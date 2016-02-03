@@ -1,21 +1,23 @@
 package com.corosus.inv;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-
-import com.corosus.inv.ai.tasks.TaskCallForHelp;
-import com.corosus.inv.ai.tasks.TaskDigTowardsTarget;
-import com.corosus.inv.config.InvConfig;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Potion;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
@@ -30,11 +32,108 @@ import CoroUtil.ai.BehaviorModifier;
 import CoroUtil.util.CoroUtilBlock;
 import CoroUtil.util.Vec3;
 
+import com.corosus.inv.ai.tasks.TaskCallForHelp;
+import com.corosus.inv.ai.tasks.TaskDigTowardsTarget;
+import com.corosus.inv.config.InvConfig;
+
 public class EventHandlerForge {
 	
 	public static String dataPlayerInvasionActive = "HW_dataPlayerInvasionActive";
 	public static String dataPlayerInvasionWaveCountCur = "HW_dataPlayerInvasionWaveCountCur";
 	public static String dataPlayerInvasionWaveCountMax = "HW_dataPlayerInvasionWaveCountMax";
+	
+	public float inventoryStages = 5;
+	
+	public HashMap<Integer, EquipmentForDifficulty> lookupDifficultyToEquipment = new HashMap<Integer, EquipmentForDifficulty>();
+	
+	public static class EquipmentForDifficulty {
+		
+		//ordered head to toe
+		private List<ItemStack> listArmor;
+		private ItemStack weapon;
+		//unused for now, worth considering in future
+		private List<Potion> listPotions;
+
+		public EquipmentForDifficulty() {
+			
+		}
+		
+		public List<ItemStack> getListArmor() {
+			return listArmor;
+		}
+
+		public void setListArmor(List<ItemStack> listArmor) {
+			this.listArmor = listArmor;
+		}
+
+		public ItemStack getWeapon() {
+			return weapon;
+		}
+
+		public void setWeapon(ItemStack weapon) {
+			this.weapon = weapon;
+		}
+
+		public List<Potion> getListPotions() {
+			return listPotions;
+		}
+
+		public void setListPotions(List<Potion> listPotions) {
+			this.listPotions = listPotions;
+		}
+		
+	}
+	
+	public EventHandlerForge() {
+		
+		//init inventories for difficulties
+		
+		
+		EquipmentForDifficulty obj = new EquipmentForDifficulty();
+		List<ItemStack> listItems = new ArrayList<ItemStack>();
+		obj.setListArmor(listItems);
+		lookupDifficultyToEquipment.put(0, obj);
+		
+		obj = new EquipmentForDifficulty();
+		listItems = new ArrayList<ItemStack>();
+		listItems.add(new ItemStack(Items.leather_helmet));
+		listItems.add(new ItemStack(Items.leather_chestplate));
+		listItems.add(new ItemStack(Items.leather_leggings));
+		listItems.add(new ItemStack(Items.leather_boots));
+		obj.setListArmor(listItems);
+		obj.setWeapon(new ItemStack(Items.wooden_sword));
+		lookupDifficultyToEquipment.put(1, obj);
+		
+		obj = new EquipmentForDifficulty();
+		listItems = new ArrayList<ItemStack>();
+		listItems.add(new ItemStack(Items.chainmail_helmet));
+		listItems.add(new ItemStack(Items.chainmail_chestplate));
+		listItems.add(new ItemStack(Items.chainmail_leggings));
+		listItems.add(new ItemStack(Items.chainmail_boots));
+		obj.setListArmor(listItems);
+		obj.setWeapon(new ItemStack(Items.stone_sword));
+		lookupDifficultyToEquipment.put(2, obj);
+		
+		obj = new EquipmentForDifficulty();
+		listItems = new ArrayList<ItemStack>();
+		listItems.add(new ItemStack(Items.iron_helmet));
+		listItems.add(new ItemStack(Items.iron_chestplate));
+		listItems.add(new ItemStack(Items.iron_leggings));
+		listItems.add(new ItemStack(Items.iron_boots));
+		obj.setListArmor(listItems);
+		obj.setWeapon(new ItemStack(Items.iron_sword));
+		lookupDifficultyToEquipment.put(3, obj);
+		
+		obj = new EquipmentForDifficulty();
+		listItems = new ArrayList<ItemStack>();
+		listItems.add(new ItemStack(Items.diamond_helmet));
+		listItems.add(new ItemStack(Items.diamond_chestplate));
+		listItems.add(new ItemStack(Items.diamond_leggings));
+		listItems.add(new ItemStack(Items.diamond_boots));
+		obj.setListArmor(listItems);
+		obj.setWeapon(new ItemStack(Items.diamond_sword));
+		lookupDifficultyToEquipment.put(4, obj);
+	}
 	
 	@SubscribeEvent
 	public void tickServer(ServerTickEvent event) {
@@ -58,8 +157,9 @@ public class EventHandlerForge {
 	public void tickPlayer(EntityPlayer player) {
 		World world = player.worldObj;
 		BlockPos pos = player.getPosition();
-		Chunk chunk = world.getChunkFromBlockCoords(pos);
-		long inhabTime = chunk.getInhabitedTime();
+		float difficultyScale = getDifficultyScaleForPos(world, pos);
+		///Chunk chunk = world.getChunkFromBlockCoords(pos);
+		//long inhabTime = chunk.getInhabitedTime();
 		//System.out.println("inhabTime: " + inhabTime);
 		
 		long dayNumber = world.getWorldTime() / 24000;
@@ -73,7 +173,7 @@ public class EventHandlerForge {
 			invasionActive = true;
 			//TODO: bug, on second day, invasion start method didnt trigger, but invasion IS active
 			if (!player.getEntityData().getBoolean(dataPlayerInvasionActive)) {
-				invasionStart(player, inhabTime);
+				invasionStart(player, difficultyScale);
 			}
 		} else {
 			invasionActive = false;
@@ -84,6 +184,7 @@ public class EventHandlerForge {
 		
 		//debug
 		invasionActive = true;
+		world.getDifficultyForLocation(player.playerLocation);
 		
 		if (invasionActive) {
 			if (player.onGround && world.getTotalWorldTime() % 200 == 0) {
@@ -178,7 +279,7 @@ public class EventHandlerForge {
 				int spawnCountCur = player.getEntityData().getInteger(dataPlayerInvasionWaveCountCur);
 				int spawnCountMax = player.getEntityData().getInteger(dataPlayerInvasionWaveCountMax);
 				if (spawnCountCur < spawnCountMax) {
-					boolean spawned = spawnNewMobSurface(player);
+					boolean spawned = spawnNewMobSurface(player, difficultyScale);
 					if (spawned) {
 						spawnCountCur++;
 						player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, spawnCountCur);
@@ -189,7 +290,7 @@ public class EventHandlerForge {
 		}
 	}
 	
-	public void invasionStart(EntityPlayer player, long inhabTime) {
+	public void invasionStart(EntityPlayer player, float difficultyScale) {
 		System.out.println("invasion started");
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, true);
 		player.getEntityData().setInteger(dataPlayerInvasionWaveCountMax, 10);
@@ -201,7 +302,7 @@ public class EventHandlerForge {
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, false);
 	}
 	
-	public boolean spawnNewMobSurface(EntityLivingBase player) {
+	public boolean spawnNewMobSurface(EntityLivingBase player, float difficultyScale) {
         
         int range = 128;
         int minDist = 50;//ZAConfigSpawning.extraSpawningDistMin;
@@ -221,6 +322,8 @@ public class EventHandlerForge {
 	
 	        EntityZombie entZ = new EntityZombie(player.worldObj);
 			entZ.setPosition(tryX, tryY, tryZ);
+			entZ.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
+			enhanceMobForDifficulty(entZ, difficultyScale);
 			player.worldObj.spawnEntityInWorld(entZ);
 			
 			/*if (ZAConfigSpawning.extraSpawningAutoTarget) */entZ.setAttackTarget(player);
@@ -246,4 +349,60 @@ public class EventHandlerForge {
         }
         return true;
     }
+	
+	public void enhanceMobForDifficulty(EntityCreature ent, float difficultyScale) {
+		/*settings to consider:
+		 *- health
+		 *- speed
+		 *- inventory 
+		 *- potions
+		 */
+		
+		//determines what integer stage of inventory we should be at based on the difficulty scale
+		//code adapts for allowing for easily adding in more inventory stages if needed
+		float scaleDivide = 1F / inventoryStages;
+		int inventoryStage = 0;
+		for (int i = 0; i < inventoryStages; i++) {
+			if (difficultyScale < scaleDivide * (i+1)) {
+				inventoryStage = i;
+				break;
+			}
+		}
+		
+		EquipmentForDifficulty equipment = lookupDifficultyToEquipment.get(inventoryStage);
+		if (equipment != null) {
+			ent.setCurrentItemOrArmor(0, equipment.getWeapon());
+			ent.setCurrentItemOrArmor(1, equipment.getListArmor().get(0));
+			ent.setCurrentItemOrArmor(2, equipment.getListArmor().get(1));
+			ent.setCurrentItemOrArmor(3, equipment.getListArmor().get(2));
+			ent.setCurrentItemOrArmor(4, equipment.getListArmor().get(3));
+		} else {
+			System.out.println("error, couldnt find equipment for difficulty value: " + inventoryStage);
+		}
+		
+		
+	}
+	
+	public float getDifficultyScaleForPos(World world, BlockPos pos) {
+		Chunk chunk = world.getChunkFromBlockCoords(pos);
+		if (chunk != null) {
+			long inhabTime = chunk.getInhabitedTime();
+			float scale = convertInhabTimeToDifficultyScale(inhabTime);
+			return scale;
+			
+		}
+		return 0F;
+	}
+	
+	/**
+	 * 
+	 * Returns value between 0 and 1 based on configured values
+	 * 
+	 * @param inhabTime
+	 * @return
+	 */
+	public float convertInhabTimeToDifficultyScale(long inhabTime) {
+		float scale = inhabTime / InvConfig.maxTicksForDifficulty;
+		return scale;
+	}
 }
