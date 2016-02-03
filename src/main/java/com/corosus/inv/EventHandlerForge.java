@@ -201,7 +201,8 @@ public class EventHandlerForge {
 		boolean invasionActive = false;
 		
 		//debug
-		difficultyScale = 0.4F;
+		//difficultyScale = 1F;
+		
 		boolean activeBool = player.getEntityData().getBoolean(dataPlayerInvasionActive);
 		
 		//TODO: add a visual cue for invasion coming tonight + active invasion
@@ -228,6 +229,7 @@ public class EventHandlerForge {
 		
 
 		System.out.println("invasion?: " + invasionActive + " - day# " + dayNumber + " - time: " + world.getWorldTime() + " - invasion tonight: " + invasionOnThisNight);
+		System.out.println("inv info: " + getInvasionDebug(difficultyScale));
 		
 		//debug
 		//invasionActive = true;
@@ -236,20 +238,19 @@ public class EventHandlerForge {
 		if (invasionActive) {
 			if (player.onGround && world.getTotalWorldTime() % 200 == 0) {
 			
-				int range = 256;
+				int range = getTargettingRangeBuff(difficultyScale);
 				double moveSpeedAmp = 1.2D;
 				
+				//TODO: instead of this expensive method and entity iteration, we could make distant targetting a targetTask! 
 				List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos, pos).expand(range, range, range));
 				
 				//System.out.println("ents: " + listEnts.size());
 				
 				TaskDigTowardsTarget task = new TaskDigTowardsTarget();
 				
-				//System.out.println("ENHANCE!");
-				//TODO: if the server restarts, the task is lost but our data still thinks we enabled the task on the mobs
-				//perhaps hook the zombie nbt load and reinject if nbt data present
 				int modifyRange = 100;
-				float chanceToEnhance = 1F;
+				float chanceToEnhance = getDigChanceBuff(difficultyScale);
+				//TODO: consider making the digging tasks disable after invasions "ends" so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
 				BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ), 
 						tasksToInject, taskPriorities[0], 
 						modifyRange, chanceToEnhance);
@@ -346,7 +347,8 @@ public class EventHandlerForge {
 	public void invasionStart(EntityPlayer player, float difficultyScale) {
 		System.out.println("invasion started");
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, true);
-		player.getEntityData().setInteger(dataPlayerInvasionWaveCountMax, 10);
+		
+		player.getEntityData().setInteger(dataPlayerInvasionWaveCountMax, getSpawnCountBuff(difficultyScale));
 		player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, 0);
 	}
 	
@@ -357,9 +359,10 @@ public class EventHandlerForge {
 	
 	public boolean spawnNewMobSurface(EntityLivingBase player, float difficultyScale) {
         
-        int range = 128;
-        int minDist = 50;//ZAConfigSpawning.extraSpawningDistMin;
-        int maxDist = 100;//ZAConfigSpawning.extraSpawningDistMax;
+        //adjusted to work best with new targetting range base value of 30
+        int minDist = 30;//ZAConfigSpawning.extraSpawningDistMin;
+        int maxDist = 60;//ZAConfigSpawning.extraSpawningDistMax;
+        int range = maxDist*2;
         
         Random rand = player.worldObj.rand;
         
@@ -413,14 +416,9 @@ public class EventHandlerForge {
 		
 		//determines what integer stage of inventory we should be at based on the difficulty scale
 		//code adapts for allowing for easily adding in more inventory stages if needed
-		float scaleDivide = 1F / inventoryStages;
-		int inventoryStage = 0;
-		for (int i = 0; i < inventoryStages; i++) {
-			if (difficultyScale < scaleDivide * (i+1)) {
-				inventoryStage = i;
-				break;
-			}
-		}
+		
+		
+		int inventoryStage = getInventoryStageBuff(difficultyScale);
 		
 		EquipmentForDifficulty equipment = lookupDifficultyToEquipment.get(inventoryStage);
 		if (equipment != null) {
@@ -470,5 +468,45 @@ public class EventHandlerForge {
 	public boolean isInvasionTonight(World world) {
 		long dayNumber = (world.getWorldTime() / 24000) + 1;
 		return dayNumber >= InvConfig.warmupDays && (dayNumber-InvConfig.warmupDays == 0 || (dayNumber-InvConfig.warmupDays) % Math.max(1, InvConfig.daysBetweenAttacks) == 0);
+	}
+	
+	public int getSpawnCountBuff(float difficultyScale) {
+		int maxSpawnsAllowed = 50;
+		int initialSpawns = 10;
+		float scaleRate = 1F;
+		return MathHelper.clamp_int(((int) ((float)(maxSpawnsAllowed) * difficultyScale * scaleRate)), initialSpawns, maxSpawnsAllowed);
+	}
+	
+	public int getTargettingRangeBuff(float difficultyScale) {
+		int initialRange = 30;
+		int max = 256;
+		float scaleRate = 1F;
+		return MathHelper.clamp_int(((int) ((float)(max) * difficultyScale * scaleRate)), initialRange, max); 
+	}
+	
+	public float getDigChanceBuff(float difficultyScale) {
+		float initial = 0.1F;
+		float max = 1F;
+		float scaleRate = 1F;
+		return MathHelper.clamp_float((((float)(max) * difficultyScale * scaleRate)), initial, max);
+	}
+	
+	public int getInventoryStageBuff(float difficultyScale) {
+		float scaleDivide = 1F / inventoryStages;
+		int inventoryStage = 0;
+		for (int i = 0; i < inventoryStages; i++) {
+			if (difficultyScale <= scaleDivide * (i+1)) {
+				inventoryStage = i;
+				break;
+			}
+		}
+		return inventoryStage;
+	}
+	
+	public String getInvasionDebug(float difficultyScale) {
+		return "spawncount: " + getSpawnCountBuff(difficultyScale) + 
+				" | targetrange: " + getTargettingRangeBuff(difficultyScale) + 
+				" | dig chance: " + getDigChanceBuff(difficultyScale) + 
+				" | inventory stage: " + getInventoryStageBuff(difficultyScale);
 	}
 }

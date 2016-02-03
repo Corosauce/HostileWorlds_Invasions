@@ -176,6 +176,17 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     		if (canMineBlock(entity.worldObj, coords, block)) {
         		posCurMining = coords;
         		return true;
+    		} else {
+    			//try to dig down if all else failed and target is below
+    			if (vecY < 0) {
+    				coords = coords.add(0, -1, 0);
+    	    		state = entity.worldObj.getBlockState(coords);
+    		    	block = state.getBlock();
+    	    		if (canMineBlock(entity.worldObj, coords, block)) {
+    	        		posCurMining = coords;
+    	        		return true;
+    	    		}
+    			}
     		}
     		
     		return false;
@@ -184,7 +195,7 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     
     public boolean canMineBlock(World world, BlockPos pos, Block block) {
     	
-    	
+    	//System.out.println("check: " + block);
     	
     	//dont mine tile entities
     	if (world.getTileEntity(pos) != null) {
@@ -199,7 +210,7 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	if (block.getMaterial().isLiquid()) {
     		return false;
     	}
-    	//System.out.println("check: " + block);
+    	
     	return true;
     }
     
@@ -237,6 +248,8 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	}
     	if (entity.worldObj.getTotalWorldTime() % (10+entity.worldObj.rand.nextInt(2)) == 0) {
     		entity.swingItem();
+    		//System.out.println("swing!");
+    		entity.worldObj.playSoundEffect(posCurMining.getX(), posCurMining.getY(), posCurMining.getZ(), block.stepSound.getBreakSound(), 0.5F, 1F);
     	}
     }
 }
