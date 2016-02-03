@@ -1,35 +1,21 @@
 package com.corosus.inv.ai;
 
 import java.lang.reflect.Constructor;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
-import java.util.UUID;
 
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.IRangedAttackMob;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.entity.ai.EntityAIFollowOwner;
-import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
-import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
-import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
-import net.minecraft.entity.passive.EntityVillager;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 import net.minecraft.pathfinding.PathNavigateGround;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
-import CoroUtil.OldUtil;
 import CoroUtil.ai.ITaskInitializer;
-import CoroUtil.forge.CoroAI;
-import CoroUtil.pets.PetsManager;
 import CoroUtil.util.Vec3;
+
+import com.corosus.inv.EventHandlerForge;
 
 public class BehaviorModifier {
 	
@@ -137,6 +123,19 @@ public class BehaviorModifier {
 		((PathNavigateGround)ent.getNavigator()).setBreakDoors(false);
 		ent.getEntityData().setBoolean(dataEntityEnhanced, true);
 		ent.getEntityData().setBoolean("CoroAI_HW_GravelDeath", true);
+		if (ent.getEquipmentInSlot(0) == null) {
+			EventHandlerForge.setEquipment(ent, 0, new ItemStack(Items.iron_pickaxe));
+		} else {
+			if (ent.getEquipmentInSlot(0).getItem() == Items.wooden_sword) {
+				EventHandlerForge.setEquipment(ent, 0, new ItemStack(Items.wooden_pickaxe));
+			} else if (ent.getEquipmentInSlot(0).getItem() == Items.stone_sword) {
+				EventHandlerForge.setEquipment(ent, 0, new ItemStack(Items.stone_pickaxe));
+			} else if (ent.getEquipmentInSlot(0).getItem() == Items.iron_sword) {
+				EventHandlerForge.setEquipment(ent, 0, new ItemStack(Items.iron_pickaxe));
+			} else if (ent.getEquipmentInSlot(0).getItem() == Items.diamond_sword) {
+				EventHandlerForge.setEquipment(ent, 0, new ItemStack(Items.diamond_pickaxe));
+			}
+		}
 	}
 	/*
 

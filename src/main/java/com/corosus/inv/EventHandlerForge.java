@@ -201,7 +201,7 @@ public class EventHandlerForge {
 		boolean invasionActive = false;
 		
 		//debug
-		//difficultyScale = 1F;
+		difficultyScale = 1F;
 		
 		boolean activeBool = player.getEntityData().getBoolean(dataPlayerInvasionActive);
 		
@@ -422,24 +422,33 @@ public class EventHandlerForge {
 		
 		EquipmentForDifficulty equipment = lookupDifficultyToEquipment.get(inventoryStage);
 		if (equipment != null) {
-			ent.setCurrentItemOrArmor(0, equipment.getWeapon());
+			setEquipment(ent, 0, equipment.getWeapon());
+			//ent.setCurrentItemOrArmor(0, equipment.getWeapon());
 			for (int i = 0; i < 4; i++) {
 				if (equipment.getListArmor().size() >= i+1) {
-					ent.setCurrentItemOrArmor(i+1, equipment.getListArmor().get(i));
+					setEquipment(ent, i+1, equipment.getListArmor().get(i));
+					//ent.setCurrentItemOrArmor(i+1, equipment.getListArmor().get(i));
 				} else {
-					ent.setCurrentItemOrArmor(i+1, null);
+					setEquipment(ent, i+1, null);
+					//ent.setCurrentItemOrArmor(i+1, null);
+					
 				}
 			}
 			//remove any chance of equipment dropping
-			for (int i = 0; i < 5; i++) {
+			/*for (int i = 0; i < 5; i++) {
 				ent.setEquipmentDropChance(i, 0);
-			}
+			}*/
 			
 		} else {
 			System.out.println("error, couldnt find equipment for difficulty value: " + inventoryStage);
 		}
 		
 		
+	}
+	
+	public static void setEquipment(EntityCreature ent, int slot, ItemStack stack) {
+		ent.setCurrentItemOrArmor(slot, stack);
+		ent.setEquipmentDropChance(slot, 0);
 	}
 	
 	public float getDifficultyScaleForPos(World world, BlockPos pos) {
