@@ -199,7 +199,7 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	if (block.getMaterial().isLiquid()) {
     		return false;
     	}
-    	System.out.println("check: " + block);
+    	//System.out.println("check: " + block);
     	return true;
     }
     

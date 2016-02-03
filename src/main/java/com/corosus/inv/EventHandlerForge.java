@@ -15,23 +15,29 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayer.EnumStatus;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
-import CoroUtil.ai.BehaviorModifier;
 import CoroUtil.util.CoroUtilBlock;
 import CoroUtil.util.Vec3;
 
+import com.corosus.inv.ai.BehaviorModifier;
 import com.corosus.inv.ai.tasks.TaskCallForHelp;
 import com.corosus.inv.ai.tasks.TaskDigTowardsTarget;
 import com.corosus.inv.config.InvConfig;
@@ -45,6 +51,9 @@ public class EventHandlerForge {
 	public float inventoryStages = 5;
 	
 	public HashMap<Integer, EquipmentForDifficulty> lookupDifficultyToEquipment = new HashMap<Integer, EquipmentForDifficulty>();
+	
+	public Class[] tasksToInject = new Class[] { TaskDigTowardsTarget.class, TaskCallForHelp.class };
+	public int[] taskPriorities = {5, 5};
 	
 	public static class EquipmentForDifficulty {
 		
@@ -136,6 +145,29 @@ public class EventHandlerForge {
 	}
 	
 	@SubscribeEvent
+	public void canSleep(PlayerSleepInBedEvent event) {
+		if (InvConfig.preventSleepDuringInvasions) {
+			if (isInvasionTonight(event.entityPlayer.worldObj)) {
+				EntityPlayerMP player = (EntityPlayerMP) event.entityPlayer;
+				player.addChatMessage(new ChatComponentText("You can't sleep during invasion nights!"));
+				event.result = EnumStatus.NOT_SAFE;
+			} else {
+				
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public void entityCreated(EntityJoinWorldEvent event) {
+		if (event.entity instanceof EntityCreature) {
+			EntityCreature ent = (EntityCreature) event.entity;
+			if (ent.getEntityData().getBoolean(BehaviorModifier.dataEntityEnhanced)) {
+				BehaviorModifier.addTaskIfMissing(ent, TaskDigTowardsTarget.class, tasksToInject, taskPriorities[0]);
+			}
+		}
+	}
+	
+	@SubscribeEvent
 	public void tickServer(ServerTickEvent event) {
 		
 		if (event.phase == Phase.START) {
@@ -160,33 +192,45 @@ public class EventHandlerForge {
 		float difficultyScale = getDifficultyScaleForPos(world, pos);
 		///Chunk chunk = world.getChunkFromBlockCoords(pos);
 		//long inhabTime = chunk.getInhabitedTime();
-		System.out.println("difficultyScale: " + difficultyScale);
+		//System.out.println("difficultyScale: " + difficultyScale);
 		
-		long dayNumber = world.getWorldTime() / 24000;
-		System.out.println("daynumber: " + dayNumber + " - " + world.getWorldTime() + " - " + world.isDaytime());
+		//start at "1"
+		long dayNumber = (world.getWorldTime() / 24000) + 1;
+		//System.out.println("daynumber: " + dayNumber + " - " + world.getWorldTime() + " - " + world.isDaytime());
 		
 		boolean invasionActive = false;
 		
 		//debug
-		difficultyScale = 0.7F;
+		difficultyScale = 0.4F;
+		boolean activeBool = player.getEntityData().getBoolean(dataPlayerInvasionActive);
+		
+		//TODO: add a visual cue for invasion coming tonight + active invasion
 		
 		//track state of invasion for proper init and reset for wave counts, etc
-		//TODO: make sure invasion isnt cut off once "midnight" hits due to that being when new day starts (we want invasion to continue till day)
-		if (dayNumber >= InvConfig.warmupDays && (dayNumber-InvConfig.warmupDays) % Math.max(1, InvConfig.daysBetweenAttacks) == 0 && !world.isDaytime()) {
+		//new day starts just as sun is rising, so invasion stops just at the right time when sun is imminent, they burn 300 ticks before invasion ends, thats ok
+		//FYI night val is based on sunlight level, so its not night ends @ 24000 cycle, its a bit before, 400ish ticks before, thats ok
+		boolean invasionOnThisNight = isInvasionTonight(world);
+		if (invasionOnThisNight && !world.isDaytime()) {
+			
 			invasionActive = true;
 			//TODO: bug, on second day, invasion start method didnt trigger, but invasion IS active
-			if (!player.getEntityData().getBoolean(dataPlayerInvasionActive)) {
+			if (!activeBool) {
+				//System.out.println("triggering invasion start");
 				invasionStart(player, difficultyScale);
 			}
 		} else {
 			invasionActive = false;
-			if (player.getEntityData().getBoolean(dataPlayerInvasionActive)) {
+			if (activeBool) {
+				//System.out.println("triggering invasion stop");
 				invasionStopReset(player);
 			}
 		}
 		
+
+		System.out.println("invasion?: " + invasionActive + " - day# " + dayNumber + " - time: " + world.getWorldTime() + " - invasion tonight: " + invasionOnThisNight);
+		
 		//debug
-		invasionActive = true;
+		//invasionActive = true;
 		//world.getDifficultyForLocation(player.playerLocation);
 		
 		if (invasionActive) {
@@ -202,7 +246,13 @@ public class EventHandlerForge {
 				TaskDigTowardsTarget task = new TaskDigTowardsTarget();
 				
 				//System.out.println("ENHANCE!");
-				BehaviorModifier.enhanceZombiesToDig(DimensionManager.getWorld(0), new Vec3(player.posX, player.posY, player.posZ), new Class[] { TaskDigTowardsTarget.class, TaskCallForHelp.class }, 5, 1F);
+				//TODO: if the server restarts, the task is lost but our data still thinks we enabled the task on the mobs
+				//perhaps hook the zombie nbt load and reinject if nbt data present
+				int modifyRange = 100;
+				float chanceToEnhance = 1F;
+				BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ), 
+						tasksToInject, taskPriorities[0], 
+						modifyRange, chanceToEnhance);
 				
 				for (EntityCreature ent : listEnts) {
 					if (ent instanceof IMob && ent instanceof EntityZombie) {
@@ -415,5 +465,10 @@ public class EventHandlerForge {
 	public float convertInhabTimeToDifficultyScale(long inhabTime) {
 		float scale = (float)inhabTime / (float)InvConfig.maxTicksForDifficulty;
 		return scale;
+	}
+	
+	public boolean isInvasionTonight(World world) {
+		long dayNumber = (world.getWorldTime() / 24000) + 1;
+		return dayNumber >= InvConfig.warmupDays && (dayNumber-InvConfig.warmupDays == 0 || (dayNumber-InvConfig.warmupDays) % Math.max(1, InvConfig.daysBetweenAttacks) == 0);
 	}
 }
