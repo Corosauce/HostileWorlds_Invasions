@@ -160,12 +160,15 @@ public class EventHandlerForge {
 		float difficultyScale = getDifficultyScaleForPos(world, pos);
 		///Chunk chunk = world.getChunkFromBlockCoords(pos);
 		//long inhabTime = chunk.getInhabitedTime();
-		//System.out.println("inhabTime: " + inhabTime);
+		System.out.println("difficultyScale: " + difficultyScale);
 		
 		long dayNumber = world.getWorldTime() / 24000;
 		System.out.println("daynumber: " + dayNumber + " - " + world.getWorldTime() + " - " + world.isDaytime());
 		
 		boolean invasionActive = false;
+		
+		//debug
+		difficultyScale = 0.7F;
 		
 		//track state of invasion for proper init and reset for wave counts, etc
 		//TODO: make sure invasion isnt cut off once "midnight" hits due to that being when new day starts (we want invasion to continue till day)
@@ -184,7 +187,7 @@ public class EventHandlerForge {
 		
 		//debug
 		invasionActive = true;
-		world.getDifficultyForLocation(player.playerLocation);
+		//world.getDifficultyForLocation(player.playerLocation);
 		
 		if (invasionActive) {
 			if (player.onGround && world.getTotalWorldTime() % 200 == 0) {
@@ -372,10 +375,18 @@ public class EventHandlerForge {
 		EquipmentForDifficulty equipment = lookupDifficultyToEquipment.get(inventoryStage);
 		if (equipment != null) {
 			ent.setCurrentItemOrArmor(0, equipment.getWeapon());
-			ent.setCurrentItemOrArmor(1, equipment.getListArmor().get(0));
-			ent.setCurrentItemOrArmor(2, equipment.getListArmor().get(1));
-			ent.setCurrentItemOrArmor(3, equipment.getListArmor().get(2));
-			ent.setCurrentItemOrArmor(4, equipment.getListArmor().get(3));
+			for (int i = 0; i < 4; i++) {
+				if (equipment.getListArmor().size() >= i+1) {
+					ent.setCurrentItemOrArmor(i+1, equipment.getListArmor().get(i));
+				} else {
+					ent.setCurrentItemOrArmor(i+1, null);
+				}
+			}
+			//remove any chance of equipment dropping
+			for (int i = 0; i < 5; i++) {
+				ent.setEquipmentDropChance(i, 0);
+			}
+			
 		} else {
 			System.out.println("error, couldnt find equipment for difficulty value: " + inventoryStage);
 		}
@@ -402,7 +413,7 @@ public class EventHandlerForge {
 	 * @return
 	 */
 	public float convertInhabTimeToDifficultyScale(long inhabTime) {
-		float scale = inhabTime / InvConfig.maxTicksForDifficulty;
+		float scale = (float)inhabTime / (float)InvConfig.maxTicksForDifficulty;
 		return scale;
 	}
 }
