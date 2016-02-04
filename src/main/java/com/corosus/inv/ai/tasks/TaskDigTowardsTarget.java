@@ -48,6 +48,9 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	//this method ticks every 3 ticks in best conditions
     	
     	//System.out.println("should?");
+    	/**
+    	 * Zombies wouldnt try to mine if they are bunched up behind others, as they are still technically pathfinding, this helps resolve that issue, and maybe water related issues
+    	 */
     	double movementThreshold = 0.05D;
     	int noMoveThreshold = 5;
     	if (posCurMining == null && entity.motionX < movementThreshold && entity.motionX > -movementThreshold && 
@@ -60,9 +63,9 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	}
     	
     	//System.out.println("noMoveTicks: " + noMoveTicks);
-    	if (noMoveTicks > noMoveThreshold) {
+    	/*if (noMoveTicks > noMoveThreshold) {
     		System.out.println("ent not moving enough, try to mine!? " + noMoveTicks + " ent: " + entity.getEntityId());
-    	}
+    	}*/
     	
     	if (!entity.onGround && !entity.isInWater()) return false;
     	//return true if not pathing, has target
@@ -240,7 +243,8 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	if (posCurMining == null) return;
     	
     	//force stop mining if pushed away
-    	if (Math.sqrt(entity.getDistanceSq(posCurMining)) > 4) {
+    	if (Math.sqrt(entity.getDistanceSq(posCurMining)) > 3) {
+    		entity.worldObj.sendBlockBreakProgress(entity.getEntityId(), posCurMining, 0);
     		posCurMining = null;
     		return;
     	}
@@ -262,13 +266,13 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	curBlockDamage += 0.01D / blockStrength;
     	
     	if (curBlockDamage > 1D) {
-    		entity.worldObj.sendBlockBreakProgress(entity.getEntityId(), posCurMining, 10);
+    		entity.worldObj.sendBlockBreakProgress(entity.getEntityId(), posCurMining, 0);
     		entity.worldObj.setBlockState(posCurMining, Blocks.air.getDefaultState());
     		
     	} else {
     		entity.worldObj.sendBlockBreakProgress(entity.getEntityId(), posCurMining, (int)(curBlockDamage * 10D));
     	}
-    	if (entity.worldObj.getTotalWorldTime() % (10+entity.worldObj.rand.nextInt(2)) == 0) {
+    	if (entity.worldObj.getTotalWorldTime() % 10 == 0) {
     		entity.swingItem();
     		//System.out.println("swing!");
     		entity.worldObj.playSoundEffect(posCurMining.getX(), posCurMining.getY(), posCurMining.getZ(), block.stepSound.getBreakSound(), 0.5F, 1F);
