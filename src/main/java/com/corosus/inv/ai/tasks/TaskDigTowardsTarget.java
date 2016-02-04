@@ -47,6 +47,9 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     {
     	//this method ticks every 3 ticks in best conditions
     	
+    	//prevent day digging, easy way to prevent digging once invasion ends
+    	if (entity.worldObj.isDaytime()) return false;
+    	
     	//System.out.println("should?");
     	/**
     	 * Zombies wouldnt try to mine if they are bunched up behind others, as they are still technically pathfinding, this helps resolve that issue, and maybe water related issues
