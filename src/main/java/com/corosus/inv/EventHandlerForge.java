@@ -423,7 +423,7 @@ public class EventHandlerForge {
 		float difficultyPos = getDifficultyScaleForPos(world, pos);
 		float difficultyPlayerEquipment = getDifficultyScaleForPlayerEquipment(player);
 		float difficultyPlayerServerTime = getDifficultyScaleForPlayerServerTime(player);
-		return difficultyPos + difficultyPlayerEquipment + difficultyPlayerServerTime / 3F;
+		return (difficultyPos + difficultyPlayerEquipment + difficultyPlayerServerTime) / 3F;
 	}
 	
 	public float getDifficultyScaleForPlayerServerTime(EntityPlayer player) {
