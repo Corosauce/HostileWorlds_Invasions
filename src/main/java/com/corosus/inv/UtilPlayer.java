@@ -65,11 +65,12 @@ public class UtilPlayer {
                 	//add attrib
                 	entP.getAttributeMap().applyAttributeModifiers(itemstack.getAttributeModifiers());
                 	
-                	if (itemstack.getItem() instanceof ItemSword) {
+                	//temp enchant test
+                	/*if (itemstack.getItem() instanceof ItemSword) {
 	                	if (itemstack.getEnchantmentTagList() == null || itemstack.getEnchantmentTagList().hasNoTags()) {
 	                		itemstack.addEnchantment(Enchantment.sharpness, 5);
 	                	}
-                	}
+                	}*/
 				}
                 
                 //get val

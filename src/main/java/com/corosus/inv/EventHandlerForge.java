@@ -1,5 +1,7 @@
 package com.corosus.inv;
 
+import io.netty.util.internal.ThreadLocalRandom;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +14,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
@@ -316,8 +319,8 @@ public class EventHandlerForge {
 	public boolean spawnNewMobSurface(EntityLivingBase player, float difficultyScale) {
         
         //adjusted to work best with new targetting range base value of 30
-        int minDist = 30;//ZAConfigSpawning.extraSpawningDistMin;
-        int maxDist = 60;//ZAConfigSpawning.extraSpawningDistMax;
+        int minDist = 20;//ZAConfigSpawning.extraSpawningDistMin;
+        int maxDist = 40;//ZAConfigSpawning.extraSpawningDistMax;
         int range = maxDist*2;
         
         Random rand = player.worldObj.rand;
@@ -379,6 +382,7 @@ public class EventHandlerForge {
 			zombie.setChild(false);
 		}
 		
+		//extra xp
 		try {
 			int xp = ObfuscationReflectionHelper.getPrivateValue(EntityLiving.class, ent, "field_70728_aV", "experienceValue");
 			xp += difficultyScale * 10F;
@@ -387,6 +391,10 @@ public class EventHandlerForge {
 			e.printStackTrace();
 		}
 		
+		//movement speed buff
+		double randBoost = ent.worldObj.rand.nextDouble() * 0.8D * difficultyScale;
+		AttributeModifier speedBoostModifier = new AttributeModifier(MathHelper.getRandomUuid(ThreadLocalRandom.current()), "Invasion speed boost", randBoost, 1);
+		ent.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(speedBoostModifier);
 		
 		int inventoryStage = getInventoryStageBuff(difficultyScale);
 		
