@@ -22,6 +22,8 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     private int digTimeCur = 0;
     private int digTimeMax = 15*20;
     private double curBlockDamage = 0D;
+    //doesnt factor in ai tick delay of % 3
+    private int noMoveTicks = 0;
 
     public TaskDigTowardsTarget()
     {
@@ -43,7 +45,24 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
      */
     public boolean shouldExecute()
     {
+    	//this method ticks every 3 ticks in best conditions
+    	
     	//System.out.println("should?");
+    	double movementThreshold = 0.05D;
+    	int noMoveThreshold = 5;
+    	if (posCurMining == null && entity.motionX < movementThreshold && entity.motionX > -movementThreshold && 
+    			entity.motionZ < movementThreshold && entity.motionZ > -movementThreshold) {
+    		
+    		noMoveTicks++;
+    		
+    	} else {
+    		noMoveTicks = 0;
+    	}
+    	
+    	//System.out.println("noMoveTicks: " + noMoveTicks);
+    	if (noMoveTicks > noMoveThreshold) {
+    		System.out.println("ent not moving enough, try to mine!? " + noMoveTicks + " ent: " + entity.getEntityId());
+    	}
     	
     	if (!entity.onGround && !entity.isInWater()) return false;
     	//return true if not pathing, has target
@@ -55,12 +74,15 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     			targetLastTracked = entity.getAttackTarget();
     		}
     		//if (!entity.getNavigator().noPath()) System.out.println("path size: " + entity.getNavigator().getPath().getCurrentPathLength());
-    		if (entity.getNavigator().noPath() || entity.getNavigator().getPath().getCurrentPathLength() == 1) {
+    		if (entity.getNavigator().noPath() || entity.getNavigator().getPath().getCurrentPathLength() == 1 || noMoveTicks > noMoveThreshold) {
     		//if (entity.motionX < 0.1D && entity.motionZ < 0.1D) {
     			if (updateBlockToMine()) {
     				//System.out.println("should!");
     				return true;
     			}
+    		} else {
+    			//clause for if stuck trying to path
+    			
     		}
     	}
     	

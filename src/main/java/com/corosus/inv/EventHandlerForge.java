@@ -201,6 +201,8 @@ public class EventHandlerForge {
 		
 		long ticksPlayed = player.getEntityData().getLong(dataPlayerServerTicks);
 		ticksPlayed += 20;
+		//3 hour start debug
+		//ticksPlayed = 20*60*60*3;
 		player.getEntityData().setLong(dataPlayerServerTicks, ticksPlayed);
 		
 		float difficultyScale = getDifficultyScaleAverage(world, player, pos);
@@ -241,11 +243,11 @@ public class EventHandlerForge {
 			}
 		}
 		
-		int playerRating = UtilPlayer.getPlayerRating(player);
+		//int playerRating = UtilPlayer.getPlayerRating(player);
 
-		//System.out.println("invasion?: " + invasionActive + " - day# " + dayNumber + " - time: " + world.getWorldTime() + " - invasion tonight: " + invasionOnThisNight);
+		System.out.println("invasion?: " + invasionActive + " - day# " + dayNumber + " - time: " + world.getWorldTime() + " - invasion tonight: " + invasionOnThisNight);
 		System.out.println("inv info: " + getInvasionDebug(difficultyScale));
-		System.out.println("player rating: " + playerRating);
+		//System.out.println("player rating: " + playerRating);
 		
 		//debug
 		//invasionActive = true;
