@@ -31,10 +31,12 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import CoroUtil.util.CoroUtilBlock;
+import CoroUtil.util.CoroUtilPath;
 import CoroUtil.util.Vec3;
 
 import com.corosus.inv.ai.BehaviorModifier;
@@ -45,6 +47,8 @@ import com.corosus.inv.config.InvConfig;
 public class EventHandlerForge {
 	
 	public static String dataPlayerInvasionActive = "HW_dataPlayerInvasionActive";
+	public static String dataPlayerServerTicks = "HW_dataPlayerServerTicks";
+	public static String dataPlayerLastCacheEquipmentRating = "HW_dataPlayerLastCacheEquipmentRating";
 	public static String dataPlayerInvasionWaveCountCur = "HW_dataPlayerInvasionWaveCountCur";
 	public static String dataPlayerInvasionWaveCountMax = "HW_dataPlayerInvasionWaveCountMax";
 	
@@ -186,10 +190,20 @@ public class EventHandlerForge {
 		}
 	}
 	
+	/**
+	 * Ticked every 20 ticks
+	 * 
+	 * @param player
+	 */
 	public void tickPlayer(EntityPlayer player) {
 		World world = player.worldObj;
 		BlockPos pos = player.getPosition();
-		float difficultyScale = getDifficultyScaleForPos(world, pos);
+		
+		long ticksPlayed = player.getEntityData().getLong(dataPlayerServerTicks);
+		ticksPlayed += 20;
+		player.getEntityData().setLong(dataPlayerServerTicks, ticksPlayed);
+		
+		float difficultyScale = getDifficultyScaleAverage(world, player, pos);
 		///Chunk chunk = world.getChunkFromBlockCoords(pos);
 		//long inhabTime = chunk.getInhabitedTime();
 		//System.out.println("difficultyScale: " + difficultyScale);
@@ -201,7 +215,7 @@ public class EventHandlerForge {
 		boolean invasionActive = false;
 		
 		//debug
-		difficultyScale = 1F;
+		//difficultyScale = 1F;
 		
 		boolean activeBool = player.getEntityData().getBoolean(dataPlayerInvasionActive);
 		
@@ -227,16 +241,18 @@ public class EventHandlerForge {
 			}
 		}
 		
+		int playerRating = UtilPlayer.getPlayerRating(player);
 
-		System.out.println("invasion?: " + invasionActive + " - day# " + dayNumber + " - time: " + world.getWorldTime() + " - invasion tonight: " + invasionOnThisNight);
+		//System.out.println("invasion?: " + invasionActive + " - day# " + dayNumber + " - time: " + world.getWorldTime() + " - invasion tonight: " + invasionOnThisNight);
 		System.out.println("inv info: " + getInvasionDebug(difficultyScale));
+		System.out.println("player rating: " + playerRating);
 		
 		//debug
 		//invasionActive = true;
 		//world.getDifficultyForLocation(player.playerLocation);
 		
 		if (invasionActive) {
-			if (player.onGround && world.getTotalWorldTime() % 200 == 0) {
+			if (player.onGround && world.getTotalWorldTime() % 50 == 0) {
 			
 				int range = getTargettingRangeBuff(difficultyScale);
 				double moveSpeedAmp = 1.2D;
@@ -258,73 +274,9 @@ public class EventHandlerForge {
 				for (EntityCreature ent : listEnts) {
 					if (ent instanceof IMob && ent instanceof EntityZombie) {
 						
-						if (ent.getNavigator().noPath()) {
+						ent.setAttackTarget(player);
+						CoroUtilPath.tryMoveToEntityLivingLongDist(ent, player, moveSpeedAmp);
 						
-							double distToPlayer = ent.getDistanceToEntity(player);
-							
-							double followDist = ent.getEntityAttribute(SharedMonsterAttributes.followRange).getAttributeValue();
-							
-							ent.setAttackTarget(player);
-							
-							if (distToPlayer <= followDist) {
-								boolean success = ent.getNavigator().tryMoveToEntityLiving(player, moveSpeedAmp);
-								//System.out.println("success? " + success + "- move to player: " + ent + " -> " + player);
-							} else {
-						        int x = MathHelper.floor_double(player.posX);
-						        int y = MathHelper.floor_double(player.posY);
-						        int z = MathHelper.floor_double(player.posZ);
-						        
-						        double d = x+0.5F - ent.posX;
-						        double d2 = z+0.5F - ent.posZ;
-						        double d1;
-						        d1 = y+0.5F - (ent.posY + (double)ent.getEyeHeight());
-						        
-						        double d3 = MathHelper.sqrt_double(d * d + d2 * d2);
-						        float f2 = (float)((Math.atan2(d2, d) * 180D) / 3.1415927410125732D) - 90F;
-						        float f3 = (float)(-((Math.atan2(d1, d3) * 180D) / 3.1415927410125732D));
-						        float rotationPitch = -f3;//-ent.updateRotation(rotationPitch, f3, 180D);
-						        float rotationYaw = f2;//updateRotation(rotationYaw, f2, 180D);
-						        
-						        EntityLiving center = ent;
-						        
-						        Random rand = world.rand;
-						        
-						        float randLook = rand.nextInt(90)-45;
-						        //int height = 10;
-						        double dist = (followDist * 0.75D) + rand.nextInt((int)followDist / 2);//rand.nextInt(26)+(queue.get(0).retryState * 6);
-						        int gatherX = (int)Math.floor(center.posX + ((double)(-Math.sin((rotationYaw+randLook) / 180.0F * 3.1415927F)/* * Math.cos(center.rotationPitch / 180.0F * 3.1415927F)*/) * dist));
-						        int gatherY = (int)center.posY;//Math.floor(center.posY-0.5 + (double)(-MathHelper.sin(center.rotationPitch / 180.0F * 3.1415927F) * dist) - 0D); //center.posY - 0D;
-						        int gatherZ = (int)Math.floor(center.posZ + ((double)(Math.cos((rotationYaw+randLook) / 180.0F * 3.1415927F)/* * Math.cos(center.rotationPitch / 180.0F * 3.1415927F)*/) * dist));
-						        
-						        Block block = world.getBlockState(new BlockPos(gatherX, gatherY, gatherZ)).getBlock();
-						        int tries = 0;
-						        if (!CoroUtilBlock.isAir(block)) {
-						        	int offset = -5;
-			    			        
-			    			        while (tries < 30) {
-			    			        	if (CoroUtilBlock.isAir(block) || !block.isSideSolid(world, new BlockPos(gatherX, gatherY, gatherZ), EnumFacing.UP)) {
-			    			        		break;
-			    			        	}
-			    			        	gatherY += offset++;
-			    			        	block = world.getBlockState(new BlockPos(gatherX, gatherY, gatherZ)).getBlock();
-			    			        	tries++;
-			    			        }
-						        } else {
-						        	//int offset = 0;
-						        	while (tries < 30) {
-						        		if (!CoroUtilBlock.isAir(block) && block.isSideSolid(world, new BlockPos(gatherX, gatherY, gatherZ), EnumFacing.UP)) break;
-						        		gatherY -= 1;//offset++;
-						        		block = world.getBlockState(new BlockPos(gatherX, gatherY, gatherZ)).getBlock();
-			    			        	tries++;
-						        	}
-						        }
-						        
-						        if (tries < 30) {
-						        	boolean success = ent.getNavigator().tryMoveToXYZ(gatherX, gatherY, gatherZ, moveSpeedAmp);
-						        	//System.out.println("pp success? " + success + "- move to player: " + ent + " -> " + player);
-						        }
-							}
-						}
 					}
 				}
 			}
@@ -346,6 +298,7 @@ public class EventHandlerForge {
 	
 	public void invasionStart(EntityPlayer player, float difficultyScale) {
 		System.out.println("invasion started");
+		player.addChatMessage(new ChatComponentText("An invasion has started! Be prepared!"));
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, true);
 		
 		player.getEntityData().setInteger(dataPlayerInvasionWaveCountMax, getSpawnCountBuff(difficultyScale));
@@ -354,6 +307,7 @@ public class EventHandlerForge {
 	
 	public void invasionStopReset(EntityPlayer player) {
 		System.out.println("invasion ended");
+		player.addChatMessage(new ChatComponentText("The invasion has ended! Next invasion in " + InvConfig.daysBetweenAttacks + " days!"));
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, false);
 	}
 	
@@ -417,6 +371,20 @@ public class EventHandlerForge {
 		//determines what integer stage of inventory we should be at based on the difficulty scale
 		//code adapts for allowing for easily adding in more inventory stages if needed
 		
+		//prevent enhanced children zombies
+		if (ent instanceof EntityZombie) {
+			EntityZombie zombie = (EntityZombie) ent;
+			zombie.setChild(false);
+		}
+		
+		try {
+			int xp = ObfuscationReflectionHelper.getPrivateValue(EntityLiving.class, ent, "field_70728_aV", "experienceValue");
+			xp += difficultyScale * 10F;
+			ObfuscationReflectionHelper.setPrivateValue(EntityLiving.class, ent, xp, "field_70728_aV", "experienceValue");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 		
 		int inventoryStage = getInventoryStageBuff(difficultyScale);
 		
@@ -451,15 +419,102 @@ public class EventHandlerForge {
 		ent.setEquipmentDropChance(slot, 0);
 	}
 	
+	public float getDifficultyScaleAverage(World world, EntityPlayer player, BlockPos pos) {
+		float difficultyPos = getDifficultyScaleForPos(world, pos);
+		float difficultyPlayerEquipment = getDifficultyScaleForPlayerEquipment(player);
+		float difficultyPlayerServerTime = getDifficultyScaleForPlayerServerTime(player);
+		return difficultyPos + difficultyPlayerEquipment + difficultyPlayerServerTime / 3F;
+	}
+	
+	public float getDifficultyScaleForPlayerServerTime(EntityPlayer player) {
+		long maxServerTime = InvConfig.maxTicksForDifficulty;
+		long curServerTime = player.getEntityData().getLong(dataPlayerServerTicks);
+		return MathHelper.clamp_float((float)curServerTime / (float)maxServerTime, 0F, 1F);
+	}
+	
+	public float getDifficultyScaleForPlayerEquipment(EntityPlayer player) {
+		int curRating = 0;
+		if (player.getEntityData().hasKey(dataPlayerLastCacheEquipmentRating)) {
+			if (player.worldObj.getTotalWorldTime() % 200 == 0) {
+				curRating = UtilPlayer.getPlayerRating(player);
+				player.getEntityData().setInteger(dataPlayerLastCacheEquipmentRating, curRating);
+			} else {
+				curRating = player.getEntityData().getInteger(dataPlayerLastCacheEquipmentRating);
+			}
+		} else {
+			curRating = UtilPlayer.getPlayerRating(player);
+			player.getEntityData().setInteger(dataPlayerLastCacheEquipmentRating, curRating);
+		}
+		
+		int bestRating = UtilPlayer.getBestPlayerRatingPossible();
+		
+		//allow a scale value over 1F, means theres equipment in play beyond vanilla stuff, or i miscalculated some things
+		return (float)curRating / (float)bestRating;
+	}
+	
 	public float getDifficultyScaleForPos(World world, BlockPos pos) {
-		Chunk chunk = world.getChunkFromBlockCoords(pos);
+		/**
+		 * 1 chunk calc
+		 */
+		/*Chunk chunk = world.getChunkFromBlockCoords(pos);
 		if (chunk != null) {
 			long inhabTime = chunk.getInhabitedTime();
 			float scale = convertInhabTimeToDifficultyScale(inhabTime);
 			return scale;
 			
 		}
-		return 0F;
+		return 0F;*/
+		
+		/**
+		 * average radius calc
+		 */
+		int chunkRange = 3;
+		int chunkX = pos.getX() / 16;
+		int chunkZ = pos.getZ() / 16;
+		int count = 0;
+		long totalTime = 0;
+		for (int x = chunkX - chunkRange; x < chunkX + chunkRange; x++) {
+			for (int z = chunkZ - chunkRange; z < chunkZ + chunkRange; z++) {
+				BlockPos checkPos = new BlockPos(chunkX * 16 + 8, 128, chunkZ * 16 + 8);
+				if (world.isBlockLoaded(checkPos)) {
+					Chunk chunk = world.getChunkFromBlockCoords(checkPos);
+					if (chunk != null) {
+						totalTime += chunk.getInhabitedTime();
+						count++;
+					}
+				}
+			}
+		}
+		long averageTime = totalTime / count;
+		
+		float scale = convertInhabTimeToDifficultyScale(averageTime);
+		return scale;
+		
+		/**
+		 * best chunk count
+		 */
+		/*int chunkRange = 4;
+		int chunkX = pos.getX() / 16;
+		int chunkZ = pos.getZ() / 16;
+		//int count = 0;
+		long bestTime = 0;
+		for (int x = chunkX - chunkRange; x < chunkX + chunkRange; x++) {
+			for (int z = chunkZ - chunkRange; z < chunkZ + chunkRange; z++) {
+				BlockPos checkPos = new BlockPos(chunkX * 16 + 8, 128, chunkZ * 16 + 8);
+				if (world.isBlockLoaded(checkPos)) {
+					Chunk chunk = world.getChunkFromBlockCoords(checkPos);
+					if (chunk != null) {
+						if (chunk.getInhabitedTime() > bestTime) {
+							bestTime = chunk.getInhabitedTime();
+						}
+					}
+				}
+			}
+		}
+		//long averageTime = bestTime / count;
+		
+		float scale = convertInhabTimeToDifficultyScale(bestTime);
+		return scale;*/
 	}
 	
 	/**
@@ -475,8 +530,10 @@ public class EventHandlerForge {
 	}
 	
 	public boolean isInvasionTonight(World world) {
+		//add 1 day because calculation is off, eg: if we want 1 warmup day, we dont want first night to be an invasion
+		int dayAdjust = InvConfig.warmupDays + 1;
 		long dayNumber = (world.getWorldTime() / 24000) + 1;
-		return dayNumber >= InvConfig.warmupDays && (dayNumber-InvConfig.warmupDays == 0 || (dayNumber-InvConfig.warmupDays) % Math.max(1, InvConfig.daysBetweenAttacks) == 0);
+		return dayNumber >= dayAdjust && (dayNumber-dayAdjust == 0 || (dayNumber-dayAdjust) % Math.max(1, InvConfig.daysBetweenAttacks) == 0);
 	}
 	
 	public int getSpawnCountBuff(float difficultyScale) {
@@ -516,6 +573,7 @@ public class EventHandlerForge {
 		return "spawncount: " + getSpawnCountBuff(difficultyScale) + 
 				" | targetrange: " + getTargettingRangeBuff(difficultyScale) + 
 				" | dig chance: " + getDigChanceBuff(difficultyScale) + 
-				" | inventory stage: " + getInventoryStageBuff(difficultyScale);
+				" | inventory stage: " + getInventoryStageBuff(difficultyScale) + 
+				" | scale: " + difficultyScale;
 	}
 }

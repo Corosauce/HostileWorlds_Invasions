@@ -5,7 +5,7 @@ import modconfig.IConfigCategory;
 
 public class InvConfig implements IConfigCategory {
 
-	public static int warmupDays = 3;
+	public static int warmupDays = 1;
 	public static int daysBetweenAttacks = 2;
 	
 	public static int maxTicksForDifficulty = 20*60*60*50;
