@@ -1,5 +1,6 @@
 package com.corosus.inv;
 
+import modconfig.ConfigMod;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -7,6 +8,8 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
+
+import com.corosus.inv.config.InvConfig;
 
 @Mod(modid = "inv", name="inv", version="v0.1")
 public class Invasion {
@@ -18,7 +21,7 @@ public class Invasion {
 	@Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
-		
+		ConfigMod.addConfigFile(event, "invConfig", new InvConfig());
     }
     
 	@Mod.EventHandler

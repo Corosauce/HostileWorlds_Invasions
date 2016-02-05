@@ -22,12 +22,10 @@ import net.minecraft.entity.player.EntityPlayer.EnumStatus;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -248,8 +246,8 @@ public class EventHandlerForge {
 		
 		//int playerRating = UtilPlayer.getPlayerRating(player);
 
-		System.out.println("invasion?: " + invasionActive + " - day# " + dayNumber + " - time: " + world.getWorldTime() + " - invasion tonight: " + invasionOnThisNight);
-		System.out.println("inv info: " + getInvasionDebug(difficultyScale));
+		//System.out.println("invasion?: " + invasionActive + " - day# " + dayNumber + " - time: " + world.getWorldTime() + " - invasion tonight: " + invasionOnThisNight);
+		//System.out.println("inv info: " + getInvasionDebug(difficultyScale));
 		//System.out.println("player rating: " + playerRating);
 		
 		//debug
@@ -312,7 +310,7 @@ public class EventHandlerForge {
 	
 	public void invasionStopReset(EntityPlayer player) {
 		System.out.println("invasion ended");
-		player.addChatMessage(new ChatComponentText("The invasion has ended! Next invasion in " + InvConfig.daysBetweenAttacks + " days!"));
+		player.addChatMessage(new ChatComponentText("The invasion has ended! Next invasion in " + InvConfig.daysBetweenInvasions + " days!"));
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, false);
 	}
 	
@@ -437,7 +435,7 @@ public class EventHandlerForge {
 	}
 	
 	public float getDifficultyScaleForPlayerServerTime(EntityPlayer player) {
-		long maxServerTime = InvConfig.maxTicksForDifficulty;
+		long maxServerTime = InvConfig.difficulty_MaxTicksOnServer;
 		long curServerTime = player.getEntityData().getLong(dataPlayerServerTicks);
 		return MathHelper.clamp_float((float)curServerTime / (float)maxServerTime, 0F, 1F);
 	}
@@ -535,35 +533,35 @@ public class EventHandlerForge {
 	 * @return
 	 */
 	public float convertInhabTimeToDifficultyScale(long inhabTime) {
-		float scale = (float)inhabTime / (float)InvConfig.maxTicksForDifficulty;
+		float scale = (float)inhabTime / (float)InvConfig.difficulty_MaxTicksInChunk;
 		return scale;
 	}
 	
 	public boolean isInvasionTonight(World world) {
 		//add 1 day because calculation is off, eg: if we want 1 warmup day, we dont want first night to be an invasion
-		int dayAdjust = InvConfig.warmupDays + 1;
+		int dayAdjust = InvConfig.warmupDaysToFirstInvasion + 1;
 		long dayNumber = (world.getWorldTime() / 24000) + 1;
-		return dayNumber >= dayAdjust && (dayNumber-dayAdjust == 0 || (dayNumber-dayAdjust) % Math.max(1, InvConfig.daysBetweenAttacks) == 0);
+		return dayNumber >= dayAdjust && (dayNumber-dayAdjust == 0 || (dayNumber-dayAdjust) % Math.max(1, InvConfig.daysBetweenInvasions) == 0);
 	}
 	
 	public int getSpawnCountBuff(float difficultyScale) {
-		int maxSpawnsAllowed = 50;
-		int initialSpawns = 10;
-		float scaleRate = 1F;
+		int initialSpawns = InvConfig.invasion_Spawns_Min;
+		int maxSpawnsAllowed = InvConfig.invasion_Spawns_Max;
+		float scaleRate = (float) InvConfig.invasion_Spawns_ScaleRate;
 		return MathHelper.clamp_int(((int) ((float)(maxSpawnsAllowed) * difficultyScale * scaleRate)), initialSpawns, maxSpawnsAllowed);
 	}
 	
 	public int getTargettingRangeBuff(float difficultyScale) {
-		int initialRange = 30;
-		int max = 256;
-		float scaleRate = 1F;
+		int initialRange = InvConfig.invasion_TargettingRange_Min;
+		int max = InvConfig.invasion_TargettingRange_Max;
+		float scaleRate = (float) InvConfig.invasion_TargettingRange_ScaleRate;
 		return MathHelper.clamp_int(((int) ((float)(max) * difficultyScale * scaleRate)), initialRange, max); 
 	}
 	
 	public float getDigChanceBuff(float difficultyScale) {
-		float initial = 0.1F;
-		float max = 1F;
-		float scaleRate = 1F;
+		float initial = (float) InvConfig.invasion_DiggerConvertChance_Min;
+		float max = (float) InvConfig.invasion_DiggerConvertChance_Max;
+		float scaleRate = (float) InvConfig.invasion_DiggerConvertChance_ScaleRate;
 		return MathHelper.clamp_float((((float)(max) * difficultyScale * scaleRate)), initial, max);
 	}
 	
