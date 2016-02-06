@@ -72,7 +72,7 @@ public class BehaviorModifier {
         	}
         }
         
-        System.out.println("enhanced " + enhanceCount + " of " + enhanceCountTry + " entities");
+        //System.out.println("enhanced " + enhanceCount + " of " + enhanceCountTry + " entities");
 	}
 	
 	public static boolean addTaskIfMissing(EntityCreature ent, Class taskToCheckFor, Class[] taskToInject, int priorityOfTask) {

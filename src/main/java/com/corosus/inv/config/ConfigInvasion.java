@@ -1,15 +1,17 @@
 package com.corosus.inv.config;
 
+import java.io.File;
+
 import net.minecraft.util.MathHelper;
 import modconfig.ConfigComment;
 import modconfig.IConfigCategory;
 
-public class InvConfig implements IConfigCategory {
+public class ConfigInvasion implements IConfigCategory {
 
 	@ConfigComment("Days before invasions start, not specific to each player")
-	public static int warmupDaysToFirstInvasion = 1;
+	public static int warmupDaysToFirstInvasion = 3;
 	@ConfigComment("Days between each invasion")
-	public static int daysBetweenInvasions = 2;
+	public static int daysBetweenInvasions = 3;
 	
 	@ConfigComment("How long it takes to reach max difficulty level for a specific player in gameplay ticks (50 hours)")
 	public static int difficulty_MaxTicksOnServer = 20*60*60*50;
@@ -44,7 +46,7 @@ public class InvConfig implements IConfigCategory {
 	
 	@Override
 	public String getConfigFileName() {
-		return "InvConfig";
+		return "HW_Invasions" + File.separator + "InvasionConfig";
 	}
 
 	@Override

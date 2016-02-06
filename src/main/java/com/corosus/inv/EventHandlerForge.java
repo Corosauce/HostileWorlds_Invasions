@@ -15,6 +15,9 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.monster.EntityCreeper;
+import net.minecraft.entity.monster.EntityEnderman;
+import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
@@ -43,7 +46,8 @@ import CoroUtil.util.Vec3;
 import com.corosus.inv.ai.BehaviorModifier;
 import com.corosus.inv.ai.tasks.TaskCallForHelp;
 import com.corosus.inv.ai.tasks.TaskDigTowardsTarget;
-import com.corosus.inv.config.InvConfig;
+import com.corosus.inv.config.ConfigAdvancedSpawning;
+import com.corosus.inv.config.ConfigInvasion;
 
 public class EventHandlerForge {
 	
@@ -151,7 +155,7 @@ public class EventHandlerForge {
 	
 	@SubscribeEvent
 	public void canSleep(PlayerSleepInBedEvent event) {
-		if (InvConfig.preventSleepDuringInvasions) {
+		if (ConfigInvasion.preventSleepDuringInvasions) {
 			if (isInvasionTonight(event.entityPlayer.worldObj)) {
 				EntityPlayerMP player = (EntityPlayerMP) event.entityPlayer;
 				player.addChatMessage(new ChatComponentText("You can't sleep during invasion nights!"));
@@ -275,7 +279,7 @@ public class EventHandlerForge {
 						modifyRange, chanceToEnhance);
 				
 				for (EntityCreature ent : listEnts) {
-					if (ent instanceof IMob && ent instanceof EntityZombie) {
+					if (ent instanceof IMob && ent instanceof EntityCreature && !(ent instanceof EntityCreeper) && !(ent instanceof EntityEnderman)) {
 						
 						ent.setAttackTarget(player);
 						CoroUtilPath.tryMoveToEntityLivingLongDist(ent, player, moveSpeedAmp);
@@ -292,7 +296,7 @@ public class EventHandlerForge {
 					if (spawned) {
 						spawnCountCur++;
 						player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, spawnCountCur);
-						System.out.println("spawned mob, wave count: " + spawnCountCur + " of " + spawnCountMax);
+						//System.out.println("spawned mob, wave count: " + spawnCountCur + " of " + spawnCountMax);
 					}
 				}
 			}
@@ -300,7 +304,7 @@ public class EventHandlerForge {
 	}
 	
 	public void invasionStart(EntityPlayer player, float difficultyScale) {
-		System.out.println("invasion started");
+		//System.out.println("invasion started");
 		player.addChatMessage(new ChatComponentText("An invasion has started! Be prepared!"));
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, true);
 		
@@ -309,8 +313,8 @@ public class EventHandlerForge {
 	}
 	
 	public void invasionStopReset(EntityPlayer player) {
-		System.out.println("invasion ended");
-		player.addChatMessage(new ChatComponentText("The invasion has ended! Next invasion in " + InvConfig.daysBetweenInvasions + " days!"));
+		//System.out.println("invasion ended");
+		player.addChatMessage(new ChatComponentText("The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, false);
 	}
 	
@@ -323,6 +327,10 @@ public class EventHandlerForge {
         
         Random rand = player.worldObj.rand;
         
+        List<Class> spawnables = getSpawnableEntitiesForDifficulty(difficultyScale);
+        
+        if (spawnables.size() == 0) return false;
+        
         for (int tries = 0; tries < 5; tries++) {
 	        int tryX = MathHelper.floor_double(player.posX) - (range/2) + (rand.nextInt(range));
 	        int tryZ = MathHelper.floor_double(player.posZ) - (range/2) + (rand.nextInt(range));
@@ -333,13 +341,33 @@ public class EventHandlerForge {
 	            continue;
 	        }
 	
-	        EntityZombie entZ = new EntityZombie(player.worldObj);
+	        
+	        
+	        
+	        try {
+	        	int randSpawn = rand.nextInt(spawnables.size());
+		        Class classToSpawn = spawnables.get(randSpawn);
+	        	
+	        	EntityCreature ent = (EntityCreature)classToSpawn.getConstructor(new Class[] {World.class}).newInstance(new Object[] {player.worldObj});
+	        	
+	        	ent.setPosition(tryX, tryY, tryZ);
+				ent.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData)null);
+				enhanceMobForDifficulty(ent, difficultyScale);
+				player.worldObj.spawnEntityInWorld(ent);
+				ent.setAttackTarget(player);
+			} catch (Exception e) {
+				System.out.println("HW_Invasions: error spawning invasion entity: ");
+				e.printStackTrace();
+			}
+	        
+	        
+	        /*EntityZombie entZ = new EntityZombie(player.worldObj);
 			entZ.setPosition(tryX, tryY, tryZ);
 			entZ.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
 			enhanceMobForDifficulty(entZ, difficultyScale);
 			player.worldObj.spawnEntityInWorld(entZ);
 			
-			/*if (ZAConfigSpawning.extraSpawningAutoTarget) */entZ.setAttackTarget(player);
+			entZ.setAttackTarget(player);*/
 			
 	        //if (ZAConfig.debugConsoleSpawns) ZombieAwareness.dbg("spawnNewMobSurface: " + tryX + ", " + tryY + ", " + tryZ);
 			//System.out.println("spawnNewMobSurface: " + tryX + ", " + tryY + ", " + tryZ);
@@ -398,7 +426,8 @@ public class EventHandlerForge {
 		
 		EquipmentForDifficulty equipment = lookupDifficultyToEquipment.get(inventoryStage);
 		if (equipment != null) {
-			setEquipment(ent, 0, equipment.getWeapon());
+			//allow for original weapon to remain if there was one and we are trying to remove it
+			if (equipment.getWeapon() != null) setEquipment(ent, 0, equipment.getWeapon());
 			//ent.setCurrentItemOrArmor(0, equipment.getWeapon());
 			for (int i = 0; i < 4; i++) {
 				if (equipment.getListArmor().size() >= i+1) {
@@ -423,24 +452,29 @@ public class EventHandlerForge {
 	}
 	
 	public static void setEquipment(EntityCreature ent, int slot, ItemStack stack) {
+		if (slot == 0 && ent instanceof EntitySkeleton) {
+			return;
+		}
 		ent.setCurrentItemOrArmor(slot, stack);
 		ent.setEquipmentDropChance(slot, 0);
 	}
 	
-	public float getDifficultyScaleAverage(World world, EntityPlayer player, BlockPos pos) {
+	public static float getDifficultyScaleAverage(World world, EntityPlayer player, BlockPos pos) {
 		float difficultyPos = getDifficultyScaleForPos(world, pos);
 		float difficultyPlayerEquipment = getDifficultyScaleForPlayerEquipment(player);
 		float difficultyPlayerServerTime = getDifficultyScaleForPlayerServerTime(player);
-		return (difficultyPos + difficultyPlayerEquipment + difficultyPlayerServerTime) / 3F;
+		float val = (difficultyPos + difficultyPlayerEquipment + difficultyPlayerServerTime) / 3F;
+		val = Math.round(val * 1000F) / 1000F;
+		return val;
 	}
 	
-	public float getDifficultyScaleForPlayerServerTime(EntityPlayer player) {
-		long maxServerTime = InvConfig.difficulty_MaxTicksOnServer;
+	public static float getDifficultyScaleForPlayerServerTime(EntityPlayer player) {
+		long maxServerTime = ConfigInvasion.difficulty_MaxTicksOnServer;
 		long curServerTime = player.getEntityData().getLong(dataPlayerServerTicks);
 		return MathHelper.clamp_float((float)curServerTime / (float)maxServerTime, 0F, 1F);
 	}
 	
-	public float getDifficultyScaleForPlayerEquipment(EntityPlayer player) {
+	public static float getDifficultyScaleForPlayerEquipment(EntityPlayer player) {
 		int curRating = 0;
 		if (player.getEntityData().hasKey(dataPlayerLastCacheEquipmentRating)) {
 			if (player.worldObj.getTotalWorldTime() % 200 == 0) {
@@ -460,7 +494,7 @@ public class EventHandlerForge {
 		return (float)curRating / (float)bestRating;
 	}
 	
-	public float getDifficultyScaleForPos(World world, BlockPos pos) {
+	public static float getDifficultyScaleForPos(World world, BlockPos pos) {
 		/**
 		 * 1 chunk calc
 		 */
@@ -532,36 +566,36 @@ public class EventHandlerForge {
 	 * @param inhabTime
 	 * @return
 	 */
-	public float convertInhabTimeToDifficultyScale(long inhabTime) {
-		float scale = (float)inhabTime / (float)InvConfig.difficulty_MaxTicksInChunk;
+	public static float convertInhabTimeToDifficultyScale(long inhabTime) {
+		float scale = (float)inhabTime / (float)ConfigInvasion.difficulty_MaxTicksInChunk;
 		return scale;
 	}
 	
 	public boolean isInvasionTonight(World world) {
 		//add 1 day because calculation is off, eg: if we want 1 warmup day, we dont want first night to be an invasion
-		int dayAdjust = InvConfig.warmupDaysToFirstInvasion + 1;
+		int dayAdjust = ConfigInvasion.warmupDaysToFirstInvasion + 1;
 		long dayNumber = (world.getWorldTime() / 24000) + 1;
-		return dayNumber >= dayAdjust && (dayNumber-dayAdjust == 0 || (dayNumber-dayAdjust) % Math.max(1, InvConfig.daysBetweenInvasions) == 0);
+		return dayNumber >= dayAdjust && (dayNumber-dayAdjust == 0 || (dayNumber-dayAdjust) % Math.max(1, ConfigInvasion.daysBetweenInvasions) == 0);
 	}
 	
 	public int getSpawnCountBuff(float difficultyScale) {
-		int initialSpawns = InvConfig.invasion_Spawns_Min;
-		int maxSpawnsAllowed = InvConfig.invasion_Spawns_Max;
-		float scaleRate = (float) InvConfig.invasion_Spawns_ScaleRate;
+		int initialSpawns = ConfigInvasion.invasion_Spawns_Min;
+		int maxSpawnsAllowed = ConfigInvasion.invasion_Spawns_Max;
+		float scaleRate = (float) ConfigInvasion.invasion_Spawns_ScaleRate;
 		return MathHelper.clamp_int(((int) ((float)(maxSpawnsAllowed) * difficultyScale * scaleRate)), initialSpawns, maxSpawnsAllowed);
 	}
 	
 	public int getTargettingRangeBuff(float difficultyScale) {
-		int initialRange = InvConfig.invasion_TargettingRange_Min;
-		int max = InvConfig.invasion_TargettingRange_Max;
-		float scaleRate = (float) InvConfig.invasion_TargettingRange_ScaleRate;
+		int initialRange = ConfigInvasion.invasion_TargettingRange_Min;
+		int max = ConfigInvasion.invasion_TargettingRange_Max;
+		float scaleRate = (float) ConfigInvasion.invasion_TargettingRange_ScaleRate;
 		return MathHelper.clamp_int(((int) ((float)(max) * difficultyScale * scaleRate)), initialRange, max); 
 	}
 	
 	public float getDigChanceBuff(float difficultyScale) {
-		float initial = (float) InvConfig.invasion_DiggerConvertChance_Min;
-		float max = (float) InvConfig.invasion_DiggerConvertChance_Max;
-		float scaleRate = (float) InvConfig.invasion_DiggerConvertChance_ScaleRate;
+		float initial = (float) ConfigInvasion.invasion_DiggerConvertChance_Min;
+		float max = (float) ConfigInvasion.invasion_DiggerConvertChance_Max;
+		float scaleRate = (float) ConfigInvasion.invasion_DiggerConvertChance_ScaleRate;
 		return MathHelper.clamp_float((((float)(max) * difficultyScale * scaleRate)), initial, max);
 	}
 	
@@ -583,5 +617,59 @@ public class EventHandlerForge {
 				" | dig chance: " + getDigChanceBuff(difficultyScale) + 
 				" | inventory stage: " + getInventoryStageBuff(difficultyScale) + 
 				" | scale: " + difficultyScale;
+	}
+	
+	/**
+	 * Returns a list of classes that are verified to extend EntityCreature
+	 * 
+	 * @param difficultyScale
+	 * @return
+	 */
+	public List<Class> getSpawnableEntitiesForDifficulty(float difficultyScale) {
+		try {
+			List<Class> listSpawns = new ArrayList<Class>();
+			String[] spawnArray = null;
+			if (difficultyScale > 0.9F) {
+				spawnArray = ConfigAdvancedSpawning.difficulty_9.split(",");
+			} else if (difficultyScale > 0.8F) {
+				spawnArray = ConfigAdvancedSpawning.difficulty_8.split(",");
+			} else if (difficultyScale > 0.7F) {
+				spawnArray = ConfigAdvancedSpawning.difficulty_7.split(",");
+			} else if (difficultyScale > 0.6F) {
+				spawnArray = ConfigAdvancedSpawning.difficulty_6.split(",");
+			} else if (difficultyScale > 0.5F) {
+				spawnArray = ConfigAdvancedSpawning.difficulty_5.split(",");
+			} else if (difficultyScale > 0.4F) {
+				spawnArray = ConfigAdvancedSpawning.difficulty_4.split(",");
+			} else if (difficultyScale > 0.3F) {
+				spawnArray = ConfigAdvancedSpawning.difficulty_3.split(",");
+			} else if (difficultyScale > 0.2F) {
+				spawnArray = ConfigAdvancedSpawning.difficulty_2.split(",");
+			} else if (difficultyScale > 0.1F) {
+				spawnArray = ConfigAdvancedSpawning.difficulty_1.split(",");
+			} else if (difficultyScale > 0F) {
+				spawnArray = ConfigAdvancedSpawning.difficulty_0.split(",");
+			}
+			if (spawnArray != null) {
+				for (String entry : spawnArray) {
+					try {
+						Class clazz = Class.forName(entry.trim());
+						if (!EntityCreature.class.isAssignableFrom(clazz)) {
+							System.out.println("HW_Invasions: class not compatible, must extend EntityCreature, problem string: " + entry);
+						} else {
+							listSpawns.add(clazz);
+						}
+					} catch (ClassNotFoundException e) {
+						System.out.println("HW_Invasions: unable to find class for string: " + entry);
+					}
+				}
+			}
+			return listSpawns;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		List<Class> listDefault = new ArrayList<Class>();
+		listDefault.add(EntityZombie.class);
+		return listDefault;
 	}
 }

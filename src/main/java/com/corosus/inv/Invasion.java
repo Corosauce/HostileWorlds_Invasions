@@ -9,19 +9,21 @@ import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 
-import com.corosus.inv.config.InvConfig;
+import com.corosus.inv.config.ConfigAdvancedSpawning;
+import com.corosus.inv.config.ConfigInvasion;
 
-@Mod(modid = "inv", name="inv", version="v0.1")
+@Mod(modid = "hw_inv", name="HW_Invasions", version="v0.1")
 public class Invasion {
 	
-	@Mod.Instance( value = "inv" )
+	@Mod.Instance( value = "hw_inv" )
 	public static Invasion instance;
-	public static String modID = "inv";
+	public static String modID = "hw_inv";
     
 	@Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
-		ConfigMod.addConfigFile(event, "invConfig", new InvConfig());
+		ConfigMod.addConfigFile(event, "invasionConfig", new ConfigInvasion());
+		ConfigMod.addConfigFile(event, "invasionSpawnsConfig", new ConfigAdvancedSpawning());
     }
     
 	@Mod.EventHandler
@@ -32,7 +34,7 @@ public class Invasion {
     
     @Mod.EventHandler
 	public void serverStarting(FMLServerStartingEvent event) {
-    	//event.registerServerCommand(new CommandWeather2());
+    	event.registerServerCommand(new CommandInvasion());
     }
     
     @Mod.EventHandler
