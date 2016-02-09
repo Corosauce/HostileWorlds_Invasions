@@ -2,11 +2,11 @@ package com.corosus.inv.ai.tasks;
 
 import java.util.List;
 
+import CoroPets.ai.ITaskInitializer;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.util.AxisAlignedBB;
-import CoroUtil.ai.ITaskInitializer;
 
 public class TaskCallForHelp extends EntityAIBase implements ITaskInitializer
 {
@@ -76,7 +76,7 @@ public class TaskCallForHelp extends EntityAIBase implements ITaskInitializer
     {
     	//System.out.println("calling for help!");
     	int callRange = 150;
-    	AxisAlignedBB aabb = new AxisAlignedBB(entity.posX, entity.posY, entity.posZ, entity.posX, entity.posY, entity.posZ);
+    	AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(entity.posX, entity.posY, entity.posZ, entity.posX, entity.posY, entity.posZ);
 		aabb = aabb.expand(callRange, callRange, callRange);
 		List list = entity.worldObj.getEntitiesWithinAABB(EntityZombie.class, aabb);
 		boolean found = false;

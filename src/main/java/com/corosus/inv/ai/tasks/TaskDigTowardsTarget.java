@@ -2,6 +2,8 @@ package com.corosus.inv.ai.tasks;
 
 import java.util.Random;
 
+import CoroPets.ai.ITaskInitializer;
+import CoroUtil.util.BlockCoord;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
@@ -9,12 +11,11 @@ import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import CoroUtil.ai.ITaskInitializer;
 
 public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializer
 {
     private EntityCreature entity = null;
-    private BlockPos posCurMining = null;
+    private BlockCoord posCurMining = null;
     private EntityLivingBase targetLastTracked = null;
     private int digTimeCur = 0;
     private int digTimeMax = 15*20;
@@ -99,7 +100,7 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     {
     	//System.out.println("continue!");
     	if (posCurMining == null) return false;
-    	if (entity.worldObj.getBlockState(posCurMining).getBlock() != Blocks.air) {
+    	if (entity.worldObj.getBlock(posCurMining.posX, posCurMining.posY, posCurMining.posZ) != Blocks.air) {
     		return true;
     	} else {
     		posCurMining = null;
@@ -152,7 +153,7 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	
     	double vecX = entity.getAttackTarget().posX - entity.posX;
     	//feet
-    	double vecY = entity.getAttackTarget().posY - entity.getEntityBoundingBox().minY;
+    	double vecY = entity.getAttackTarget().posY - entity.boundingBox.minY;
     	double vecZ = entity.getAttackTarget().posZ - entity.posZ;
     	
     	double dist = (double)MathHelper.sqrt_double(vecX * vecX/* + vecY * vecY*/ + vecZ * vecZ);
@@ -170,10 +171,10 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
         	//scanZ = entity.posZ;
     	}
     	
-    	BlockPos coords = new BlockPos(MathHelper.floor_double(scanX), MathHelper.floor_double(entity.getEntityBoundingBox().minY + 1), MathHelper.floor_double(scanZ));
+    	BlockCoord coords = new BlockCoord(MathHelper.floor_double(scanX), MathHelper.floor_double(entity.boundingBox.minY + 1), MathHelper.floor_double(scanZ));
     	
-    	IBlockState state = entity.worldObj.getBlockState(coords);
-    	Block block = state.getBlock();//entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
+    	//IBlockState state = entity.worldObj.getBlockState(coords);
+    	Block block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
     	
     	//System.out.println("ahead to target: " + block);
     	
@@ -183,10 +184,10 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     		return true;
     	} else {
     		if (vecY > 0) {
-    			//coords.posY++;
-    			coords = coords.add(0, 1, 0);
-    			state = entity.worldObj.getBlockState(coords);
-    	    	block = state.getBlock();
+    			coords.posY++;
+    			//coords = coords.add(0, 1, 0);
+    			//state = entity.worldObj.getBlockState(coords);
+    	    	block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
         		if (canMineBlock(entity.worldObj, coords, block)) {
             		posCurMining = coords;
             		return true;
@@ -194,19 +195,23 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     		}
     		
     		//if dont or cant dig up, continue strait
-    		//coords.posY--;
-    		coords = coords.add(0, -1, 0);
-    		state = entity.worldObj.getBlockState(coords);
-	    	block = state.getBlock();
+    		coords.posY--;
+    		//coords = coords.add(0, -1, 0);
+    		
+    		//state = entity.worldObj.getBlockState(coords);
+	    	block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);//state.getBlock();
     		if (canMineBlock(entity.worldObj, coords, block)) {
         		posCurMining = coords;
         		return true;
     		} else {
     			//try to dig down if all else failed and target is below
     			if (vecY < 0) {
-    				coords = coords.add(0, -1, 0);
-    	    		state = entity.worldObj.getBlockState(coords);
-    		    	block = state.getBlock();
+    				//coords = coords.add(0, -1, 0);
+    				coords.posY--;
+    	    		//state = entity.worldObj.getBlockState(coords);
+    	    		//block = state.getBlock();
+    	    		block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
+    		    	
     	    		if (canMineBlock(entity.worldObj, coords, block)) {
     	        		posCurMining = coords;
     	        		return true;
@@ -218,12 +223,12 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	}
     }
     
-    public boolean canMineBlock(World world, BlockPos pos, Block block) {
+    public boolean canMineBlock(World world, BlockCoord pos, Block block) {
     	
     	//System.out.println("check: " + block);
     	
     	//dont mine tile entities
-    	if (world.getTileEntity(pos) != null) {
+    	if (world.getTileEntity(pos.posX, pos.posY, pos.posZ) != null) {
     		return false;
     	}
     	if (block == Blocks.air) {
@@ -243,20 +248,20 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	if (posCurMining == null) return;
     	
     	//force stop mining if pushed away
-    	if (Math.sqrt(entity.getDistanceSq(posCurMining)) > 3) {
-    		entity.worldObj.sendBlockBreakProgress(entity.getEntityId(), posCurMining, 0);
+    	if (entity.getDistance(posCurMining.posX, posCurMining.posY, posCurMining.posZ) > 3) {
+    		entity.worldObj.destroyBlockInWorldPartially(entity.getEntityId(), posCurMining.posX, posCurMining.posY, posCurMining.posZ, 0);
     		posCurMining = null;
     		return;
     	}
     	
     	entity.getNavigator().clearPathEntity();
     	
-    	//Block block = entity.worldObj.getBlock(posCurMining.posX, posCurMining.posY, posCurMining.posZ);
+    	Block block = entity.worldObj.getBlock(posCurMining.posX, posCurMining.posY, posCurMining.posZ);
     	//double blockStrength = block.getBlockHardness(entity.worldObj, posCurMining.posX, posCurMining.posY, posCurMining.posZ);
-    	IBlockState state = entity.worldObj.getBlockState(posCurMining);
-    	Block block = state.getBlock();
+    	//IBlockState state = entity.worldObj.getBlockState(posCurMining);
+    	//Block block = state.getBlock();
     	
-    	double blockStrength = block.getBlockHardness(entity.worldObj, posCurMining);
+    	double blockStrength = block.getBlockHardness(entity.worldObj, posCurMining.posX, posCurMining.posY, posCurMining.posZ);
     	
     	if (blockStrength == -1) {
     		posCurMining = null;
@@ -266,11 +271,11 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	curBlockDamage += 0.01D / blockStrength;
     	
     	if (curBlockDamage > 1D) {
-    		entity.worldObj.sendBlockBreakProgress(entity.getEntityId(), posCurMining, 0);
-    		entity.worldObj.setBlockState(posCurMining, Blocks.air.getDefaultState());
+    		entity.worldObj.destroyBlockInWorldPartially(entity.getEntityId(), posCurMining.posX, posCurMining.posY, posCurMining.posZ, 0);
+    		entity.worldObj.setBlock(posCurMining.posX, posCurMining.posY, posCurMining.posZ, Blocks.air);
     		
     	} else {
-    		entity.worldObj.sendBlockBreakProgress(entity.getEntityId(), posCurMining, (int)(curBlockDamage * 10D));
+    		entity.worldObj.destroyBlockInWorldPartially(entity.getEntityId(), posCurMining.posX, posCurMining.posY, posCurMining.posZ, (int)(curBlockDamage * 10D));
     	}
     	if (entity.worldObj.getTotalWorldTime() % 10 == 0) {
     		entity.swingItem();

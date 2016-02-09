@@ -4,6 +4,8 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.MathHelper;
+import CoroUtil.util.BlockCoord;
 import CoroUtil.util.CoroUtil;
 
 public class CommandInvasion extends CommandBase {
@@ -36,7 +38,9 @@ public class CommandInvasion extends CommandBase {
 	        
 	        	if (var2[0].equalsIgnoreCase("difficulty")) {
 	        		EntityPlayerMP ent = (EntityPlayerMP) var1;
-	        		CoroUtil.sendPlayerMsg(ent, "difficulty for this area: " + EventHandlerForge.getDifficultyScaleAverage(ent.worldObj, ent, ent.getPosition()));
+	        		net.minecraft.util.Vec3 posVec = ent.getPosition(1F);
+	        		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
+	        		CoroUtil.sendPlayerMsg(ent, "difficulty for this area: " + EventHandlerForge.getDifficultyScaleAverage(ent.worldObj, ent, pos));
 	        	}
 	        	
 	        }

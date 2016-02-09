@@ -11,7 +11,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
-import CoroUtil.ai.ITaskInitializer;
+import CoroPets.ai.ITaskInitializer;
 import CoroUtil.util.Vec3;
 
 import com.corosus.inv.EventHandlerForge;
@@ -34,7 +34,7 @@ public class BehaviorModifier {
 	public static void enhanceZombiesToDig(World parWorld, Vec3 parPos, Class[] taskToInject, int priorityOfTask, int modifyRange, float chanceToEnhance) {
 		
 		
-		AxisAlignedBB aabb = new AxisAlignedBB(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord, parPos.yCoord, parPos.zCoord);
+		AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord, parPos.yCoord, parPos.zCoord);
 		aabb = aabb.expand(modifyRange, modifyRange, modifyRange);
 		List list = parWorld.getEntitiesWithinAABB(EntityZombie.class, aabb);
 		
@@ -76,7 +76,8 @@ public class BehaviorModifier {
 	
 	public static boolean addTaskIfMissing(EntityCreature ent, Class taskToCheckFor, Class[] taskToInject, int priorityOfTask) {
 		boolean foundTask = false;
-		for (EntityAITaskEntry entry : ent.tasks.taskEntries) {
+		for (Object entry2 : ent.tasks.taskEntries) {
+			EntityAITaskEntry entry = (EntityAITaskEntry) entry2;
 			if (taskToCheckFor.isAssignableFrom(entry.action.getClass())) {
 				foundTask = true;
 				break;
@@ -119,7 +120,8 @@ public class BehaviorModifier {
 	}
 	
 	public static void performExtraChanges(EntityCreature ent) {
-		((PathNavigateGround)ent.getNavigator()).setBreakDoors(false);
+		ent.getNavigator().setBreakDoors(false);
+		//((PathNavigateGround)ent.getNavigator()).setBreakDoors(false);
 		ent.getEntityData().setBoolean(dataEntityEnhanced, true);
 		ent.getEntityData().setBoolean("CoroAI_HW_GravelDeath", true);
 		if (ent.getEquipmentInSlot(0) == null) {
