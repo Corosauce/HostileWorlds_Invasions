@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -27,7 +28,6 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
@@ -35,10 +35,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
+import CoroUtil.util.BlockCoord;
 import CoroUtil.util.CoroUtilBlock;
 import CoroUtil.util.CoroUtilPath;
 import CoroUtil.util.Vec3;
@@ -48,6 +45,11 @@ import com.corosus.inv.ai.tasks.TaskCallForHelp;
 import com.corosus.inv.ai.tasks.TaskDigTowardsTarget;
 import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
+
+import cpw.mods.fml.common.ObfuscationReflectionHelper;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.Phase;
+import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
 
 public class EventHandlerForge {
 	
@@ -187,8 +189,8 @@ public class EventHandlerForge {
 			World world = DimensionManager.getWorld(0);
 			if (world != null) {
 				if (world.getTotalWorldTime() % 20 == 0) {
-					for (EntityPlayer player : world.playerEntities) {
-						tickPlayer(player);
+					for (Object player : world.playerEntities) {
+						tickPlayer((EntityPlayer)player);
 					}
 				}
 			}
@@ -202,7 +204,8 @@ public class EventHandlerForge {
 	 */
 	public void tickPlayer(EntityPlayer player) {
 		World world = player.worldObj;
-		BlockPos pos = player.getPosition();
+		net.minecraft.util.Vec3 posVec = player.getPosition(1F);
+		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 		
 		long ticksPlayed = player.getEntityData().getLong(dataPlayerServerTicks);
 		ticksPlayed += 20;
@@ -265,7 +268,7 @@ public class EventHandlerForge {
 				double moveSpeedAmp = 1.2D;
 				
 				//TODO: instead of this expensive method and entity iteration, we could make distant targetting a targetTask! 
-				List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos, pos).expand(range, range, range));
+				List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, AxisAlignedBB.getBoundingBox(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).expand(range, range, range));
 				
 				//System.out.println("ents: " + listEnts.size());
 				
@@ -334,10 +337,10 @@ public class EventHandlerForge {
         for (int tries = 0; tries < 5; tries++) {
 	        int tryX = MathHelper.floor_double(player.posX) - (range/2) + (rand.nextInt(range));
 	        int tryZ = MathHelper.floor_double(player.posZ) - (range/2) + (rand.nextInt(range));
-	        int tryY = player.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
+	        int tryY = player.worldObj.getHeightValue(tryX, tryZ);
 	
-	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
-	        	//System.out.println("light: " + player.worldObj.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)));
+	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6) {
+	        	//System.out.println("light: " + player.worldObj.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
 	            continue;
 	        }
 	
@@ -351,7 +354,7 @@ public class EventHandlerForge {
 	        	EntityCreature ent = (EntityCreature)classToSpawn.getConstructor(new Class[] {World.class}).newInstance(new Object[] {player.worldObj});
 	        	
 	        	ent.setPosition(tryX, tryY, tryZ);
-				ent.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData)null);
+				ent.onSpawnWithEgg(/*player.worldObj.func_147473_B(tryX, tryY, tryZ), */(IEntityLivingData)null);
 				enhanceMobForDifficulty(ent, difficultyScale);
 				player.worldObj.spawnEntityInWorld(ent);
 				ent.setAttackTarget(player);
@@ -363,7 +366,7 @@ public class EventHandlerForge {
 	        
 	        /*EntityZombie entZ = new EntityZombie(player.worldObj);
 			entZ.setPosition(tryX, tryY, tryZ);
-			entZ.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
+			entZ.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockCoord(entZ)), (IEntityLivingData)null);
 			enhanceMobForDifficulty(entZ, difficultyScale);
 			player.worldObj.spawnEntityInWorld(entZ);
 			
@@ -379,8 +382,8 @@ public class EventHandlerForge {
     }
 	
 	public boolean canSpawnMob(World world, int x, int y, int z) {
-        //Block id = world.getBlockState(new BlockPos(x-1,y,z)).getBlock();//Block.pressurePlatePlanks.blockID;
-		Block id = world.getBlockState(new BlockPos(x,y,z)).getBlock();//Block.pressurePlatePlanks.blockID;
+        //Block id = world.getBlockState(new BlockCoord(x-1,y,z)).getBlock();//Block.pressurePlatePlanks.blockID;
+		Block id = world.getBlock(x,y,z);//Block.pressurePlatePlanks.blockID;
 
         /*if (id == Block.grass.blockID || id == Block.stone.blockID || id == Block.tallGrass.blockID || id == Block.grass.blockID || id == Block.sand.blockID) {
             return true;
@@ -419,7 +422,7 @@ public class EventHandlerForge {
 		
 		//movement speed buff
 		double randBoost = ent.worldObj.rand.nextDouble() * 0.8D * difficultyScale;
-		AttributeModifier speedBoostModifier = new AttributeModifier(MathHelper.getRandomUuid(ThreadLocalRandom.current()), "Invasion speed boost", randBoost, 1);
+		AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836"), "Invasion speed boost", randBoost, 1);
 		ent.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(speedBoostModifier);
 		
 		int inventoryStage = getInventoryStageBuff(difficultyScale);
@@ -459,7 +462,7 @@ public class EventHandlerForge {
 		ent.setEquipmentDropChance(slot, 0);
 	}
 	
-	public static float getDifficultyScaleAverage(World world, EntityPlayer player, BlockPos pos) {
+	public static float getDifficultyScaleAverage(World world, EntityPlayer player, BlockCoord pos) {
 		float difficultyPos = getDifficultyScaleForPos(world, pos);
 		float difficultyPlayerEquipment = getDifficultyScaleForPlayerEquipment(player);
 		float difficultyPlayerServerTime = getDifficultyScaleForPlayerServerTime(player);
@@ -494,7 +497,7 @@ public class EventHandlerForge {
 		return (float)curRating / (float)bestRating;
 	}
 	
-	public static float getDifficultyScaleForPos(World world, BlockPos pos) {
+	public static float getDifficultyScaleForPos(World world, BlockCoord pos) {
 		/**
 		 * 1 chunk calc
 		 */
@@ -517,11 +520,11 @@ public class EventHandlerForge {
 		long totalTime = 0;
 		for (int x = chunkX - chunkRange; x < chunkX + chunkRange; x++) {
 			for (int z = chunkZ - chunkRange; z < chunkZ + chunkRange; z++) {
-				BlockPos checkPos = new BlockPos(chunkX * 16 + 8, 128, chunkZ * 16 + 8);
-				if (world.isBlockLoaded(checkPos)) {
-					Chunk chunk = world.getChunkFromBlockCoords(checkPos);
+				BlockCoord checkPos = new BlockCoord(chunkX * 16 + 8, 128, chunkZ * 16 + 8);
+				if (world.checkChunksExist(checkPos.posX, checkPos.posY, checkPos.posZ, checkPos.posX, checkPos.posY, checkPos.posZ)) {
+					Chunk chunk = world.getChunkFromBlockCoords(checkPos.posX, checkPos.posZ);
 					if (chunk != null) {
-						totalTime += chunk.getInhabitedTime();
+						totalTime += chunk.inhabitedTime;
 						count++;
 					}
 				}
@@ -542,7 +545,7 @@ public class EventHandlerForge {
 		long bestTime = 0;
 		for (int x = chunkX - chunkRange; x < chunkX + chunkRange; x++) {
 			for (int z = chunkZ - chunkRange; z < chunkZ + chunkRange; z++) {
-				BlockPos checkPos = new BlockPos(chunkX * 16 + 8, 128, chunkZ * 16 + 8);
+				BlockCoord checkPos = new BlockCoord(chunkX * 16 + 8, 128, chunkZ * 16 + 8);
 				if (world.isBlockLoaded(checkPos)) {
 					Chunk chunk = world.getChunkFromBlockCoords(checkPos);
 					if (chunk != null) {

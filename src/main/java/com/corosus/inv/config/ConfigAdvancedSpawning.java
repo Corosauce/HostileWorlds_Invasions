@@ -2,7 +2,6 @@ package com.corosus.inv.config;
 
 import java.io.File;
 
-import net.minecraft.util.MathHelper;
 import modconfig.ConfigComment;
 import modconfig.IConfigCategory;
 

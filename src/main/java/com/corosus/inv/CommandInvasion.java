@@ -4,8 +4,6 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayerMP;
-import CoroUtil.OldUtil;
-import CoroUtil.pathfinding.PFQueue;
 import CoroUtil.util.CoroUtil;
 
 public class CommandInvasion extends CommandBase {
