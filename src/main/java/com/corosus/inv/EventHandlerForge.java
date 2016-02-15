@@ -292,7 +292,7 @@ public class EventHandlerForge {
 								}
 								
 								ent.setAttackTarget(targetPlayer);
-								CoroUtilPath.tryMoveToEntityLivingLongDist(ent, player, moveSpeedAmp);
+								CoroUtilPath.tryMoveToEntityLivingLongDist(ent, targetPlayer, moveSpeedAmp);
 								
 								int pathFindingDelay = ConfigAdvancedOptions.pathDelayBase;
 								
