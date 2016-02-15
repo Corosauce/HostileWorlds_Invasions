@@ -26,6 +26,7 @@ import net.minecraft.entity.player.EntityPlayer.EnumStatus;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
@@ -43,6 +44,7 @@ import CoroUtil.util.Vec3;
 import com.corosus.inv.ai.BehaviorModifier;
 import com.corosus.inv.ai.tasks.TaskCallForHelp;
 import com.corosus.inv.ai.tasks.TaskDigTowardsTarget;
+import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
 
@@ -58,6 +60,7 @@ public class EventHandlerForge {
 	public static String dataPlayerLastCacheEquipmentRating = "HW_dataPlayerLastCacheEquipmentRating";
 	public static String dataPlayerInvasionWaveCountCur = "HW_dataPlayerInvasionWaveCountCur";
 	public static String dataPlayerInvasionWaveCountMax = "HW_dataPlayerInvasionWaveCountMax";
+	public static String dataCreatureLastPathWithDelay = "CoroAI_HW_CreatureLastPathWithDelay";
 	
 	public float inventoryStages = 5;
 	
@@ -203,107 +206,152 @@ public class EventHandlerForge {
 	 * @param player
 	 */
 	public void tickPlayer(EntityPlayer player) {
-		World world = player.worldObj;
-		net.minecraft.util.Vec3 posVec = player.getPosition(1F);
-		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
-		
-		long ticksPlayed = player.getEntityData().getLong(dataPlayerServerTicks);
-		ticksPlayed += 20;
-		//3 hour start debug
-		//ticksPlayed = 20*60*60*3;
-		player.getEntityData().setLong(dataPlayerServerTicks, ticksPlayed);
-		
-		float difficultyScale = getDifficultyScaleAverage(world, player, pos);
-		///Chunk chunk = world.getChunkFromBlockCoords(pos);
-		//long inhabTime = chunk.getInhabitedTime();
-		//System.out.println("difficultyScale: " + difficultyScale);
-		
-		//start at "1"
-		long dayNumber = (world.getWorldTime() / 24000) + 1;
-		//System.out.println("daynumber: " + dayNumber + " - " + world.getWorldTime() + " - " + world.isDaytime());
-		
-		boolean invasionActive = false;
-		
-		//debug
-		//difficultyScale = 1F;
-		
-		boolean activeBool = player.getEntityData().getBoolean(dataPlayerInvasionActive);
-		
-		//TODO: add a visual cue for invasion coming tonight + active invasion
-		
-		//track state of invasion for proper init and reset for wave counts, etc
-		//new day starts just as sun is rising, so invasion stops just at the right time when sun is imminent, they burn 300 ticks before invasion ends, thats ok
-		//FYI night val is based on sunlight level, so its not night ends @ 24000 cycle, its a bit before, 400ish ticks before, thats ok
-		boolean invasionOnThisNight = isInvasionTonight(world);
-		if (invasionOnThisNight && !world.isDaytime()) {
+		try {
+			World world = player.worldObj;
+			net.minecraft.util.Vec3 posVec = net.minecraft.util.Vec3.createVectorHelper(player.posX, player.posY + (player.getEyeHeight() - player.getDefaultEyeHeight()), player.posZ);//player.getPosition(1F);
+			BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 			
-			invasionActive = true;
-			//TODO: bug, on second day, invasion start method didnt trigger, but invasion IS active
-			if (!activeBool) {
-				//System.out.println("triggering invasion start");
-				invasionStart(player, difficultyScale);
+			long ticksPlayed = player.getEntityData().getLong(dataPlayerServerTicks);
+			ticksPlayed += 20;
+			//3 hour start debug
+			//ticksPlayed = 20*60*60*3;
+			player.getEntityData().setLong(dataPlayerServerTicks, ticksPlayed);
+			
+			float difficultyScale = getDifficultyScaleAverage(world, player, pos);
+			///Chunk chunk = world.getChunkFromBlockCoords(pos);
+			//long inhabTime = chunk.getInhabitedTime();
+			//System.out.println("difficultyScale: " + difficultyScale);
+			
+			//start at "1"
+			long dayNumber = (world.getWorldTime() / 24000) + 1;
+			//System.out.println("daynumber: " + dayNumber + " - " + world.getWorldTime() + " - " + world.isDaytime());
+			
+			boolean invasionActive = false;
+			
+			//debug
+			//difficultyScale = 1F;
+			
+			boolean activeBool = player.getEntityData().getBoolean(dataPlayerInvasionActive);
+			
+			//TODO: add a visual cue for invasion coming tonight + active invasion
+			
+			//track state of invasion for proper init and reset for wave counts, etc
+			//new day starts just as sun is rising, so invasion stops just at the right time when sun is imminent, they burn 300 ticks before invasion ends, thats ok
+			//FYI night val is based on sunlight level, so its not night ends @ 24000 cycle, its a bit before, 400ish ticks before, thats ok
+			boolean invasionOnThisNight = isInvasionTonight(world);
+			if (invasionOnThisNight && !world.isDaytime()) {
+				
+				invasionActive = true;
+				//TODO: bug, on second day, invasion start method didnt trigger, but invasion IS active
+				if (!activeBool) {
+					//System.out.println("triggering invasion start");
+					invasionStart(player, difficultyScale);
+				}
+			} else {
+				invasionActive = false;
+				if (activeBool) {
+					//System.out.println("triggering invasion stop");
+					invasionStopReset(player);
+				}
 			}
-		} else {
-			invasionActive = false;
-			if (activeBool) {
-				//System.out.println("triggering invasion stop");
-				invasionStopReset(player);
-			}
-		}
-		
-		//int playerRating = UtilPlayer.getPlayerRating(player);
+			
+			//int playerRating = UtilPlayer.getPlayerRating(player);
 
-		//System.out.println("invasion?: " + invasionActive + " - day# " + dayNumber + " - time: " + world.getWorldTime() + " - invasion tonight: " + invasionOnThisNight);
-		//System.out.println("inv info: " + getInvasionDebug(difficultyScale));
-		//System.out.println("player rating: " + playerRating);
-		
-		//debug
-		//invasionActive = true;
-		//world.getDifficultyForLocation(player.playerLocation);
-		
-		if (invasionActive) {
-			if (player.onGround && world.getTotalWorldTime() % 50 == 0) {
+			//System.out.println("invasion?: " + invasionActive + " - day# " + dayNumber + " - time: " + world.getWorldTime() + " - invasion tonight: " + invasionOnThisNight);
+			//System.out.println("inv info: " + getInvasionDebug(difficultyScale));
+			//System.out.println("player rating: " + playerRating);
 			
-				int range = getTargettingRangeBuff(difficultyScale);
-				double moveSpeedAmp = 1.2D;
+			//debug
+			//invasionActive = true;
+			//world.getDifficultyForLocation(player.playerLocation);
+			
+			if (invasionActive) {
+				if (player.onGround && world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRatePath == 0) {
 				
-				//TODO: instead of this expensive method and entity iteration, we could make distant targetting a targetTask! 
-				List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, AxisAlignedBB.getBoundingBox(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).expand(range, range, range));
+					int range = getTargettingRangeBuff(difficultyScale);
+					double moveSpeedAmp = 1D;
+					
+					//TODO: instead of this expensive method and entity iteration, we could make distant targetting a targetTask! 
+					List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, AxisAlignedBB.getBoundingBox(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).expand(range, range, range));
+					
+					//System.out.println("ents: " + listEnts.size());
+					
+					
+					
+					for (EntityCreature ent : listEnts) {
+						if (ent instanceof IMob && ent instanceof EntityCreature && !(ent instanceof EntityCreeper) && !(ent instanceof EntityEnderman)) {
+							
+							long lastPathWithDelay = ent.getEntityData().getLong(dataCreatureLastPathWithDelay);
+							if (world.getTotalWorldTime() > lastPathWithDelay) {
+							
+								EntityPlayer targetPlayer = null;
+								if (ent.getAttackTarget() == null || !(ent.getAttackTarget() instanceof EntityPlayer)) {
+									targetPlayer = player;
+								} else {
+									targetPlayer = (EntityPlayer) ent.getAttackTarget();
+								}
+								
+								ent.setAttackTarget(targetPlayer);
+								CoroUtilPath.tryMoveToEntityLivingLongDist(ent, player, moveSpeedAmp);
+								
+								int pathFindingDelay = ConfigAdvancedOptions.pathDelayBase;
+								
+								if (ent.getNavigator().getPath() != null)
+					            {
+					                PathPoint finalPathPoint = ent.getNavigator().getPath().getFinalPathPoint();
+					                //if final path point is near player, thats good!
+					                if (finalPathPoint != null && player.getDistanceSq(finalPathPoint.xCoord, finalPathPoint.yCoord, finalPathPoint.zCoord) < 1)
+					                {
+					                    pathFindingDelay = ConfigAdvancedOptions.pathDelayBase;
+					                }
+					                else
+					                {
+					                    pathFindingDelay += ConfigAdvancedOptions.pathFailDelayPenalty;
+					                }
+					            }
+					            else
+					            {
+					                pathFindingDelay += ConfigAdvancedOptions.pathFailDelayPenalty;
+					            }
+								
+								
+								//TODO: MAKE USE OF failedPathFindingPenalty
+								//TEST ME
+								ent.getEntityData().setLong(dataCreatureLastPathWithDelay, world.getTotalWorldTime() + pathFindingDelay);
+							}
+							
+						}
+					}
+				}
 				
-				//System.out.println("ents: " + listEnts.size());
+				if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
+					TaskDigTowardsTarget task = new TaskDigTowardsTarget();
+					
+					int modifyRange = ConfigAdvancedOptions.aiEnhanceRange;
+					float chanceToEnhance = getDigChanceBuff(difficultyScale);
+					//TODO: consider making the digging tasks disable after invasions "ends" so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
+					BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ), 
+							tasksToInject, taskPriorities[0], 
+							modifyRange, chanceToEnhance);
+				}
 				
-				TaskDigTowardsTarget task = new TaskDigTowardsTarget();
-				
-				int modifyRange = 100;
-				float chanceToEnhance = getDigChanceBuff(difficultyScale);
-				//TODO: consider making the digging tasks disable after invasions "ends" so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
-				BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ), 
-						tasksToInject, taskPriorities[0], 
-						modifyRange, chanceToEnhance);
-				
-				for (EntityCreature ent : listEnts) {
-					if (ent instanceof IMob && ent instanceof EntityCreature && !(ent instanceof EntityCreeper) && !(ent instanceof EntityEnderman)) {
-						
-						ent.setAttackTarget(player);
-						CoroUtilPath.tryMoveToEntityLivingLongDist(ent, player, moveSpeedAmp);
-						
+				if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateSpawning == 0) {
+					int spawnCountCur = player.getEntityData().getInteger(dataPlayerInvasionWaveCountCur);
+					int spawnCountMax = player.getEntityData().getInteger(dataPlayerInvasionWaveCountMax);
+					if (spawnCountCur < spawnCountMax) {
+						boolean spawned = spawnNewMobSurface(player, difficultyScale);
+						if (spawned) {
+							spawnCountCur++;
+							player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, spawnCountCur);
+							//System.out.println("spawned mob, wave count: " + spawnCountCur + " of " + spawnCountMax);
+						}
 					}
 				}
 			}
-			
-			if (world.getTotalWorldTime() % 10 == 0) {
-				int spawnCountCur = player.getEntityData().getInteger(dataPlayerInvasionWaveCountCur);
-				int spawnCountMax = player.getEntityData().getInteger(dataPlayerInvasionWaveCountMax);
-				if (spawnCountCur < spawnCountMax) {
-					boolean spawned = spawnNewMobSurface(player, difficultyScale);
-					if (spawned) {
-						spawnCountCur++;
-						player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, spawnCountCur);
-						//System.out.println("spawned mob, wave count: " + spawnCountCur + " of " + spawnCountMax);
-					}
-				}
-			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+		
 	}
 	
 	public void invasionStart(EntityPlayer player, float difficultyScale) {
@@ -324,8 +372,8 @@ public class EventHandlerForge {
 	public boolean spawnNewMobSurface(EntityLivingBase player, float difficultyScale) {
         
         //adjusted to work best with new targetting range base value of 30
-        int minDist = 20;//ZAConfigSpawning.extraSpawningDistMin;
-        int maxDist = 40;//ZAConfigSpawning.extraSpawningDistMax;
+        int minDist = ConfigAdvancedOptions.spawnRangeMin;//20;//ZAConfigSpawning.extraSpawningDistMin;
+        int maxDist = ConfigAdvancedOptions.spawnRangeMax;//ZAConfigSpawning.extraSpawningDistMax;
         int range = maxDist*2;
         
         Random rand = player.worldObj.rand;
@@ -421,7 +469,7 @@ public class EventHandlerForge {
 		}
 		
 		//movement speed buff
-		double randBoost = ent.worldObj.rand.nextDouble() * 0.8D * difficultyScale;
+		double randBoost = ent.worldObj.rand.nextDouble() * ConfigAdvancedOptions.speedBoostBase * difficultyScale;
 		AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836"), "Invasion speed boost", randBoost, 1);
 		ent.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(speedBoostModifier);
 		
@@ -530,7 +578,10 @@ public class EventHandlerForge {
 				}
 			}
 		}
-		long averageTime = totalTime / count;
+		long averageTime = 0;
+		if (count > 0) {
+			averageTime = totalTime / count;
+		}
 		
 		float scale = convertInhabTimeToDifficultyScale(averageTime);
 		return scale;
@@ -650,7 +701,7 @@ public class EventHandlerForge {
 				spawnArray = ConfigAdvancedSpawning.difficulty_2.split(",");
 			} else if (difficultyScale > 0.1F) {
 				spawnArray = ConfigAdvancedSpawning.difficulty_1.split(",");
-			} else if (difficultyScale > 0F) {
+			} else if (difficultyScale >= 0F) {
 				spawnArray = ConfigAdvancedSpawning.difficulty_0.split(",");
 			}
 			if (spawnArray != null) {

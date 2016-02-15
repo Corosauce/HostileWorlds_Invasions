@@ -3,9 +3,11 @@ package com.corosus.inv;
 import modconfig.ConfigMod;
 import net.minecraftforge.common.MinecraftForge;
 
+import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -25,12 +27,14 @@ public class Invasion {
     {
 		ConfigMod.addConfigFile(event, "invasionConfig", new ConfigInvasion());
 		ConfigMod.addConfigFile(event, "invasionSpawnsConfig", new ConfigAdvancedSpawning());
+		ConfigMod.addConfigFile(event, "invasionAdvancedConfigOptions", new ConfigAdvancedOptions());
     }
     
 	@Mod.EventHandler
     public void load(FMLInitializationEvent event)
     {
 		MinecraftForge.EVENT_BUS.register(new EventHandlerForge());
+		FMLCommonHandler.instance().bus().register(new EventHandlerForge());
     }
     
     @Mod.EventHandler
