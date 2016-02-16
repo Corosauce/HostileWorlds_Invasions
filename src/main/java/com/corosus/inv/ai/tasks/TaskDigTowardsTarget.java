@@ -2,6 +2,8 @@ package com.corosus.inv.ai.tasks;
 
 import java.util.Random;
 
+import com.corosus.inv.util.UtilMining;
+
 import CoroPets.ai.ITaskInitializer;
 import CoroUtil.util.BlockCoord;
 import net.minecraft.block.Block;
@@ -178,7 +180,7 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	
     	//System.out.println("ahead to target: " + block);
     	
-    	if (canMineBlock(entity.worldObj, coords, block)) {
+    	if (UtilMining.canMineBlock(entity.worldObj, coords, block)) {
     		posCurMining = coords;
     		//entity.worldObj.setBlock(coords.posX, coords.posY, coords.posZ, Blocks.air);
     		return true;
@@ -188,7 +190,7 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     			//coords = coords.add(0, 1, 0);
     			//state = entity.worldObj.getBlockState(coords);
     	    	block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
-        		if (canMineBlock(entity.worldObj, coords, block)) {
+        		if (UtilMining.canMineBlock(entity.worldObj, coords, block)) {
             		posCurMining = coords;
             		return true;
         		}
@@ -200,7 +202,7 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     		
     		//state = entity.worldObj.getBlockState(coords);
 	    	block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);//state.getBlock();
-    		if (canMineBlock(entity.worldObj, coords, block)) {
+    		if (UtilMining.canMineBlock(entity.worldObj, coords, block)) {
         		posCurMining = coords;
         		return true;
     		} else {
@@ -212,7 +214,7 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	    		//block = state.getBlock();
     	    		block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
     		    	
-    	    		if (canMineBlock(entity.worldObj, coords, block)) {
+    	    		if (UtilMining.canMineBlock(entity.worldObj, coords, block)) {
     	        		posCurMining = coords;
     	        		return true;
     	    		}
@@ -221,27 +223,6 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     		
     		return false;
     	}
-    }
-    
-    public boolean canMineBlock(World world, BlockCoord pos, Block block) {
-    	
-    	//System.out.println("check: " + block);
-    	
-    	//dont mine tile entities
-    	if (world.getTileEntity(pos.posX, pos.posY, pos.posZ) != null) {
-    		return false;
-    	}
-    	if (block == Blocks.air) {
-    		return false;
-    	}
-    	if (block == Blocks.obsidian) {
-    		return false;
-    	}
-    	if (block.getMaterial().isLiquid()) {
-    		return false;
-    	}
-    	
-    	return true;
     }
     
     public void tickMineBlock() {

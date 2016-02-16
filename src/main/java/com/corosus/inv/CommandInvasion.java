@@ -1,8 +1,8 @@
 package com.corosus.inv;
 
+import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MathHelper;
@@ -10,6 +10,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import CoroUtil.util.BlockCoord;
 import CoroUtil.util.CoroUtil;
+
+import com.corosus.inv.util.UtilMining;
 
 public class CommandInvasion extends CommandBase {
 
@@ -54,9 +56,19 @@ public class CommandInvasion extends CommandBase {
 	        }
 	        else
 	        {
-	        
-	        	if (var2[0].equalsIgnoreCase("difficulty")) {
-	        		
+
+	        	if (var2.length <= 4) {
+		        	if (var2[0].equalsIgnoreCase("canMine")) {
+		        		int x = Integer.valueOf(var2[1]);
+		        		int y = Integer.valueOf(var2[2]);
+		        		int z = Integer.valueOf(var2[3]);
+		        		
+		        		Block block = world.getBlock(x, y, z);
+		        		boolean canMine = UtilMining.canMineBlock(world, new BlockCoord(x, y, z), block);
+		        		float blockStrength = block.getBlockHardness(world, x, y, z);
+		        		
+		        		var1.addChatMessage(new ChatComponentText("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
+		        	}
 	        	}
 	        	
 	        }
@@ -68,11 +80,16 @@ public class CommandInvasion extends CommandBase {
 		}
 	}
 	
-	@Override
+	/*@Override
 	public boolean canCommandSenderUseCommand(ICommandSender par1ICommandSender)
     {
         return true;//par1ICommandSender.canCommandSenderUseCommand(this.getRequiredPermissionLevel(), this.getCommandName());
-    }
+    }*/
+	
+	@Override
+	public boolean canCommandSenderUseCommand(ICommandSender p_71519_1_) {
+		return true;
+	}
 	
 	@Override
 	public int getRequiredPermissionLevel() {
