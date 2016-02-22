@@ -160,6 +160,7 @@ public class EventHandlerForge {
 	
 	@SubscribeEvent
 	public void canSleep(PlayerSleepInBedEvent event) {
+		if (event.entityPlayer.worldObj.isRemote) return;
 		if (ConfigInvasion.preventSleepDuringInvasions) {
 			if (isInvasionTonight(event.entityPlayer.worldObj)) {
 				EntityPlayerMP player = (EntityPlayerMP) event.entityPlayer;
@@ -173,6 +174,7 @@ public class EventHandlerForge {
 	
 	@SubscribeEvent
 	public void entityCreated(EntityJoinWorldEvent event) {
+		if (event.entity.worldObj.isRemote) return;
 		if (event.entity instanceof EntityCreature) {
 			EntityCreature ent = (EntityCreature) event.entity;
 			if (ent.getEntityData().getBoolean(BehaviorModifier.dataEntityEnhanced)) {
@@ -516,6 +518,7 @@ public class EventHandlerForge {
 		float difficultyPlayerServerTime = getDifficultyScaleForPlayerServerTime(player);
 		float val = (difficultyPos + difficultyPlayerEquipment + difficultyPlayerServerTime) / 3F;
 		val = Math.round(val * 1000F) / 1000F;
+		if (val > 1F) val = 1F;
 		return val;
 	}
 	
