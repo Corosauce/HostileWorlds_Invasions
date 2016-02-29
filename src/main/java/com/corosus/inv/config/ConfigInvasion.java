@@ -13,13 +13,6 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("Days between each invasion")
 	public static int daysBetweenInvasions = 3;
 	
-	@ConfigComment("How long it takes to reach max difficulty level for a specific player in gameplay ticks (50 hours)")
-	public static int difficulty_MaxTicksOnServer = 20*60*60*50;
-	
-	@ConfigComment("How long it takes to reach max difficulty level for a specific chunk in gameplay ticks (50 hours)")
-	public static int difficulty_MaxTicksInChunk = 20*60*60*50;
-	//public static int difficulty_MaxInventoryRating = 60;
-	
 	@ConfigComment("Max allowed extra spawns at highest difficulty")
 	public static int invasion_Spawns_Max = 50;
 	@ConfigComment("Starting spawncount at lowest difficulty")

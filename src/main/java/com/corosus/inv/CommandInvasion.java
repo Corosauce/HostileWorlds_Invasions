@@ -10,6 +10,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import CoroUtil.util.BlockCoord;
 import CoroUtil.util.CoroUtil;
+import CoroUtil.world.player.DynamicDifficulty;
 
 import com.corosus.inv.util.UtilMining;
 
@@ -48,7 +49,7 @@ public class CommandInvasion extends CommandBase {
 		    		net.minecraft.util.Vec3 posVec = net.minecraft.util.Vec3.createVectorHelper(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
 		    		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 		    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
-		    		CoroUtil.sendPlayerMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + EventHandlerForge.getDifficultyScaleAverage(ent.worldObj, ent, pos));
+		    		CoroUtil.sendPlayerMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + DynamicDifficulty.getDifficultyScaleAverage(ent.worldObj, ent, pos));
 				} else {
 					var1.addChatMessage(new ChatComponentText("day: " + dayNumber));
 		    		//CoroUtil.sendPlayerMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + EventHandlerForge.getDifficultyScaleAverage(ent.worldObj, ent, pos));
@@ -78,9 +79,9 @@ public class CommandInvasion extends CommandBase {
 			    		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 			    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
 			    		CoroUtil.sendPlayerMsg(ent, "Difficulties for you: ");
-			    		CoroUtil.sendPlayerMsg(ent, "player rating: " + EventHandlerForge.getDifficultyScaleForPlayerEquipment(ent));
-			    		CoroUtil.sendPlayerMsg(ent, "server time: " + EventHandlerForge.getDifficultyScaleForPlayerServerTime(ent));
-			    		CoroUtil.sendPlayerMsg(ent, "avg chunk time: " + EventHandlerForge.getDifficultyScaleForPos(ent.worldObj, pos));
+			    		CoroUtil.sendPlayerMsg(ent, "player rating: " + DynamicDifficulty.getDifficultyScaleForPlayerEquipment(ent));
+			    		CoroUtil.sendPlayerMsg(ent, "server time: " + DynamicDifficulty.getDifficultyScaleForPlayerServerTime(ent));
+			    		CoroUtil.sendPlayerMsg(ent, "avg chunk time: " + DynamicDifficulty.getDifficultyScaleForPos(ent.worldObj, pos));
 					}
 	        	}
 	        	
