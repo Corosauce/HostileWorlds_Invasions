@@ -57,9 +57,9 @@ public class CommandInvasion extends CommandBase {
 	        else
 	        {
 
-	        	if (var2.length <= 4) {
-		        	if (var2[0].equalsIgnoreCase("canMine")) {
-		        		int x = Integer.valueOf(var2[1]);
+	        	if (var2[0].equalsIgnoreCase("canMine")) {
+	        		if (var2.length <= 4) {
+	        			int x = Integer.valueOf(var2[1]);
 		        		int y = Integer.valueOf(var2[2]);
 		        		int z = Integer.valueOf(var2[3]);
 		        		
@@ -69,7 +69,22 @@ public class CommandInvasion extends CommandBase {
 		        		
 		        		var1.addChatMessage(new ChatComponentText("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
 		        	}
+	        		
+	        	} else if (var2[0].equalsIgnoreCase("difficulty")) {
+	        		if ((var1 instanceof EntityPlayerMP)) {
+						EntityPlayerMP ent = (EntityPlayerMP) var1;
+			    		//net.minecraft.util.Vec3 posVec = ent.getPosition(1F);
+			    		net.minecraft.util.Vec3 posVec = net.minecraft.util.Vec3.createVectorHelper(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
+			    		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
+			    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
+			    		CoroUtil.sendPlayerMsg(ent, "Difficulties for you: ");
+			    		CoroUtil.sendPlayerMsg(ent, "player rating: " + EventHandlerForge.getDifficultyScaleForPlayerEquipment(ent));
+			    		CoroUtil.sendPlayerMsg(ent, "server time: " + EventHandlerForge.getDifficultyScaleForPlayerServerTime(ent));
+			    		CoroUtil.sendPlayerMsg(ent, "avg chunk time: " + EventHandlerForge.getDifficultyScaleForPos(ent.worldObj, pos));
+					}
 	        	}
+	        	
+	        	
 	        	
 	        }
 			

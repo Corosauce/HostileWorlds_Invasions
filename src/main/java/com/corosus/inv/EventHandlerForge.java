@@ -30,6 +30,7 @@ import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -54,6 +55,17 @@ import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
 
 public class EventHandlerForge {
+	
+	/**
+	 * TODO: features:
+	 * - health boosts
+	 * - config to make only mobs we spawn potential miners
+	 * -- if config is true, detect if player is in cave, if so, try to spawn stuff in cave
+	 * --- to solve cliffs bedrock base issue of having little to no invaders
+	 * - DPS location specific calculator for better adapting to players / bases capabilities
+	 * -- store data per chunk?
+	 * - raining triggering invasions accidentally, switch to modulus time range for 'is night' 
+	 */
 	
 	public static String dataPlayerInvasionActive = "HW_dataPlayerInvasionActive";
 	public static String dataPlayerServerTicks = "HW_dataPlayerServerTicks";
@@ -358,7 +370,7 @@ public class EventHandlerForge {
 	
 	public void invasionStart(EntityPlayer player, float difficultyScale) {
 		//System.out.println("invasion started");
-		player.addChatMessage(new ChatComponentText("An invasion has started! Be prepared!"));
+		player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "An invasion has started! Be prepared!"));
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, true);
 		
 		player.getEntityData().setInteger(dataPlayerInvasionWaveCountMax, getSpawnCountBuff(difficultyScale));
@@ -367,7 +379,7 @@ public class EventHandlerForge {
 	
 	public void invasionStopReset(EntityPlayer player) {
 		//System.out.println("invasion ended");
-		player.addChatMessage(new ChatComponentText("The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
+		player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, false);
 	}
 	
