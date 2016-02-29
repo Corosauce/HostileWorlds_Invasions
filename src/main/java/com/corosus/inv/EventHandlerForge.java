@@ -350,11 +350,19 @@ public class EventHandlerForge {
 	        	
 	        	EntityCreature ent = (EntityCreature)classToSpawn.getConstructor(new Class[] {World.class}).newInstance(new Object[] {player.worldObj});
 	        	
+	        	
 	        	ent.setPosition(tryX, tryY, tryZ);
-				ent.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData)null);
-				enhanceMobForDifficulty(ent, difficultyScale);
-				player.worldObj.spawnEntityInWorld(ent);
-				ent.setAttackTarget(player);
+	        	
+	        	if (ent.getCanSpawnHere()) {
+	        	
+					ent.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData)null);
+					enhanceMobForDifficulty(ent, difficultyScale);
+					player.worldObj.spawnEntityInWorld(ent);
+					ent.setAttackTarget(player);
+					
+	        	} else {
+	        		continue;
+	        	}
 			} catch (Exception e) {
 				System.out.println("HW_Invasions: error spawning invasion entity: ");
 				e.printStackTrace();
@@ -527,7 +535,10 @@ public class EventHandlerForge {
 				}
 			}
 		}
-		long averageTime = totalTime / count;
+		long averageTime = 0;
+		if (count > 0) {
+			averageTime = totalTime / count;
+		}
 		
 		float scale = convertInhabTimeToDifficultyScale(averageTime);
 		return scale;
@@ -647,7 +658,7 @@ public class EventHandlerForge {
 				spawnArray = ConfigAdvancedSpawning.difficulty_2.split(",");
 			} else if (difficultyScale > 0.1F) {
 				spawnArray = ConfigAdvancedSpawning.difficulty_1.split(",");
-			} else if (difficultyScale > 0F) {
+			} else if (difficultyScale >= 0F) {
 				spawnArray = ConfigAdvancedSpawning.difficulty_0.split(",");
 			}
 			if (spawnArray != null) {
