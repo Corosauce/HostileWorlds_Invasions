@@ -81,7 +81,12 @@ public class CommandInvasion extends CommandBase {
 			    		CoroUtil.sendPlayerMsg(ent, "Difficulties for you: ");
 			    		CoroUtil.sendPlayerMsg(ent, "player rating: " + DynamicDifficulty.getDifficultyScaleForPlayerEquipment(ent));
 			    		CoroUtil.sendPlayerMsg(ent, "server time: " + DynamicDifficulty.getDifficultyScaleForPlayerServerTime(ent));
-			    		CoroUtil.sendPlayerMsg(ent, "avg chunk time: " + DynamicDifficulty.getDifficultyScaleForPos(ent.worldObj, pos));
+			    		CoroUtil.sendPlayerMsg(ent, "avg chunk time: " + DynamicDifficulty.getDifficultyScaleForPosOccupyTime(ent.worldObj, pos));
+			    		CoroUtil.sendPlayerMsg(ent, "best dps: " + DynamicDifficulty.getDifficultyScaleForPosDPS(ent.worldObj, pos));
+			    		CoroUtil.sendPlayerMsg(ent, "health: " + DynamicDifficulty.getDifficultyScaleForHealth(ent));
+			    		CoroUtil.sendPlayerMsg(ent, "dist from spawn: " + DynamicDifficulty.getDifficultyScaleForDistFromSpawn(ent));
+			    		CoroUtil.sendPlayerMsg(ent, "------------");
+			    		CoroUtil.sendPlayerMsg(ent, "average: " + DynamicDifficulty.getDifficultyScaleAverage(ent.worldObj, ent, pos));
 					}
 	        	}
 	        	

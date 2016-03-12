@@ -34,11 +34,6 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     public void setEntity(EntityCreature creature) {
     	this.entity = creature;
     }
-    
-    //method for future order handling
-    public boolean canMove() {
-    	return true;
-    }
 
     /**
      * Returns whether the EntityAIBase should begin execution.

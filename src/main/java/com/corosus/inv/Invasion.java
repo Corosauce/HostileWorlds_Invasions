@@ -15,7 +15,7 @@ import cpw.mods.fml.common.event.FMLServerStartedEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.event.FMLServerStoppedEvent;
 
-@Mod(modid = "hw_inv", name="HW_Invasions", version="v0.1")
+@Mod(modid = "hw_inv", name="HW_Invasions", version="v0.1", acceptableRemoteVersions="*")
 public class Invasion {
 	
 	@Mod.Instance( value = "hw_inv" )

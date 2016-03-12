@@ -16,6 +16,7 @@ public class ConfigAdvancedOptions implements IConfigCategory {
 	public static int aiEnhanceRange = 100;
 	public static int pathFailDelayPenalty = 200;
 	public static int pathDelayBase = 50;
+	public static boolean enhanceOnlyExtraSpawnedForDigging = true;
 	
 	@Override
 	public String getConfigFileName() {

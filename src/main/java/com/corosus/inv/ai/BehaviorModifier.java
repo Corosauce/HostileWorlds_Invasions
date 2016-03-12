@@ -15,6 +15,7 @@ import CoroPets.ai.ITaskInitializer;
 import CoroUtil.util.Vec3;
 
 import com.corosus.inv.EventHandlerForge;
+import com.corosus.inv.config.ConfigAdvancedOptions;
 
 public class BehaviorModifier {
 	
@@ -28,8 +29,9 @@ public class BehaviorModifier {
 	//entityid
 	//public static HashMap<Integer, Boolean> aiEnhanced = new HashMap<Integer, Boolean>();
 	
-	public static String dataEntityEnhanced = "CoroAI_HW_Enhanced";
-	public static String dataEntityEnhanceTried = "CoroAI_HW_EnhanceTried";
+	public static String dataEntityEnhanced = "CoroAI_HW_Inv_Enhanced";
+	public static String dataEntityEnhanceTried = "CoroAI_HW_Inv_EnhanceTried";
+	public static String dataEntityWaveSpawned = "CoroAI_HW_Inv_WaveSpawned";
 	
 	public static void enhanceZombiesToDig(World parWorld, Vec3 parPos, Class[] taskToInject, int priorityOfTask, int modifyRange, float chanceToEnhance) {
 		
@@ -57,12 +59,14 @@ public class BehaviorModifier {
         			if (parWorld.rand.nextFloat() < chanceToEnhance) {
         			
 	        			if (!ent.getEntityData().getBoolean(dataEntityEnhanced)) {
-	            			for (Class clazz : taskToInject) {
-	    		        		addTask(ent, clazz, priorityOfTask);
-	            			}
-	            			
-	            			enhanceCount++;
-	            			performExtraChanges(ent);
+	        				if (!ConfigAdvancedOptions.enhanceOnlyExtraSpawnedForDigging || ent.getEntityData().getBoolean(dataEntityWaveSpawned)) {
+		            			for (Class clazz : taskToInject) {
+		    		        		addTask(ent, clazz, priorityOfTask);
+		            			}
+		            			
+		            			enhanceCount++;
+		            			performExtraChanges(ent);
+	        				}
 	            		}
         			}
         		} else {
@@ -85,14 +89,14 @@ public class BehaviorModifier {
 		}
 		
 		if (!foundTask) {
-			System.out.println("Detected entity was recreated and missing tasks, readding tasks and changes");
+			//System.out.println("Detected entity was recreated and missing tasks, readding tasks and changes");
 			for (Class clazz : taskToInject) {
 				addTask(ent, clazz, priorityOfTask);
 			}
 			performExtraChanges(ent);
 		} else {
 			//temp output to make sure detection works
-			System.out.println("already has task!");
+			//System.out.println("already has task!");
 		}
 		
 		return !foundTask;

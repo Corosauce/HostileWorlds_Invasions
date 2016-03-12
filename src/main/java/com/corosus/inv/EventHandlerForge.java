@@ -59,12 +59,12 @@ public class EventHandlerForge {
 	
 	/**
 	 * TODO: features:
-	 * - health boosts
+	 * x health boosts
 	 * - config to make only mobs we spawn potential miners
 	 * -- if config is true, detect if player is in cave, if so, try to spawn stuff in cave
 	 * --- to solve cliffs bedrock base issue of having little to no invaders
-	 * - DPS location specific calculator for better adapting to players / bases capabilities
-	 * -- store data per chunk?
+	 * x DPS location specific calculator for better adapting to players / bases capabilities
+	 * x- store data per chunk?
 	 * - raining triggering invasions accidentally, switch to modulus time range for 'is night' 
 	 */
 	
@@ -322,9 +322,6 @@ public class EventHandlerForge {
 					                pathFindingDelay += ConfigAdvancedOptions.pathFailDelayPenalty;
 					            }
 								
-								
-								//TODO: MAKE USE OF failedPathFindingPenalty
-								//TEST ME
 								ent.getEntityData().setLong(dataCreatureLastPathWithDelay, world.getTotalWorldTime() + pathFindingDelay);
 							}
 							
@@ -411,6 +408,7 @@ public class EventHandlerForge {
 	        	
 	        	ent.setPosition(tryX, tryY, tryZ);
 				ent.onSpawnWithEgg(/*player.worldObj.func_147473_B(tryX, tryY, tryZ), */(IEntityLivingData)null);
+				ent.getEntityData().setBoolean(BehaviorModifier.dataEntityWaveSpawned, true);
 				enhanceMobForDifficulty(ent, difficultyScale);
 				player.worldObj.spawnEntityInWorld(ent);
 				ent.setAttackTarget(player);
@@ -477,6 +475,7 @@ public class EventHandlerForge {
 		}
 		
 		//movement speed buff
+		//TODO: clamp to 1.0 or account for other mods speed bosting, or both!
 		double randBoost = ent.worldObj.rand.nextDouble() * ConfigAdvancedOptions.speedBoostBase * difficultyScale;
 		AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836"), "Invasion speed boost", randBoost, 1);
 		ent.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(speedBoostModifier);
@@ -547,10 +546,12 @@ public class EventHandlerForge {
 	}
 	
 	public int getInventoryStageBuff(float difficultyScale) {
+		//clamp difficulty between 0 and 1 until we expand on this equipment more 
+		float scaleCap = MathHelper.clamp_float(difficultyScale, 0F, 1F);
 		float scaleDivide = 1F / inventoryStages;
 		int inventoryStage = 0;
 		for (int i = 0; i < inventoryStages; i++) {
-			if (difficultyScale <= scaleDivide * (i+1)) {
+			if (scaleCap <= scaleDivide * (i+1)) {
 				inventoryStage = i;
 				break;
 			}
