@@ -2,7 +2,6 @@ package com.corosus.inv.config;
 
 import java.io.File;
 
-import modconfig.ConfigComment;
 import modconfig.IConfigCategory;
 
 public class ConfigAdvancedOptions implements IConfigCategory {

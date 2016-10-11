@@ -1,7 +1,5 @@
 package com.corosus.inv;
 
-import io.netty.util.internal.ThreadLocalRandom;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +8,7 @@ import java.util.UUID;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -22,21 +21,25 @@ import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayer.EnumStatus;
+import net.minecraft.entity.player.EntityPlayer.SleepResult;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.potion.Potion;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import CoroUtil.util.BlockCoord;
 import CoroUtil.util.CoroUtilBlock;
 import CoroUtil.util.CoroUtilPath;
@@ -49,11 +52,7 @@ import com.corosus.inv.ai.tasks.TaskDigTowardsTarget;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
-
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.Phase;
-import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
+import com.mojang.realmsclient.gui.ChatFormatting;
 
 public class EventHandlerForge {
 	
@@ -130,53 +129,53 @@ public class EventHandlerForge {
 		
 		obj = new EquipmentForDifficulty();
 		listItems = new ArrayList<ItemStack>();
-		listItems.add(new ItemStack(Items.leather_helmet));
-		listItems.add(new ItemStack(Items.leather_chestplate));
-		listItems.add(new ItemStack(Items.leather_leggings));
-		listItems.add(new ItemStack(Items.leather_boots));
+		listItems.add(new ItemStack(Items.LEATHER_HELMET));
+		listItems.add(new ItemStack(Items.LEATHER_CHESTPLATE));
+		listItems.add(new ItemStack(Items.LEATHER_LEGGINGS));
+		listItems.add(new ItemStack(Items.LEATHER_BOOTS));
 		obj.setListArmor(listItems);
-		obj.setWeapon(new ItemStack(Items.wooden_sword));
+		obj.setWeapon(new ItemStack(Items.WOODEN_SWORD));
 		lookupDifficultyToEquipment.put(1, obj);
 		
 		obj = new EquipmentForDifficulty();
 		listItems = new ArrayList<ItemStack>();
-		listItems.add(new ItemStack(Items.chainmail_helmet));
-		listItems.add(new ItemStack(Items.chainmail_chestplate));
-		listItems.add(new ItemStack(Items.chainmail_leggings));
-		listItems.add(new ItemStack(Items.chainmail_boots));
+		listItems.add(new ItemStack(Items.CHAINMAIL_HELMET));
+		listItems.add(new ItemStack(Items.CHAINMAIL_CHESTPLATE));
+		listItems.add(new ItemStack(Items.CHAINMAIL_LEGGINGS));
+		listItems.add(new ItemStack(Items.CHAINMAIL_BOOTS));
 		obj.setListArmor(listItems);
-		obj.setWeapon(new ItemStack(Items.stone_sword));
+		obj.setWeapon(new ItemStack(Items.STONE_SWORD));
 		lookupDifficultyToEquipment.put(2, obj);
 		
 		obj = new EquipmentForDifficulty();
 		listItems = new ArrayList<ItemStack>();
-		listItems.add(new ItemStack(Items.iron_helmet));
-		listItems.add(new ItemStack(Items.iron_chestplate));
-		listItems.add(new ItemStack(Items.iron_leggings));
-		listItems.add(new ItemStack(Items.iron_boots));
+		listItems.add(new ItemStack(Items.IRON_HELMET));
+		listItems.add(new ItemStack(Items.IRON_CHESTPLATE));
+		listItems.add(new ItemStack(Items.IRON_LEGGINGS));
+		listItems.add(new ItemStack(Items.IRON_BOOTS));
 		obj.setListArmor(listItems);
-		obj.setWeapon(new ItemStack(Items.iron_sword));
+		obj.setWeapon(new ItemStack(Items.IRON_SWORD));
 		lookupDifficultyToEquipment.put(3, obj);
 		
 		obj = new EquipmentForDifficulty();
 		listItems = new ArrayList<ItemStack>();
-		listItems.add(new ItemStack(Items.diamond_helmet));
-		listItems.add(new ItemStack(Items.diamond_chestplate));
-		listItems.add(new ItemStack(Items.diamond_leggings));
-		listItems.add(new ItemStack(Items.diamond_boots));
+		listItems.add(new ItemStack(Items.DIAMOND_HELMET));
+		listItems.add(new ItemStack(Items.DIAMOND_CHESTPLATE));
+		listItems.add(new ItemStack(Items.DIAMOND_LEGGINGS));
+		listItems.add(new ItemStack(Items.DIAMOND_BOOTS));
 		obj.setListArmor(listItems);
-		obj.setWeapon(new ItemStack(Items.diamond_sword));
+		obj.setWeapon(new ItemStack(Items.DIAMOND_SWORD));
 		lookupDifficultyToEquipment.put(4, obj);
 	}
 	
 	@SubscribeEvent
 	public void canSleep(PlayerSleepInBedEvent event) {
-		if (event.entityPlayer.worldObj.isRemote) return;
+		if (event.getEntityPlayer().worldObj.isRemote) return;
 		if (ConfigInvasion.preventSleepDuringInvasions) {
-			if (isInvasionTonight(event.entityPlayer.worldObj)) {
-				EntityPlayerMP player = (EntityPlayerMP) event.entityPlayer;
-				player.addChatMessage(new ChatComponentText("You can't sleep during invasion nights!"));
-				event.result = EnumStatus.NOT_SAFE;
+			if (isInvasionTonight(event.getEntityPlayer().worldObj)) {
+				EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
+				player.addChatMessage(new TextComponentString("You can't sleep during invasion nights!"));
+				event.setResult(SleepResult.NOT_SAFE);
 			} else {
 				
 			}
@@ -185,9 +184,9 @@ public class EventHandlerForge {
 	
 	@SubscribeEvent
 	public void entityCreated(EntityJoinWorldEvent event) {
-		if (event.entity.worldObj.isRemote) return;
-		if (event.entity instanceof EntityCreature) {
-			EntityCreature ent = (EntityCreature) event.entity;
+		if (event.getEntity().worldObj.isRemote) return;
+		if (event.getEntity() instanceof EntityCreature) {
+			EntityCreature ent = (EntityCreature) event.getEntity();
 			if (ent.getEntityData().getBoolean(BehaviorModifier.dataEntityEnhanced)) {
 				BehaviorModifier.addTaskIfMissing(ent, TaskDigTowardsTarget.class, tasksToInject, taskPriorities[0]);
 			}
@@ -221,7 +220,7 @@ public class EventHandlerForge {
 	public void tickPlayer(EntityPlayer player) {
 		try {
 			World world = player.worldObj;
-			net.minecraft.util.Vec3 posVec = net.minecraft.util.Vec3.createVectorHelper(player.posX, player.posY + (player.getEyeHeight() - player.getDefaultEyeHeight()), player.posZ);//player.getPosition(1F);
+			net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(player.posX, player.posY + (player.getEyeHeight() - player.getDefaultEyeHeight()), player.posZ);//player.getPosition(1F);
 			BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 			
 			
@@ -280,7 +279,7 @@ public class EventHandlerForge {
 					double moveSpeedAmp = 1D;
 					
 					//TODO: instead of this expensive method and entity iteration, we could make distant targetting a targetTask! 
-					List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, AxisAlignedBB.getBoundingBox(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).expand(range, range, range));
+					List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).expand(range, range, range));
 					
 					//System.out.println("ents: " + listEnts.size());
 					
@@ -361,7 +360,7 @@ public class EventHandlerForge {
 	
 	public void invasionStart(EntityPlayer player, float difficultyScale) {
 		//System.out.println("invasion started");
-		player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "An invasion has started! Be prepared!"));
+		player.addChatMessage(new TextComponentString(ChatFormatting.RED + "An invasion has started! Be prepared!"));
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, true);
 		
 		player.getEntityData().setInteger(dataPlayerInvasionWaveCountMax, getSpawnCountBuff(difficultyScale));
@@ -370,7 +369,7 @@ public class EventHandlerForge {
 	
 	public void invasionStopReset(EntityPlayer player) {
 		//System.out.println("invasion ended");
-		player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
+		player.addChatMessage(new TextComponentString(ChatFormatting.GREEN + "The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, false);
 	}
 	
@@ -390,7 +389,7 @@ public class EventHandlerForge {
         for (int tries = 0; tries < 5; tries++) {
 	        int tryX = MathHelper.floor_double(player.posX) - (range/2) + (rand.nextInt(range));
 	        int tryZ = MathHelper.floor_double(player.posZ) - (range/2) + (rand.nextInt(range));
-	        int tryY = player.worldObj.getHeightValue(tryX, tryZ);
+	        int tryY = player.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 	
 	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6) {
 	        	//System.out.println("light: " + player.worldObj.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
@@ -407,7 +406,7 @@ public class EventHandlerForge {
 	        	EntityCreature ent = (EntityCreature)classToSpawn.getConstructor(new Class[] {World.class}).newInstance(new Object[] {player.worldObj});
 	        	
 	        	ent.setPosition(tryX, tryY, tryZ);
-				ent.onSpawnWithEgg(/*player.worldObj.func_147473_B(tryX, tryY, tryZ), */(IEntityLivingData)null);
+				ent.onInitialSpawn(ent.worldObj.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData)null);
 				ent.getEntityData().setBoolean(BehaviorModifier.dataEntityWaveSpawned, true);
 				enhanceMobForDifficulty(ent, difficultyScale);
 				player.worldObj.spawnEntityInWorld(ent);
@@ -437,12 +436,13 @@ public class EventHandlerForge {
 	
 	public boolean canSpawnMob(World world, int x, int y, int z) {
         //Block id = world.getBlockState(new BlockCoord(x-1,y,z)).getBlock();//Block.pressurePlatePlanks.blockID;
-		Block id = world.getBlock(x,y,z);//Block.pressurePlatePlanks.blockID;
+		IBlockState state = world.getBlockState(new BlockPos(x,y,z));
+		Block id = state.getBlock();//Block.pressurePlatePlanks.blockID;
 
         /*if (id == Block.grass.blockID || id == Block.stone.blockID || id == Block.tallGrass.blockID || id == Block.grass.blockID || id == Block.sand.blockID) {
             return true;
         }*/
-        if (CoroUtilBlock.isAir(id) || id.getMaterial() == Material.leaves) {
+        if (CoroUtilBlock.isAir(id) || state.getMaterial() == Material.LEAVES) {
         	return false;
         }
         return true;
@@ -478,7 +478,7 @@ public class EventHandlerForge {
 		//TODO: clamp to 1.0 or account for other mods speed bosting, or both!
 		double randBoost = ent.worldObj.rand.nextDouble() * ConfigAdvancedOptions.speedBoostBase * difficultyScale;
 		AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836"), "Invasion speed boost", randBoost, 1);
-		ent.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(speedBoostModifier);
+		ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
 		
 		int inventoryStage = getInventoryStageBuff(difficultyScale);
 		

@@ -4,8 +4,8 @@ import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import CoroUtil.util.BlockCoord;
@@ -46,12 +46,12 @@ public class CommandInvasion extends CommandBase {
 				if ((var1 instanceof EntityPlayerMP)) {
 					EntityPlayerMP ent = (EntityPlayerMP) var1;
 		    		//net.minecraft.util.Vec3 posVec = ent.getPosition(1F);
-		    		net.minecraft.util.Vec3 posVec = net.minecraft.util.Vec3.createVectorHelper(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
+		    		net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
 		    		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 		    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
 		    		CoroUtil.sendPlayerMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + DynamicDifficulty.getDifficultyScaleAverage(ent.worldObj, ent, pos));
 				} else {
-					var1.addChatMessage(new ChatComponentText("day: " + dayNumber));
+					var1.addChatMessage(new TextComponentString("day: " + dayNumber));
 		    		//CoroUtil.sendPlayerMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + EventHandlerForge.getDifficultyScaleAverage(ent.worldObj, ent, pos));
 				}
 	        }
@@ -68,14 +68,14 @@ public class CommandInvasion extends CommandBase {
 		        		boolean canMine = UtilMining.canMineBlock(world, new BlockCoord(x, y, z), block);
 		        		float blockStrength = block.getBlockHardness(world, x, y, z);
 		        		
-		        		var1.addChatMessage(new ChatComponentText("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
+		        		var1.addChatMessage(new TextComponentString("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
 		        	}
 	        		
 	        	} else if (var2[0].equalsIgnoreCase("difficulty")) {
 	        		if ((var1 instanceof EntityPlayerMP)) {
 						EntityPlayerMP ent = (EntityPlayerMP) var1;
 			    		//net.minecraft.util.Vec3 posVec = ent.getPosition(1F);
-			    		net.minecraft.util.Vec3 posVec = net.minecraft.util.Vec3.createVectorHelper(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
+						net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
 			    		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 			    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
 			    		CoroUtil.sendPlayerMsg(ent, "Difficulties for you: ");

@@ -1,6 +1,7 @@
 package com.corosus.inv.util;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import CoroUtil.util.BlockCoord;
@@ -11,17 +12,19 @@ public class UtilMining {
     	
     	//System.out.println("check: " + block);
     	
+    	IBlockState state = world.getBlockState(pos.toBlockPos());
+    	
     	//dont mine tile entities
-    	if (world.getTileEntity(pos.posX, pos.posY, pos.posZ) != null) {
+    	if (world.getTileEntity(pos.toBlockPos()) != null) {
     		return false;
     	}
-    	if (block == Blocks.air) {
+    	if (block == Blocks.AIR) {
     		return false;
     	}
     	/*if (block == Blocks.obsidian) {
     		return false;
     	}*/
-    	if (block.getMaterial().isLiquid()) {
+    	if (state.getMaterial().isLiquid()) {
     		return false;
     	}
     	
