@@ -11,6 +11,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
+import CoroUtil.ai.ITaskInitializer;
 import CoroUtil.util.Vec3;
 
 import com.corosus.inv.EventHandlerForge;

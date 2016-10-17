@@ -6,6 +6,7 @@ import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.util.math.AxisAlignedBB;
+import CoroUtil.ai.ITaskInitializer;
 
 public class TaskCallForHelp extends EntityAIBase implements ITaskInitializer
 {

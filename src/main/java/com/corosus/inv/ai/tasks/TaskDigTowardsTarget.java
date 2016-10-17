@@ -3,12 +3,16 @@ package com.corosus.inv.ai.tasks;
 import java.util.Random;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import CoroUtil.ai.ITaskInitializer;
 import CoroUtil.util.BlockCoord;
 
 import com.corosus.inv.util.UtilMining;
@@ -169,8 +173,9 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	
     	BlockCoord coords = new BlockCoord(MathHelper.floor_double(scanX), MathHelper.floor_double(entity.getEntityBoundingBox().minY + 1), MathHelper.floor_double(scanZ));
     	
-    	//IBlockState state = entity.worldObj.getBlockState(coords);
-    	Block block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
+    	IBlockState state = entity.worldObj.getBlockState(coords.toBlockPos());
+    	Block block = state.getBlock();
+    	//Block block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
     	
     	//System.out.println("ahead to target: " + block);
     	
@@ -182,8 +187,8 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     		if (vecY > 0) {
     			coords.posY++;
     			//coords = coords.add(0, 1, 0);
-    			//state = entity.worldObj.getBlockState(coords);
-    	    	block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
+    			state = entity.worldObj.getBlockState(coords.toBlockPos());
+    	    	//block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
         		if (UtilMining.canMineBlock(entity.worldObj, coords, block)) {
             		posCurMining = coords;
             		return true;
@@ -194,7 +199,7 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     		coords.posY--;
     		//coords = coords.add(0, -1, 0);
     		
-    		//state = entity.worldObj.getBlockState(coords);
+    		state = entity.worldObj.getBlockState(coords);
 	    	block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);//state.getBlock();
     		if (UtilMining.canMineBlock(entity.worldObj, coords, block)) {
         		posCurMining = coords;
@@ -224,19 +229,21 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	
     	//force stop mining if pushed away
     	if (entity.getDistance(posCurMining.posX, posCurMining.posY, posCurMining.posZ) > 3) {
-    		entity.worldObj.destroyBlockInWorldPartially(entity.getEntityId(), posCurMining.posX, posCurMining.posY, posCurMining.posZ, 0);
+    		//entity.worldObj.destroyBlockInWorldPartially(entity.getEntityId(), posCurMining.posX, posCurMining.posY, posCurMining.posZ, 0);
+    		entity.worldObj.sendBlockBreakProgress(entity.getEntityId(), posCurMining.toBlockPos(), 0);
     		posCurMining = null;
     		return;
     	}
     	
     	entity.getNavigator().clearPathEntity();
     	
-    	Block block = entity.worldObj.getBlock(posCurMining.posX, posCurMining.posY, posCurMining.posZ);
+    	//Block block = entity.worldObj.getBlock(posCurMining.posX, posCurMining.posY, posCurMining.posZ);
     	//double blockStrength = block.getBlockHardness(entity.worldObj, posCurMining.posX, posCurMining.posY, posCurMining.posZ);
-    	//IBlockState state = entity.worldObj.getBlockState(posCurMining);
+    	IBlockState state = entity.worldObj.getBlockState(posCurMining.toBlockPos());
+    	Block block = state.getBlock();
     	//Block block = state.getBlock();
     	
-    	double blockStrength = block.getBlockHardness(entity.worldObj, posCurMining.posX, posCurMining.posY, posCurMining.posZ);
+    	double blockStrength = state.getBlockHardness(entity.worldObj, posCurMining.toBlockPos());
     	
     	if (blockStrength == -1) {
     		posCurMining = null;
@@ -246,16 +253,23 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     	curBlockDamage += 0.01D / blockStrength;
     	
     	if (curBlockDamage > 1D) {
-    		entity.worldObj.destroyBlockInWorldPartially(entity.getEntityId(), posCurMining.posX, posCurMining.posY, posCurMining.posZ, 0);
-    		entity.worldObj.setBlock(posCurMining.posX, posCurMining.posY, posCurMining.posZ, Blocks.AIR);
+    		//entity.worldObj.destroyBlockInWorldPartially(entity.getEntityId(), posCurMining.posX, posCurMining.posY, posCurMining.posZ, 0);
+    		entity.worldObj.sendBlockBreakProgress(entity.getEntityId(), posCurMining.toBlockPos(), 0);
+    		//entity.worldObj.setBlock(posCurMining.posX, posCurMining.posY, posCurMining.posZ, Blocks.AIR);
+    		entity.worldObj.setBlockToAir(posCurMining.toBlockPos());
+    		
     		
     	} else {
-    		entity.worldObj.destroyBlockInWorldPartially(entity.getEntityId(), posCurMining.posX, posCurMining.posY, posCurMining.posZ, (int)(curBlockDamage * 10D));
+    		//entity.worldObj.destroyBlockInWorldPartially(entity.getEntityId(), posCurMining.posX, posCurMining.posY, posCurMining.posZ, (int)(curBlockDamage * 10D));
+    		entity.worldObj.sendBlockBreakProgress(entity.getEntityId(), posCurMining.toBlockPos(), (int)(curBlockDamage * 10D));
     	}
     	if (entity.worldObj.getTotalWorldTime() % 10 == 0) {
-    		entity.swingItem();
+    		//entity.swingItem();
+    		entity.swingArm(EnumHand.MAIN_HAND);
     		//System.out.println("swing!");
-    		entity.worldObj.playSoundEffect(posCurMining.getX(), posCurMining.getY(), posCurMining.getZ(), block.stepSound.getBreakSound(), 0.5F, 1F);
+    		
+    		entity.worldObj.playSound(null, new BlockPos(posCurMining.getX(), posCurMining.getY(), posCurMining.getZ()), block.getSoundType(state, entity.worldObj, posCurMining.toBlockPos(), entity).getBreakSound(), SoundCategory.HOSTILE, 0.5F, 1F);
+    		//entity.worldObj.playSoundEffect(posCurMining.getX(), posCurMining.getY(), posCurMining.getZ(), block.stepSound.getBreakSound(), 0.5F, 1F);
     	}
     }
 }
