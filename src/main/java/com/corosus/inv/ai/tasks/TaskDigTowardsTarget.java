@@ -199,8 +199,8 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     		coords.posY--;
     		//coords = coords.add(0, -1, 0);
     		
-    		state = entity.worldObj.getBlockState(coords);
-	    	block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);//state.getBlock();
+    		state = entity.worldObj.getBlockState(coords.toBlockPos());
+	    	block = state.getBlock();
     		if (UtilMining.canMineBlock(entity.worldObj, coords, block)) {
         		posCurMining = coords;
         		return true;
@@ -209,9 +209,9 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     			if (vecY < 0) {
     				//coords = coords.add(0, -1, 0);
     				coords.posY--;
-    	    		//state = entity.worldObj.getBlockState(coords);
-    	    		//block = state.getBlock();
-    	    		block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
+    	    		state = entity.worldObj.getBlockState(coords.toBlockPos());
+    	    		block = state.getBlock();
+    	    		//block = entity.worldObj.getBlock(coords.posX, coords.posY, coords.posZ);
     		    	
     	    		if (UtilMining.canMineBlock(entity.worldObj, coords, block)) {
     	        		posCurMining = coords;

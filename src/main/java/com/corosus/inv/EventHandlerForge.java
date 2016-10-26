@@ -24,6 +24,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayer.SleepResult;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.potion.Potion;
@@ -113,6 +114,14 @@ public class EventHandlerForge {
 
 		public void setListPotions(List<Potion> listPotions) {
 			this.listPotions = listPotions;
+		}
+		
+		public EntityEquipmentSlot getSlotForSlotID(int ID) {
+			if (ID == 0) return EntityEquipmentSlot.HEAD;
+			if (ID == 1) return EntityEquipmentSlot.CHEST;
+			if (ID == 2) return EntityEquipmentSlot.LEGS;
+			if (ID == 3) return EntityEquipmentSlot.FEET;
+			return null;
 		}
 		
 	}
@@ -391,7 +400,9 @@ public class EventHandlerForge {
 	        int tryZ = MathHelper.floor_double(player.posZ) - (range/2) + (rand.nextInt(range));
 	        int tryY = player.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 	
-	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6) {
+	        
+	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || 
+	        		!canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
 	        	//System.out.println("light: " + player.worldObj.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
 	            continue;
 	        }
@@ -485,14 +496,15 @@ public class EventHandlerForge {
 		EquipmentForDifficulty equipment = lookupDifficultyToEquipment.get(inventoryStage);
 		if (equipment != null) {
 			//allow for original weapon to remain if there was one and we are trying to remove it
-			if (equipment.getWeapon() != null) setEquipment(ent, 0, equipment.getWeapon());
+			if (equipment.getWeapon() != null) setEquipment(ent, EntityEquipmentSlot.MAINHAND, equipment.getWeapon());
 			//ent.setCurrentItemOrArmor(0, equipment.getWeapon());
 			for (int i = 0; i < 4; i++) {
+				//TODO: verify 1.10.2 update didnt mess with this, maybe rewrite a bit for new sane slot based system
 				if (equipment.getListArmor().size() >= i+1) {
-					setEquipment(ent, i+1, equipment.getListArmor().get(i));
+					setEquipment(ent, equipment.getSlotForSlotID(i)/*i+1*/, equipment.getListArmor().get(i));
 					//ent.setCurrentItemOrArmor(i+1, equipment.getListArmor().get(i));
 				} else {
-					setEquipment(ent, i+1, null);
+					setEquipment(ent, equipment.getSlotForSlotID(i)/*i+1*/, null);
 					//ent.setCurrentItemOrArmor(i+1, null);
 					
 				}
@@ -509,12 +521,15 @@ public class EventHandlerForge {
 		
 	}
 	
-	public static void setEquipment(EntityCreature ent, int slot, ItemStack stack) {
-		if (slot == 0 && ent instanceof EntitySkeleton) {
+	public static void setEquipment(EntityCreature ent, EntityEquipmentSlot slot/*int slot*/, ItemStack stack) {
+		if (slot == EntityEquipmentSlot.MAINHAND/*slot == 0*/ && ent instanceof EntitySkeleton) {
 			return;
 		}
-		ent.setCurrentItemOrArmor(slot, stack);
-		ent.setEquipmentDropChance(slot, 0);
+		/*ent.setCurrentItemOrArmor(slot, stack);
+		ent.setEquipmentDropChance(slot, 0);*/
+		ent.setItemStackToSlot(slot, stack);
+		ent.setDropChance(slot, 0);
+		
 	}
 	
 	public boolean isInvasionTonight(World world) {

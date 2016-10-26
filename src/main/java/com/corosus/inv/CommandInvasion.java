@@ -1,9 +1,12 @@
 package com.corosus.inv;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
@@ -27,7 +30,7 @@ public class CommandInvasion extends CommandBase {
 	}
 
 	@Override
-	public void processCommand(ICommandSender var1, String[] var2) {
+	public void execute(MinecraftServer server, ICommandSender var1, String[] var2) {
 		
 		/*if (!(var1 instanceof EntityPlayerMP)) {
 			System.out.println("Works for actual players only");
@@ -64,9 +67,11 @@ public class CommandInvasion extends CommandBase {
 		        		int y = Integer.valueOf(var2[2]);
 		        		int z = Integer.valueOf(var2[3]);
 		        		
-		        		Block block = world.getBlock(x, y, z);
+		        		BlockPos pos = new BlockPos(x, y, z);
+		        		IBlockState state = world.getBlockState(pos);
+		        		Block block = state.getBlock();
 		        		boolean canMine = UtilMining.canMineBlock(world, new BlockCoord(x, y, z), block);
-		        		float blockStrength = block.getBlockHardness(world, x, y, z);
+		        		float blockStrength = state.getBlockHardness(world, pos);
 		        		
 		        		var1.addChatMessage(new TextComponentString("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
 		        	}
@@ -108,7 +113,8 @@ public class CommandInvasion extends CommandBase {
     }*/
 	
 	@Override
-	public boolean canCommandSenderUseCommand(ICommandSender p_71519_1_) {
+	public boolean checkPermission(MinecraftServer server, ICommandSender par1ICommandSender)
+    {
 		return true;
 	}
 	

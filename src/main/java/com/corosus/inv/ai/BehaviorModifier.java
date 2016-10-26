@@ -8,7 +8,9 @@ import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import CoroUtil.ai.ITaskInitializer;
@@ -124,21 +126,22 @@ public class BehaviorModifier {
 	}
 	
 	public static void performExtraChanges(EntityCreature ent) {
-		ent.getNavigator().setBreakDoors(false);
-		//((PathNavigateGround)ent.getNavigator()).setBreakDoors(false);
+		//ent.getNavigator().setBreakDoors(false);
+		((PathNavigateGround)ent.getNavigator()).setBreakDoors(false);
 		ent.getEntityData().setBoolean(dataEntityEnhanced, true);
 		ent.getEntityData().setBoolean("CoroAI_HW_GravelDeath", true);
-		if (ent.getEquipmentInSlot(0) == null) {
-			EventHandlerForge.setEquipment(ent, 0, new ItemStack(Items.IRON_PICKAXE));
+		ItemStack is = ent.getItemStackFromSlot(EntityEquipmentSlot.MAINHAND);
+		if (is == null) {
+			EventHandlerForge.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
 		} else {
-			if (ent.getEquipmentInSlot(0).getItem() == Items.WOODEN_SWORD) {
-				EventHandlerForge.setEquipment(ent, 0, new ItemStack(Items.WOODEN_PICKAXE));
-			} else if (ent.getEquipmentInSlot(0).getItem() == Items.STONE_SWORD) {
-				EventHandlerForge.setEquipment(ent, 0, new ItemStack(Items.STONE_PICKAXE));
-			} else if (ent.getEquipmentInSlot(0).getItem() == Items.IRON_SWORD) {
-				EventHandlerForge.setEquipment(ent, 0, new ItemStack(Items.IRON_PICKAXE));
-			} else if (ent.getEquipmentInSlot(0).getItem() == Items.DIAMOND_SWORD) {
-				EventHandlerForge.setEquipment(ent, 0, new ItemStack(Items.DIAMOND_PICKAXE));
+			if (is.getItem() == Items.WOODEN_SWORD) {
+				EventHandlerForge.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_PICKAXE));
+			} else if (is.getItem() == Items.STONE_SWORD) {
+				EventHandlerForge.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.STONE_PICKAXE));
+			} else if (is.getItem() == Items.IRON_SWORD) {
+				EventHandlerForge.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
+			} else if (is.getItem() == Items.DIAMOND_SWORD) {
+				EventHandlerForge.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_PICKAXE));
 			}
 		}
 	}
