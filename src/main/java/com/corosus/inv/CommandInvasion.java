@@ -52,7 +52,7 @@ public class CommandInvasion extends CommandBase {
 		    		net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
 		    		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 		    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
-		    		CoroUtil.sendPlayerMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + DynamicDifficulty.getDifficultyScaleAverage(ent.worldObj, ent, pos));
+		    		CoroUtil.sendCommandSenderMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + DynamicDifficulty.getDifficultyScaleAverage(ent.worldObj, ent, pos));
 				} else {
 					var1.addChatMessage(new TextComponentString("day: " + dayNumber));
 		    		//CoroUtil.sendPlayerMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + EventHandlerForge.getDifficultyScaleAverage(ent.worldObj, ent, pos));
@@ -83,15 +83,15 @@ public class CommandInvasion extends CommandBase {
 						net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
 			    		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 			    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
-			    		CoroUtil.sendPlayerMsg(ent, "Difficulties for you: ");
-			    		CoroUtil.sendPlayerMsg(ent, "player rating: " + DynamicDifficulty.getDifficultyScaleForPlayerEquipment(ent));
-			    		CoroUtil.sendPlayerMsg(ent, "server time: " + DynamicDifficulty.getDifficultyScaleForPlayerServerTime(ent));
-			    		CoroUtil.sendPlayerMsg(ent, "avg chunk time: " + DynamicDifficulty.getDifficultyScaleForPosOccupyTime(ent.worldObj, pos));
-			    		CoroUtil.sendPlayerMsg(ent, "best dps: " + DynamicDifficulty.getDifficultyScaleForPosDPS(ent.worldObj, pos));
-			    		CoroUtil.sendPlayerMsg(ent, "health: " + DynamicDifficulty.getDifficultyScaleForHealth(ent));
-			    		CoroUtil.sendPlayerMsg(ent, "dist from spawn: " + DynamicDifficulty.getDifficultyScaleForDistFromSpawn(ent));
-			    		CoroUtil.sendPlayerMsg(ent, "------------");
-			    		CoroUtil.sendPlayerMsg(ent, "average: " + DynamicDifficulty.getDifficultyScaleAverage(ent.worldObj, ent, pos));
+			    		CoroUtil.sendCommandSenderMsg(ent, "Difficulties for you: ");
+			    		CoroUtil.sendCommandSenderMsg(ent, "player rating: " + DynamicDifficulty.getDifficultyScaleForPlayerEquipment(ent));
+			    		CoroUtil.sendCommandSenderMsg(ent, "server time: " + DynamicDifficulty.getDifficultyScaleForPlayerServerTime(ent));
+			    		CoroUtil.sendCommandSenderMsg(ent, "avg chunk time: " + DynamicDifficulty.getDifficultyScaleForPosOccupyTime(ent.worldObj, pos));
+			    		CoroUtil.sendCommandSenderMsg(ent, "best dps: " + DynamicDifficulty.getDifficultyScaleForPosDPS(ent.worldObj, pos));
+			    		CoroUtil.sendCommandSenderMsg(ent, "health: " + DynamicDifficulty.getDifficultyScaleForHealth(ent));
+			    		CoroUtil.sendCommandSenderMsg(ent, "dist from spawn: " + DynamicDifficulty.getDifficultyScaleForDistFromSpawn(ent));
+			    		CoroUtil.sendCommandSenderMsg(ent, "------------");
+			    		CoroUtil.sendCommandSenderMsg(ent, "average: " + DynamicDifficulty.getDifficultyScaleAverage(ent.worldObj, ent, pos));
 					}
 	        	}
 	        	

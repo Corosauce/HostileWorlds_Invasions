@@ -14,7 +14,7 @@ import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
 
-@Mod(modid = "hw_inv", name="HW_Invasions", version="v0.1", acceptableRemoteVersions="*")
+@Mod(modid = "hw_inv", name="HW_Invasions", version="v0.1", acceptableRemoteVersions="*", dependencies="required-after:coroutil")
 public class Invasion {
 	
 	@Mod.Instance( value = "hw_inv" )
