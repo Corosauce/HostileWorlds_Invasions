@@ -18,10 +18,20 @@ public class ConfigAdvancedSpawning implements IConfigCategory {
 	public static String difficulty_7 = "net.minecraft.entity.monster.EntityZombie";
 	public static String difficulty_8 = "net.minecraft.entity.monster.EntityZombie";
 	public static String difficulty_9 = "net.minecraft.entity.monster.EntityZombie";
-	
+
+	@Override
+	public String getName() {
+		return "AdvancedSpawning";
+	}
+
+	@Override
+	public String getRegistryName() {
+		return "invasionSpawnsConfig";
+	}
+
 	@Override
 	public String getConfigFileName() {
-		return "HW_Invasions" + File.separator + "AdvancedSpawning";
+		return "HW_Invasions" + File.separator + getName();
 	}
 
 	@Override

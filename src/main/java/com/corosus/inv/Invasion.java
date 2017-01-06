@@ -24,9 +24,9 @@ public class Invasion {
 	@Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
-		ConfigMod.addConfigFile(event, "invasionConfig", new ConfigInvasion());
-		ConfigMod.addConfigFile(event, "invasionSpawnsConfig", new ConfigAdvancedSpawning());
-		ConfigMod.addConfigFile(event, "invasionAdvancedConfigOptions", new ConfigAdvancedOptions());
+		ConfigMod.addConfigFile(event, new ConfigInvasion());
+		ConfigMod.addConfigFile(event, new ConfigAdvancedSpawning());
+		ConfigMod.addConfigFile(event, new ConfigAdvancedOptions());
     }
     
 	@Mod.EventHandler

@@ -16,10 +16,20 @@ public class ConfigAdvancedOptions implements IConfigCategory {
 	public static int pathFailDelayPenalty = 200;
 	public static int pathDelayBase = 50;
 	public static boolean enhanceOnlyExtraSpawnedForDigging = true;
-	
+
+	@Override
+	public String getName() {
+		return "AdvancedOptions";
+	}
+
+	@Override
+	public String getRegistryName() {
+		return "invasionAdvancedConfigOptions";
+	}
+
 	@Override
 	public String getConfigFileName() {
-		return "HW_Invasions" + File.separator + "AdvancedOptions";
+		return "HW_Invasions" + File.separator + getName();
 	}
 
 	@Override

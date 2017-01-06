@@ -36,7 +36,17 @@ public class ConfigInvasion implements IConfigCategory {
 	
 	@ConfigComment("Prevent players from sleeping through the night during invasion nights")
 	public static boolean preventSleepDuringInvasions = true;
-	
+
+	@Override
+	public String getName() {
+		return "InvasionConfig";
+	}
+
+	@Override
+	public String getRegistryName() {
+		return "invasionConfig";
+	}
+
 	@Override
 	public String getConfigFileName() {
 		return "HW_Invasions" + File.separator + "InvasionConfig";
