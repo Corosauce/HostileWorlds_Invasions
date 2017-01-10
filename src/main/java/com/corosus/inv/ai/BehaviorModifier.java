@@ -3,6 +3,7 @@ package com.corosus.inv.ai;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
+import CoroUtil.difficulty.UtilEntityBuffs;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
@@ -62,9 +63,10 @@ public class BehaviorModifier {
         			
 	        			if (!ent.getEntityData().getBoolean(dataEntityEnhanced)) {
 	        				if (!ConfigAdvancedOptions.enhanceOnlyExtraSpawnedForDigging || ent.getEntityData().getBoolean(dataEntityWaveSpawned)) {
-		            			for (Class clazz : taskToInject) {
-		    		        		addTask(ent, clazz, priorityOfTask);
-		            			}
+
+								UtilEntityBuffs.buffAI_CoroAI_Digging(parWorld, ent, null, -1);
+
+
 		            			
 		            			enhanceCount++;
 		            			performExtraChanges(ent);
@@ -81,19 +83,12 @@ public class BehaviorModifier {
 	}
 	
 	public static boolean addTaskIfMissing(EntityCreature ent, Class taskToCheckFor, Class[] taskToInject, int priorityOfTask) {
-		boolean foundTask = false;
-		for (Object entry2 : ent.tasks.taskEntries) {
-			EntityAITaskEntry entry = (EntityAITaskEntry) entry2;
-			if (taskToCheckFor.isAssignableFrom(entry.action.getClass())) {
-				foundTask = true;
-				break;
-			}
-		}
-		
+		boolean foundTask = UtilEntityBuffs.hasTask(ent, taskToCheckFor);
+
 		if (!foundTask) {
 			//System.out.println("Detected entity was recreated and missing tasks, readding tasks and changes");
 			for (Class clazz : taskToInject) {
-				addTask(ent, clazz, priorityOfTask);
+				UtilEntityBuffs.addTask(ent, clazz, priorityOfTask);
 			}
 			performExtraChanges(ent);
 		} else {
@@ -105,26 +100,6 @@ public class BehaviorModifier {
 		
 	}
 	
-	public static boolean addTask(EntityCreature ent, Class taskToInject, int priorityOfTask) {
-		try {
-			Constructor<?> cons = taskToInject.getConstructor();
-			Object obj = cons.newInstance();
-			if (obj instanceof ITaskInitializer) {
-				ITaskInitializer task = (ITaskInitializer) obj;
-				task.setEntity(ent);
-				//System.out.println("adding task into zombie: " + taskToInject);
-				ent.tasks.addTask(priorityOfTask, (EntityAIBase) task);
-				//aiEnhanced.put(ent.getEntityId(), true);
-				
-				
-				return true;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-	
 	public static void performExtraChanges(EntityCreature ent) {
 		//ent.getNavigator().setBreakDoors(false);
 		((PathNavigateGround)ent.getNavigator()).setBreakDoors(false);
@@ -132,16 +107,16 @@ public class BehaviorModifier {
 		ent.getEntityData().setBoolean("CoroAI_HW_GravelDeath", true);
 		ItemStack is = ent.getItemStackFromSlot(EntityEquipmentSlot.MAINHAND);
 		if (is == null) {
-			EventHandlerForge.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
+			UtilEntityBuffs.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
 		} else {
 			if (is.getItem() == Items.WOODEN_SWORD) {
-				EventHandlerForge.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_PICKAXE));
+				UtilEntityBuffs.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_PICKAXE));
 			} else if (is.getItem() == Items.STONE_SWORD) {
-				EventHandlerForge.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.STONE_PICKAXE));
+				UtilEntityBuffs.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.STONE_PICKAXE));
 			} else if (is.getItem() == Items.IRON_SWORD) {
-				EventHandlerForge.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
+				UtilEntityBuffs.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
 			} else if (is.getItem() == Items.DIAMOND_SWORD) {
-				EventHandlerForge.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_PICKAXE));
+				UtilEntityBuffs.setEquipment(ent, EntityEquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_PICKAXE));
 			}
 		}
 	}

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import CoroUtil.difficulty.EquipmentForDifficulty;
+import CoroUtil.difficulty.UtilEntityBuffs;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -32,7 +34,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -48,8 +49,8 @@ import CoroUtil.util.Vec3;
 import CoroUtil.world.player.DynamicDifficulty;
 
 import com.corosus.inv.ai.BehaviorModifier;
-import com.corosus.inv.ai.tasks.TaskCallForHelp;
-import com.corosus.inv.ai.tasks.TaskDigTowardsTarget;
+import CoroUtil.ai.tasks.TaskCallForHelp;
+import CoroUtil.ai.tasks.TaskDigTowardsTarget;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
@@ -73,108 +74,16 @@ public class EventHandlerForge {
 	public static String dataPlayerInvasionWaveCountMax = "HW_dataPlayerInvasionWaveCountMax";
 	public static String dataCreatureLastPathWithDelay = "CoroAI_HW_CreatureLastPathWithDelay";
 	
-	public float inventoryStages = 5;
+
 	
-	public HashMap<Integer, EquipmentForDifficulty> lookupDifficultyToEquipment = new HashMap<Integer, EquipmentForDifficulty>();
-	
-	public Class[] tasksToInject = new Class[] { TaskDigTowardsTarget.class, TaskCallForHelp.class };
-	public int[] taskPriorities = {5, 5};
-	
-	public static class EquipmentForDifficulty {
-		
-		//ordered head to toe
-		private List<ItemStack> listArmor;
-		private ItemStack weapon;
-		//unused for now, worth considering in future
-		private List<Potion> listPotions;
 
-		public EquipmentForDifficulty() {
-			
-		}
-		
-		public List<ItemStack> getListArmor() {
-			return listArmor;
-		}
-
-		public void setListArmor(List<ItemStack> listArmor) {
-			this.listArmor = listArmor;
-		}
-
-		public ItemStack getWeapon() {
-			return weapon;
-		}
-
-		public void setWeapon(ItemStack weapon) {
-			this.weapon = weapon;
-		}
-
-		public List<Potion> getListPotions() {
-			return listPotions;
-		}
-
-		public void setListPotions(List<Potion> listPotions) {
-			this.listPotions = listPotions;
-		}
-		
-		public EntityEquipmentSlot getSlotForSlotID(int ID) {
-			if (ID == 0) return EntityEquipmentSlot.HEAD;
-			if (ID == 1) return EntityEquipmentSlot.CHEST;
-			if (ID == 2) return EntityEquipmentSlot.LEGS;
-			if (ID == 3) return EntityEquipmentSlot.FEET;
-			return null;
-		}
-		
-	}
 	
 	public EventHandlerForge() {
 		
 		//init inventories for difficulties
 		
 		
-		EquipmentForDifficulty obj = new EquipmentForDifficulty();
-		List<ItemStack> listItems = new ArrayList<ItemStack>();
-		obj.setListArmor(listItems);
-		lookupDifficultyToEquipment.put(0, obj);
-		
-		obj = new EquipmentForDifficulty();
-		listItems = new ArrayList<ItemStack>();
-		listItems.add(new ItemStack(Items.LEATHER_HELMET));
-		listItems.add(new ItemStack(Items.LEATHER_CHESTPLATE));
-		listItems.add(new ItemStack(Items.LEATHER_LEGGINGS));
-		listItems.add(new ItemStack(Items.LEATHER_BOOTS));
-		obj.setListArmor(listItems);
-		obj.setWeapon(new ItemStack(Items.WOODEN_SWORD));
-		lookupDifficultyToEquipment.put(1, obj);
-		
-		obj = new EquipmentForDifficulty();
-		listItems = new ArrayList<ItemStack>();
-		listItems.add(new ItemStack(Items.CHAINMAIL_HELMET));
-		listItems.add(new ItemStack(Items.CHAINMAIL_CHESTPLATE));
-		listItems.add(new ItemStack(Items.CHAINMAIL_LEGGINGS));
-		listItems.add(new ItemStack(Items.CHAINMAIL_BOOTS));
-		obj.setListArmor(listItems);
-		obj.setWeapon(new ItemStack(Items.STONE_SWORD));
-		lookupDifficultyToEquipment.put(2, obj);
-		
-		obj = new EquipmentForDifficulty();
-		listItems = new ArrayList<ItemStack>();
-		listItems.add(new ItemStack(Items.IRON_HELMET));
-		listItems.add(new ItemStack(Items.IRON_CHESTPLATE));
-		listItems.add(new ItemStack(Items.IRON_LEGGINGS));
-		listItems.add(new ItemStack(Items.IRON_BOOTS));
-		obj.setListArmor(listItems);
-		obj.setWeapon(new ItemStack(Items.IRON_SWORD));
-		lookupDifficultyToEquipment.put(3, obj);
-		
-		obj = new EquipmentForDifficulty();
-		listItems = new ArrayList<ItemStack>();
-		listItems.add(new ItemStack(Items.DIAMOND_HELMET));
-		listItems.add(new ItemStack(Items.DIAMOND_CHESTPLATE));
-		listItems.add(new ItemStack(Items.DIAMOND_LEGGINGS));
-		listItems.add(new ItemStack(Items.DIAMOND_BOOTS));
-		obj.setListArmor(listItems);
-		obj.setWeapon(new ItemStack(Items.DIAMOND_SWORD));
-		lookupDifficultyToEquipment.put(4, obj);
+
 	}
 	
 	@SubscribeEvent
@@ -190,14 +99,15 @@ public class EventHandlerForge {
 			}
 		}
 	}
-	
+
+	//TODO: generic task flagging and restoration system in CoroUtil
 	@SubscribeEvent
 	public void entityCreated(EntityJoinWorldEvent event) {
 		if (event.getEntity().worldObj.isRemote) return;
 		if (event.getEntity() instanceof EntityCreature) {
 			EntityCreature ent = (EntityCreature) event.getEntity();
 			if (ent.getEntityData().getBoolean(BehaviorModifier.dataEntityEnhanced)) {
-				BehaviorModifier.addTaskIfMissing(ent, TaskDigTowardsTarget.class, tasksToInject, taskPriorities[0]);
+				BehaviorModifier.addTaskIfMissing(ent, TaskDigTowardsTarget.class, UtilEntityBuffs.tasksToInjectInv, UtilEntityBuffs.taskPrioritiesInv[0]);
 			}
 		}
 	}
@@ -338,13 +248,13 @@ public class EventHandlerForge {
 				}
 				
 				if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
-					TaskDigTowardsTarget task = new TaskDigTowardsTarget();
+					//TaskDigTowardsTarget task = new TaskDigTowardsTarget();
 					
 					int modifyRange = ConfigAdvancedOptions.aiEnhanceRange;
 					float chanceToEnhance = getDigChanceBuff(difficultyScale);
 					//TODO: consider making the digging tasks disable after invasions "ends" so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
-					BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ), 
-							tasksToInject, taskPriorities[0], 
+					BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ),
+							UtilEntityBuffs.tasksToInject, UtilEntityBuffs.taskPriorities[0],
 							modifyRange, chanceToEnhance);
 				}
 				
@@ -477,13 +387,13 @@ public class EventHandlerForge {
 		}
 		
 		//extra xp
-		try {
+		/*try {
 			int xp = ObfuscationReflectionHelper.getPrivateValue(EntityLiving.class, ent, "field_70728_aV", "experienceValue");
 			xp += difficultyScale * 10F;
 			ObfuscationReflectionHelper.setPrivateValue(EntityLiving.class, ent, xp, "field_70728_aV", "experienceValue");
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 		//movement speed buff
 		//TODO: clamp to 1.0 or account for other mods speed bosting, or both!
@@ -491,7 +401,7 @@ public class EventHandlerForge {
 		AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836"), "Invasion speed boost", randBoost, 1);
 		ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
 		
-		int inventoryStage = getInventoryStageBuff(difficultyScale);
+		/*int inventoryStage = getInventoryStageBuff(difficultyScale);
 		
 		EquipmentForDifficulty equipment = lookupDifficultyToEquipment.get(inventoryStage);
 		if (equipment != null) {
@@ -501,36 +411,23 @@ public class EventHandlerForge {
 			for (int i = 0; i < 4; i++) {
 				//TODO: verify 1.10.2 update didnt mess with this, maybe rewrite a bit for new sane slot based system
 				if (equipment.getListArmor().size() >= i+1) {
-					setEquipment(ent, equipment.getSlotForSlotID(i)/*i+1*/, equipment.getListArmor().get(i));
+					setEquipment(ent, equipment.getSlotForSlotID(i)*//*i+1*//*, equipment.getListArmor().get(i));
 					//ent.setCurrentItemOrArmor(i+1, equipment.getListArmor().get(i));
 				} else {
-					setEquipment(ent, equipment.getSlotForSlotID(i)/*i+1*/, null);
+					setEquipment(ent, equipment.getSlotForSlotID(i)*//*i+1*//*, null);
 					//ent.setCurrentItemOrArmor(i+1, null);
 					
 				}
 			}
-			//remove any chance of equipment dropping
-			/*for (int i = 0; i < 5; i++) {
-				ent.setEquipmentDropChance(i, 0);
-			}*/
 			
 		} else {
 			System.out.println("error, couldnt find equipment for difficulty value: " + inventoryStage);
-		}
+		}*/
 		
 		
 	}
 	
-	public static void setEquipment(EntityCreature ent, EntityEquipmentSlot slot/*int slot*/, ItemStack stack) {
-		if (slot == EntityEquipmentSlot.MAINHAND/*slot == 0*/ && ent instanceof EntitySkeleton) {
-			return;
-		}
-		/*ent.setCurrentItemOrArmor(slot, stack);
-		ent.setEquipmentDropChance(slot, 0);*/
-		ent.setItemStackToSlot(slot, stack);
-		ent.setDropChance(slot, 0);
-		
-	}
+
 	
 	public boolean isInvasionTonight(World world) {
 		//add 1 day because calculation is off, eg: if we want 1 warmup day, we dont want first night to be an invasion
@@ -560,27 +457,13 @@ public class EventHandlerForge {
 		return MathHelper.clamp_float((((float)(max) * difficultyScale * scaleRate)), initial, max);
 	}
 	
-	public int getInventoryStageBuff(float difficultyScale) {
-		//clamp difficulty between 0 and 1 until we expand on this equipment more 
-		float scaleCap = MathHelper.clamp_float(difficultyScale, 0F, 1F);
-		float scaleDivide = 1F / inventoryStages;
-		int inventoryStage = 0;
-		for (int i = 0; i < inventoryStages; i++) {
-			if (scaleCap <= scaleDivide * (i+1)) {
-				inventoryStage = i;
-				break;
-			}
-		}
-		return inventoryStage;
-	}
-	
-	public String getInvasionDebug(float difficultyScale) {
+	/*public String getInvasionDebug(float difficultyScale) {
 		return "spawncount: " + getSpawnCountBuff(difficultyScale) + 
 				" | targetrange: " + getTargettingRangeBuff(difficultyScale) + 
 				" | dig chance: " + getDigChanceBuff(difficultyScale) + 
 				" | inventory stage: " + getInventoryStageBuff(difficultyScale) + 
 				" | scale: " + difficultyScale;
-	}
+	}*/
 	
 	/**
 	 * Returns a list of classes that are verified to extend EntityCreature

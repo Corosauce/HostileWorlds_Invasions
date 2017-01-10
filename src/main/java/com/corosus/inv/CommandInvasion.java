@@ -15,7 +15,7 @@ import CoroUtil.util.BlockCoord;
 import CoroUtil.util.CoroUtilMisc;
 import CoroUtil.world.player.DynamicDifficulty;
 
-import com.corosus.inv.util.UtilMining;
+import CoroUtil.util.UtilMining;
 
 public class CommandInvasion extends CommandBase {
 
