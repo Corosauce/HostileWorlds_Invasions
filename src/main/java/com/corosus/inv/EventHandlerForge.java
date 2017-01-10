@@ -1,35 +1,27 @@
 package com.corosus.inv;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import CoroUtil.difficulty.EquipmentForDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
-import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayer.SleepResult;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.ItemStack;
 import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.potion.Potion;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -38,7 +30,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
@@ -46,10 +37,9 @@ import CoroUtil.util.BlockCoord;
 import CoroUtil.util.CoroUtilBlock;
 import CoroUtil.util.CoroUtilPath;
 import CoroUtil.util.Vec3;
-import CoroUtil.world.player.DynamicDifficulty;
+import CoroUtil.difficulty.DynamicDifficulty;
 
 import com.corosus.inv.ai.BehaviorModifier;
-import CoroUtil.ai.tasks.TaskCallForHelp;
 import CoroUtil.ai.tasks.TaskDigTowardsTarget;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigAdvancedSpawning;
@@ -100,7 +90,7 @@ public class EventHandlerForge {
 		}
 	}
 
-	//TODO: generic task flagging and restoration system in CoroUtil
+	/*//TODO: generic task flagging and restoration system in CoroUtil
 	@SubscribeEvent
 	public void entityCreated(EntityJoinWorldEvent event) {
 		if (event.getEntity().worldObj.isRemote) return;
@@ -110,7 +100,7 @@ public class EventHandlerForge {
 				BehaviorModifier.addTaskIfMissing(ent, TaskDigTowardsTarget.class, UtilEntityBuffs.tasksToInjectInv, UtilEntityBuffs.taskPrioritiesInv[0]);
 			}
 		}
-	}
+	}*/
 	
 	@SubscribeEvent
 	public void tickServer(ServerTickEvent event) {
@@ -254,7 +244,7 @@ public class EventHandlerForge {
 					float chanceToEnhance = getDigChanceBuff(difficultyScale);
 					//TODO: consider making the digging tasks disable after invasions "ends" so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
 					BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ),
-							UtilEntityBuffs.tasksToInject, UtilEntityBuffs.taskPriorities[0],
+							/*UtilEntityBuffs.tasksToInject, UtilEntityBuffs.taskPriorities[0],*/
 							modifyRange, chanceToEnhance);
 				}
 				

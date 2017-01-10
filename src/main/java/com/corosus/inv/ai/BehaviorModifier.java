@@ -36,7 +36,7 @@ public class BehaviorModifier {
 	public static String dataEntityEnhanceTried = "CoroAI_HW_Inv_EnhanceTried";
 	public static String dataEntityWaveSpawned = "CoroAI_HW_Inv_WaveSpawned";
 	
-	public static void enhanceZombiesToDig(World parWorld, Vec3 parPos, Class[] taskToInject, int priorityOfTask, int modifyRange, float chanceToEnhance) {
+	public static void enhanceZombiesToDig(World parWorld, Vec3 parPos, /*Class[] taskToInject, int priorityOfTask, */int modifyRange, float chanceToEnhance) {
 		
 		
 		AxisAlignedBB aabb = new AxisAlignedBB(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord, parPos.yCoord, parPos.zCoord);
@@ -64,7 +64,8 @@ public class BehaviorModifier {
 	        			if (!ent.getEntityData().getBoolean(dataEntityEnhanced)) {
 	        				if (!ConfigAdvancedOptions.enhanceOnlyExtraSpawnedForDigging || ent.getEntityData().getBoolean(dataEntityWaveSpawned)) {
 
-								UtilEntityBuffs.buffAI_CoroAI_Digging(parWorld, ent, null, -1);
+								//UtilEntityBuffs.buffAI_CoroAI_Digging(parWorld, ent, null, -1);
+								UtilEntityBuffs.applyBuff(UtilEntityBuffs.dataEntityBuffed_AI_Digging, ent, -1);
 
 
 		            			

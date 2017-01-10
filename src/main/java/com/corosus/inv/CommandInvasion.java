@@ -13,7 +13,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import CoroUtil.util.BlockCoord;
 import CoroUtil.util.CoroUtilMisc;
-import CoroUtil.world.player.DynamicDifficulty;
+import CoroUtil.difficulty.DynamicDifficulty;
 
 import CoroUtil.util.UtilMining;
 
