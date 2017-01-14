@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import CoroUtil.difficulty.UtilEntityBuffs;
+import CoroUtil.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -33,10 +34,6 @@ import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
-import CoroUtil.util.BlockCoord;
-import CoroUtil.util.CoroUtilBlock;
-import CoroUtil.util.CoroUtilPath;
-import CoroUtil.util.Vec3;
 import CoroUtil.difficulty.DynamicDifficulty;
 
 import com.corosus.inv.ai.BehaviorModifier;
@@ -388,8 +385,10 @@ public class EventHandlerForge {
 		//movement speed buff
 		//TODO: clamp to 1.0 or account for other mods speed bosting, or both!
 		double randBoost = ent.worldObj.rand.nextDouble() * ConfigAdvancedOptions.speedBoostBase * difficultyScale;
-		AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836"), "Invasion speed boost", randBoost, 1);
-		ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
+		AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "Invasion speed boost", randBoost, EnumAttribModifierType.INCREMENT_MULTIPLY_BASE.ordinal());
+		if (!ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier)) {
+			ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
+		}
 		
 		/*int inventoryStage = getInventoryStageBuff(difficultyScale);
 		

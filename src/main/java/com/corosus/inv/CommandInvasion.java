@@ -62,38 +62,21 @@ public class CommandInvasion extends CommandBase {
 	        {
 
 	        	if (var2[0].equalsIgnoreCase("canMine")) {
-	        		if (var2.length <= 4) {
-	        			int x = Integer.valueOf(var2[1]);
-		        		int y = Integer.valueOf(var2[2]);
-		        		int z = Integer.valueOf(var2[3]);
-		        		
-		        		BlockPos pos = new BlockPos(x, y, z);
-		        		IBlockState state = world.getBlockState(pos);
-		        		Block block = state.getBlock();
-		        		boolean canMine = UtilMining.canMineBlock(world, new BlockCoord(x, y, z), block);
-		        		float blockStrength = state.getBlockHardness(world, pos);
-		        		
-		        		var1.addChatMessage(new TextComponentString("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
-		        	}
-	        		
-	        	} else if (var2[0].equalsIgnoreCase("difficulty")) {
-	        		if ((var1 instanceof EntityPlayerMP)) {
-						EntityPlayerMP ent = (EntityPlayerMP) var1;
-			    		//net.minecraft.util.Vec3 posVec = ent.getPosition(1F);
-						net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
-			    		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
-			    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
-			    		CoroUtilMisc.sendCommandSenderMsg(ent, "Difficulties for you: ");
-			    		CoroUtilMisc.sendCommandSenderMsg(ent, "player rating: " + DynamicDifficulty.getDifficultyScaleForPlayerEquipment(ent));
-			    		CoroUtilMisc.sendCommandSenderMsg(ent, "server time: " + DynamicDifficulty.getDifficultyScaleForPlayerServerTime(ent));
-			    		CoroUtilMisc.sendCommandSenderMsg(ent, "avg chunk time: " + DynamicDifficulty.getDifficultyScaleForPosOccupyTime(ent.worldObj, pos));
-			    		CoroUtilMisc.sendCommandSenderMsg(ent, "best dps: " + DynamicDifficulty.getDifficultyScaleForPosDPS(ent.worldObj, pos));
-			    		CoroUtilMisc.sendCommandSenderMsg(ent, "health: " + DynamicDifficulty.getDifficultyScaleForHealth(ent));
-			    		CoroUtilMisc.sendCommandSenderMsg(ent, "dist from spawn: " + DynamicDifficulty.getDifficultyScaleForDistFromSpawn(ent));
-			    		CoroUtilMisc.sendCommandSenderMsg(ent, "------------");
-			    		CoroUtilMisc.sendCommandSenderMsg(ent, "average: " + DynamicDifficulty.getDifficultyScaleAverage(ent.worldObj, ent, pos));
+					if (var2.length <= 4) {
+						int x = Integer.valueOf(var2[1]);
+						int y = Integer.valueOf(var2[2]);
+						int z = Integer.valueOf(var2[3]);
+
+						BlockPos pos = new BlockPos(x, y, z);
+						IBlockState state = world.getBlockState(pos);
+						Block block = state.getBlock();
+						boolean canMine = UtilMining.canMineBlock(world, new BlockCoord(x, y, z), block);
+						float blockStrength = state.getBlockHardness(world, pos);
+
+						var1.addChatMessage(new TextComponentString("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
 					}
-	        	}
+
+				}
 	        	
 	        	
 	        	
