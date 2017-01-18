@@ -32,10 +32,6 @@ public class BehaviorModifier {
 	//entityid
 	//public static HashMap<Integer, Boolean> aiEnhanced = new HashMap<Integer, Boolean>();
 	
-	public static String dataEntityEnhanced = "CoroAI_HW_Inv_Enhanced";
-	public static String dataEntityEnhanceTried = "CoroAI_HW_Inv_EnhanceTried";
-	public static String dataEntityWaveSpawned = "CoroAI_HW_Inv_WaveSpawned";
-	
 	public static void enhanceZombiesToDig(World parWorld, Vec3 parPos, /*Class[] taskToInject, int priorityOfTask, */int modifyRange, float chanceToEnhance) {
 		
 		
@@ -51,26 +47,24 @@ public class BehaviorModifier {
         	EntityCreature ent = (EntityCreature)list.get(j);
             
         	if (ent != null && !ent.isDead) {
-        		//if (!aiEnhanced.containsKey(ent.getEntityId())) {
         		//log that we've tried to enhance with chance already, prevent further attempts to avoid stacking the odds per call on this method
-        		if (!ent.getEntityData().getBoolean(dataEntityEnhanceTried)) {
+        		if (!ent.getEntityData().getBoolean(UtilEntityBuffs.dataEntityEnhanceTried)) {
         			
         			enhanceCountTry++;
         			
-        			ent.getEntityData().setBoolean(dataEntityEnhanceTried, true);
+        			ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityEnhanceTried, true);
         			
         			if (parWorld.rand.nextFloat() < chanceToEnhance) {
         			
-	        			if (!ent.getEntityData().getBoolean(dataEntityEnhanced)) {
-	        				if (!ConfigAdvancedOptions.enhanceOnlyExtraSpawnedForDigging || ent.getEntityData().getBoolean(dataEntityWaveSpawned)) {
+	        			if (!ent.getEntityData().getBoolean(UtilEntityBuffs.dataEntityEnhanced)) {
+	        				if (!ConfigAdvancedOptions.enhanceOnlyExtraSpawnedForDigging || ent.getEntityData().getBoolean(UtilEntityBuffs.dataEntityWaveSpawned)) {
 
 								//UtilEntityBuffs.buffAI_CoroAI_Digging(parWorld, ent, null, -1);
-								UtilEntityBuffs.applyBuff(UtilEntityBuffs.dataEntityBuffed_AI_Digging, ent, -1);
 
-
+								UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_AI_Digging, ent, -1);
 		            			
 		            			enhanceCount++;
-		            			performExtraChanges(ent);
+		            			//performExtraChanges(ent);
 	        				}
 	            		}
         			}
@@ -100,11 +94,12 @@ public class BehaviorModifier {
 		return !foundTask;
 		
 	}
-	
+
+	@Deprecated
 	public static void performExtraChanges(EntityCreature ent) {
 		//ent.getNavigator().setBreakDoors(false);
 		((PathNavigateGround)ent.getNavigator()).setBreakDoors(false);
-		ent.getEntityData().setBoolean(dataEntityEnhanced, true);
+		ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityEnhanced, true);
 		ent.getEntityData().setBoolean("CoroAI_HW_GravelDeath", true);
 		ItemStack is = ent.getItemStackFromSlot(EntityEquipmentSlot.MAINHAND);
 		if (is == null) {

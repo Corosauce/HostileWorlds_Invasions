@@ -179,6 +179,11 @@ public class EventHandlerForge {
 			//world.getDifficultyForLocation(player.playerLocation);
 			
 			if (invasionActive) {
+
+				/**
+				 * Target and path to player code
+				 */
+
 				if (player.onGround && world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRatePath == 0) {
 				
 					int range = getTargettingRangeBuff(difficultyScale);
@@ -233,7 +238,11 @@ public class EventHandlerForge {
 						}
 					}
 				}
-				
+
+				/**
+				 * Buff with digging
+				 */
+
 				if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
 					//TaskDigTowardsTarget task = new TaskDigTowardsTarget();
 					
@@ -244,7 +253,11 @@ public class EventHandlerForge {
 							/*UtilEntityBuffs.tasksToInject, UtilEntityBuffs.taskPriorities[0],*/
 							modifyRange, chanceToEnhance);
 				}
-				
+
+				/**
+				 * Spawn extra with buffs
+				 */
+
 				if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateSpawning == 0) {
 					int spawnCountCur = player.getEntityData().getInteger(dataPlayerInvasionWaveCountCur);
 					int spawnCountMax = player.getEntityData().getInteger(dataPlayerInvasionWaveCountMax);
@@ -315,7 +328,7 @@ public class EventHandlerForge {
 	        	
 	        	ent.setPosition(tryX, tryY, tryZ);
 				ent.onInitialSpawn(ent.worldObj.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData)null);
-				ent.getEntityData().setBoolean(BehaviorModifier.dataEntityWaveSpawned, true);
+				ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
 				enhanceMobForDifficulty(ent, difficultyScale);
 				player.worldObj.spawnEntityInWorld(ent);
 				ent.setAttackTarget(player);
@@ -383,12 +396,14 @@ public class EventHandlerForge {
 		}*/
 		
 		//movement speed buff
-		//TODO: clamp to 1.0 or account for other mods speed bosting, or both!
+		//TODO: clamp to 1.0 or account for other mods speed boosting, or both!
 		double randBoost = ent.worldObj.rand.nextDouble() * ConfigAdvancedOptions.speedBoostBase * difficultyScale;
 		AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "Invasion speed boost", randBoost, EnumAttribModifierType.INCREMENT_MULTIPLY_BASE.ordinal());
 		if (!ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier)) {
 			ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
 		}
+
+		UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_Inventory, ent, difficultyScale);
 		
 		/*int inventoryStage = getInventoryStageBuff(difficultyScale);
 		
