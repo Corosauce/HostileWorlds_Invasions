@@ -37,6 +37,10 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("Prevent players from sleeping through the night during invasion nights")
 	public static boolean preventSleepDuringInvasions = true;
 	
+	@ConfigComment("Players to exclude from invasions, or only include depending on list mode")
+	public static String blackListPlayers = "";
+	public static boolean useBlacklistAsWhitelist = false;
+	
 	@Override
 	public String getConfigFileName() {
 		return "HW_Invasions" + File.separator + "InvasionConfig";

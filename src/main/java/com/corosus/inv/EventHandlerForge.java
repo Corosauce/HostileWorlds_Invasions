@@ -1,7 +1,5 @@
 package com.corosus.inv;
 
-import io.netty.util.internal.ThreadLocalRandom;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,12 +31,12 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import CoroUtil.util.BlockCoord;
 import CoroUtil.util.CoroUtilBlock;
+import CoroUtil.util.CoroUtilEntity;
 import CoroUtil.util.CoroUtilPath;
 import CoroUtil.util.Vec3;
 import CoroUtil.world.player.DynamicDifficulty;
@@ -220,6 +218,17 @@ public class EventHandlerForge {
 	 */
 	public void tickPlayer(EntityPlayer player) {
 		try {
+			
+			if (ConfigInvasion.useBlacklistAsWhitelist) {
+				if (!ConfigInvasion.blackListPlayers.contains(CoroUtilEntity.getName(player))) {
+					return;
+				}
+			} else {
+				if (ConfigInvasion.blackListPlayers.contains(CoroUtilEntity.getName(player))) {
+					return;
+				}
+			}
+			
 			World world = player.worldObj;
 			net.minecraft.util.Vec3 posVec = net.minecraft.util.Vec3.createVectorHelper(player.posX, player.posY + (player.getEyeHeight() - player.getDefaultEyeHeight()), player.posZ);//player.getPosition(1F);
 			BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));

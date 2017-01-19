@@ -71,6 +71,10 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     		if (entity.getAttackTarget() == null) {
     			//System.out.println("forcing reset of target2");
     			entity.setAttackTarget(targetLastTracked);
+    			//fix for scenario where setAttackTarget calls forge event and someone undoes target setting
+    			if (entity.getAttackTarget() == null) {
+    				return false;
+    			}
     		} else {
     			targetLastTracked = entity.getAttackTarget();
     		}
@@ -145,6 +149,11 @@ public class TaskDigTowardsTarget extends EntityAIBase implements ITaskInitializ
     }
     
     public boolean updateBlockToMine() {
+    	
+    	//fix for scenario where setAttackTarget calls forge event and someone undoes target setting
+		if (entity.getAttackTarget() == null) {
+			return false;
+		}
     	
     	posCurMining = null;
     	
