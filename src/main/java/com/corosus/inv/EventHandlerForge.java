@@ -77,7 +77,7 @@ public class EventHandlerForge {
 	public void canSleep(PlayerSleepInBedEvent event) {
 		if (event.getEntityPlayer().worldObj.isRemote) return;
 		if (ConfigInvasion.preventSleepDuringInvasions) {
-			if (isInvasionTonight(event.getEntityPlayer().worldObj)) {
+			if (!event.getEntityPlayer().worldObj.isDaytime() && isInvasionTonight(event.getEntityPlayer().worldObj)) {
 				EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
 				player.addChatMessage(new TextComponentString("You can't sleep during invasion nights!"));
 				event.setResult(SleepResult.NOT_SAFE);
