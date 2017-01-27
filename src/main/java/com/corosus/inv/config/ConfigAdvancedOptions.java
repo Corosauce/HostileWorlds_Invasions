@@ -16,6 +16,8 @@ public class ConfigAdvancedOptions implements IConfigCategory {
 	public static int pathFailDelayPenalty = 200;
 	public static int pathDelayBase = 50;
 	public static boolean enhanceOnlyExtraSpawnedForDigging = true;
+	public static String blackListPlayers = "";
+	public static boolean useBlacklistAsWhitelist = false;
 
 	@Override
 	public String getName() {

@@ -60,12 +60,60 @@ public class EventHandlerForge {
 	public static String dataPlayerInvasionWaveCountCur = "HW_dataPlayerInvasionWaveCountCur";
 	public static String dataPlayerInvasionWaveCountMax = "HW_dataPlayerInvasionWaveCountMax";
 	public static String dataCreatureLastPathWithDelay = "CoroAI_HW_CreatureLastPathWithDelay";
-	
 
-	
 
-	
-	public EventHandlerForge() {
+    /**
+     *
+     * Invasion reason redesign:
+     *
+     * 2 Invasion trigger ways
+     * - Time
+     * - Activity
+     *
+     * - Try to keep it shared between players / global, its fun to band together to fight them off, server events are fun
+     *
+     * - Do config for each
+     *
+     * - Time
+     * -- Count up a timer instead of doing sketchy day number math
+     * -- Track a central timer for dimension 0
+     * --- support for per player ? why if its same time for all
+     *
+     * - Activity
+     * -- Try to make it a shared value between players
+     * -- Track a value, build it up when activity happens
+     * -- When activityTracked > activityThreshold, schedule an invasion for that night
+     *
+     * -- What counts as activity? Ideas:
+     * --- Mining resources
+     * ---- How to handle quarries?
+     *
+     * --- Power usage / Pollution buildup like factorio
+     * ---- Might need a whitelist / blacklist of mod machines
+     * ----- for all power spending machines: blacklist stuff like batteries, trasmitters (wires)
+     * ----- or whitelist only non batteries
+     * ---- Using the various APIs, attempt to track their power consumption
+     * N---- doesnt seem to be a standard way to track it spending energy, not even RF
+     * ----- no sane way to hook into or detect it receiving energy...
+     *
+     * --- Player clicks
+     * --- Player movement that maybe factors in distance travelled
+     * --- Player mining time
+     * --- Or instead of the 3 above, track hunger spending?
+     *
+     *
+     * -- Use a generic activity value, and have things increase it, weighted by their severity
+     *
+     *
+     * - Way to ward off invasions for specific player
+     * -- must keep it global event
+     * -- but allow a way for a player to prevent/reduce invasion entities specifically for them
+     * -- maybe makes next invasion harder to compensate for reducing / cancelling pending invasion
+     *
+     *
+     */
+
+    public EventHandlerForge() {
 		
 		//init inventories for difficulties
 		
@@ -77,6 +125,7 @@ public class EventHandlerForge {
 	public void canSleep(PlayerSleepInBedEvent event) {
 		if (event.getEntityPlayer().worldObj.isRemote) return;
 		if (ConfigInvasion.preventSleepDuringInvasions) {
+			//TODO: let players with invasions off sleep
 			if (!event.getEntityPlayer().worldObj.isDaytime() && isInvasionTonight(event.getEntityPlayer().worldObj)) {
 				EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
 				player.addChatMessage(new TextComponentString("You can't sleep during invasion nights!"));
@@ -86,18 +135,6 @@ public class EventHandlerForge {
 			}
 		}
 	}
-
-	/*//TODO: generic task flagging and restoration system in CoroUtil
-	@SubscribeEvent
-	public void entityCreated(EntityJoinWorldEvent event) {
-		if (event.getEntity().worldObj.isRemote) return;
-		if (event.getEntity() instanceof EntityCreature) {
-			EntityCreature ent = (EntityCreature) event.getEntity();
-			if (ent.getEntityData().getBoolean(BehaviorModifier.dataEntityEnhanced)) {
-				BehaviorModifier.addTaskIfMissing(ent, TaskDigTowardsTarget.class, UtilEntityBuffs.tasksToInjectInv, UtilEntityBuffs.taskPrioritiesInv[0]);
-			}
-		}
-	}*/
 	
 	@SubscribeEvent
 	public void tickServer(ServerTickEvent event) {
@@ -110,8 +147,10 @@ public class EventHandlerForge {
 			World world = DimensionManager.getWorld(0);
 			if (world != null) {
 				if (world.getTotalWorldTime() % 20 == 0) {
-					for (Object player : world.playerEntities) {
-						tickPlayer((EntityPlayer)player);
+					for (EntityPlayer player : world.playerEntities) {
+						if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
+							tickPlayer(player);
+						}
 					}
 				}
 			}

@@ -3,6 +3,7 @@ package com.corosus.inv.ai;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
+import CoroUtil.ai.tasks.TaskDigTowardsTarget;
 import CoroUtil.difficulty.UtilEntityBuffs;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.ai.EntityAIBase;
@@ -61,7 +62,12 @@ public class BehaviorModifier {
 
 								//UtilEntityBuffs.buffAI_CoroAI_Digging(parWorld, ent, null, -1);
 
-								UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_AI_Digging, ent, -1);
+								if (UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_AI_Digging, ent, -1)) {
+									ent.getEntityData().setBoolean(TaskDigTowardsTarget.dataUseInvasionRules, true);
+									ent.getEntityData().setBoolean(TaskDigTowardsTarget.dataUsePlayerList, true);
+									ent.getEntityData().setBoolean(TaskDigTowardsTarget.dataWhitelistMode, ConfigAdvancedOptions.useBlacklistAsWhitelist);
+									ent.getEntityData().setString(TaskDigTowardsTarget.dataListPlayers, ConfigAdvancedOptions.blackListPlayers);
+								}
 		            			
 		            			enhanceCount++;
 		            			//performExtraChanges(ent);
