@@ -4,10 +4,12 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
@@ -36,12 +38,19 @@ public class CommandInvasion extends CommandBase {
 			System.out.println("Works for actual players only");
 			return;
 		}*/
-		
-		
+
+		EntityPlayer player = null;
+		if (var1 instanceof EntityPlayer) {
+			player = (EntityPlayer) var1;
+		}
+		World world = var1.getEntityWorld();
+		int dimension = world.provider.getDimension();
+		BlockPos posBlock = var1.getPosition();
+		Vec3d posVec = var1.getPositionVector();
 		
 		try {
 			
-			World world = DimensionManager.getWorld(0);
+			world = DimensionManager.getWorld(0);
 			long dayNumber = (world.getWorldTime() / 24000) + 1;
 			
 			if (var2.length < 1)
@@ -49,7 +58,7 @@ public class CommandInvasion extends CommandBase {
 				if ((var1 instanceof EntityPlayerMP)) {
 					EntityPlayerMP ent = (EntityPlayerMP) var1;
 		    		//net.minecraft.util.Vec3 posVec = ent.getPosition(1F);
-		    		net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
+		    		/*net.minecraft.util.math.Vec3d */posVec = new net.minecraft.util.math.Vec3d(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
 		    		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 		    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
 		    		CoroUtilMisc.sendCommandSenderMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + DynamicDifficulty.getDifficultyScaleAverage(ent.worldObj, ent, pos));
@@ -76,6 +85,12 @@ public class CommandInvasion extends CommandBase {
 						var1.addChatMessage(new TextComponentString("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
 					}
 
+				} else if (var2[0].equalsIgnoreCase("skip")) {
+					if (player != null) {
+						EventHandlerForge.skipNextInvasionForPlayer(player);
+					} else {
+						var1.addChatMessage(new TextComponentString("requires player reference"));
+					}
 				}
 	        	
 	        	

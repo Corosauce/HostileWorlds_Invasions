@@ -30,7 +30,9 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
@@ -57,9 +59,11 @@ public class EventHandlerForge {
 	 */
 	
 	public static String dataPlayerInvasionActive = "HW_dataPlayerInvasionActive";
+	public static String dataPlayerInvasionWarned = "HW_dataPlayerInvasionWarned";
 	public static String dataPlayerInvasionWaveCountCur = "HW_dataPlayerInvasionWaveCountCur";
 	public static String dataPlayerInvasionWaveCountMax = "HW_dataPlayerInvasionWaveCountMax";
 	public static String dataCreatureLastPathWithDelay = "CoroAI_HW_CreatureLastPathWithDelay";
+
 
 
     /**
@@ -114,24 +118,81 @@ public class EventHandlerForge {
      */
 
     public EventHandlerForge() {
-		
-		//init inventories for difficulties
-		
-		
 
+	}
+
+	public static boolean skipNextInvasionForPlayer(EntityPlayer player) {
+		/**
+		 * mark in data they have a skip ready
+		 *
+		 * track amount of skips used up to 3, reset if they didnt skip invasion (factor in leaving as a skip)
+		 *
+		 * once code wants to start invasion for player, check for skip flag, dont do anything if present
+		 *
+		 * once invasion ends, count up consecutive skips used, remove skip flags,
+		 *
+		 * skipping counts as blood sacrifice, or leaving to cheat the invasion
+		 *
+		 * to make harder for next invasion:
+		 * manage a buff into coroutil ..... err, a thing that increases difficulty value, not a buff
+		 * during invasion, check for skip count
+		 * apply a +50% difficulty buff * skip count
+		 * somehow remove after invasion over
+		 */
+		World world = player.worldObj;
+		boolean skipped = player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping);
+		if (!skipped) {
+			if (isInvasionTonight(world)) {
+				//only allow skip during day before its actually active
+				if (world.isDaytime()) {
+					int skipCountMax = 3;
+					int skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCount);
+					if (skipCount < skipCountMax) {
+						skipCount++;
+						player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, true);
+						player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCount, skipCount);
+						player.addChatComponentMessage(new TextComponentString("Skipping tonights invasion, skip count: " + skipCount));
+						return true;
+					} else {
+						player.addChatComponentMessage(new TextComponentString("You've already skipped invasions " + skipCountMax + " times!"));
+					}
+
+				} else {
+					player.addChatComponentMessage(new TextComponentString("Too late, invasion already started!"));
+				}
+			} else {
+				player.addChatComponentMessage(new TextComponentString("Cant skip yet!"));
+			}
+		} else {
+			player.addChatComponentMessage(new TextComponentString("You are already skipping this nights invasion!"));
+		}
+		return false;
 	}
 	
 	@SubscribeEvent
 	public void canSleep(PlayerSleepInBedEvent event) {
 		if (event.getEntityPlayer().worldObj.isRemote) return;
 		if (ConfigInvasion.preventSleepDuringInvasions) {
-			//TODO: let players with invasions off sleep
 			if (!event.getEntityPlayer().worldObj.isDaytime() && isInvasionTonight(event.getEntityPlayer().worldObj)) {
 				EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
-				player.addChatMessage(new TextComponentString("You can't sleep during invasion nights!"));
-				event.setResult(SleepResult.NOT_SAFE);
+				if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
+					player.addChatMessage(new TextComponentString("You can't sleep during invasion nights!"));
+					event.setResult(SleepResult.NOT_SAFE);
+				}
 			} else {
 				
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public void canDespawn(LivingSpawnEvent.AllowDespawn event) {
+
+		//prevent invasion spawned entities from despawning during invasion if they are too far away
+
+		if (!event.getEntity().worldObj.isDaytime() && isInvasionTonight(event.getEntity().worldObj)) {
+			if (event.getEntity().getEntityData().getBoolean(UtilEntityBuffs.dataEntityWaveSpawned)) {
+				event.setResult(Event.Result.DENY);
 			}
 		}
 	}
@@ -185,6 +246,7 @@ public class EventHandlerForge {
 			//difficultyScale = 1F;
 			
 			boolean activeBool = player.getEntityData().getBoolean(dataPlayerInvasionActive);
+			boolean skippingBool = player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping);
 			
 			//TODO: add a visual cue for invasion coming tonight + active invasion
 			
@@ -192,6 +254,14 @@ public class EventHandlerForge {
 			//new day starts just as sun is rising, so invasion stops just at the right time when sun is imminent, they burn 300 ticks before invasion ends, thats ok
 			//FYI night val is based on sunlight level, so its not night ends @ 24000 cycle, its a bit before, 400ish ticks before, thats ok
 			boolean invasionOnThisNight = isInvasionTonight(world);
+
+			if (invasionOnThisNight && world.isDaytime()) {
+				if (!player.getEntityData().getBoolean(dataPlayerInvasionWarned)) {
+					player.addChatComponentMessage(new TextComponentString(ChatFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!"));
+					player.getEntityData().setBoolean(dataPlayerInvasionWarned, true);
+				}
+			}
+
 			if (invasionOnThisNight && !world.isDaytime()) {
 				
 				invasionActive = true;
@@ -203,6 +273,13 @@ public class EventHandlerForge {
 				invasionActive = false;
 				if (activeBool) {
 					//System.out.println("triggering invasion stop");
+
+					//before the skipping flag is reset for all, check if wasnt skipping, and reset their skip counter
+					//might be a better place to put this
+					if (!skippingBool) {
+						player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCount, 0);
+					}
+
 					invasionStopReset(player);
 				}
 			}
@@ -217,7 +294,7 @@ public class EventHandlerForge {
 			//invasionActive = true;
 			//world.getDifficultyForLocation(player.playerLocation);
 			
-			if (invasionActive) {
+			if (invasionActive && !skippingBool) {
 
 				/**
 				 * Target and path to player code
@@ -318,17 +395,34 @@ public class EventHandlerForge {
 	
 	public void invasionStart(EntityPlayer player, float difficultyScale) {
 		//System.out.println("invasion started");
-		player.addChatMessage(new TextComponentString(ChatFormatting.RED + "An invasion has started! Be prepared!"));
+		if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
+			player.addChatMessage(new TextComponentString(ChatFormatting.GREEN + "An invasion has started! But skipped for you!"));
+		} else {
+			player.addChatMessage(new TextComponentString(ChatFormatting.RED + "An invasion has started! Be prepared!"));
+		}
+
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, true);
 		
 		player.getEntityData().setInteger(dataPlayerInvasionWaveCountMax, getSpawnCountBuff(difficultyScale));
 		player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, 0);
+
+		//add buff for player based on how many invasions they skipped (and only if this isnt a skipped invasion)
+		if (!player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
+			float buffBase = 0.5F;
+			float skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCount);
+			DynamicDifficulty.setInvasionSkipBuff(player, buffBase * skipCount);
+		}
 	}
 	
 	public void invasionStopReset(EntityPlayer player) {
 		//System.out.println("invasion ended");
 		player.addChatMessage(new TextComponentString(ChatFormatting.GREEN + "The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
 		player.getEntityData().setBoolean(dataPlayerInvasionActive, false);
+		player.getEntityData().setBoolean(dataPlayerInvasionWarned, false);
+		player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, false);
+
+		//remove invasion specific buff since invasion stopped
+		DynamicDifficulty.setInvasionSkipBuff(player, 0);
 	}
 	
 	public boolean spawnNewMobSurface(EntityLivingBase player, float difficultyScale) {
@@ -472,11 +566,18 @@ public class EventHandlerForge {
 	
 
 	
-	public boolean isInvasionTonight(World world) {
+	public static boolean isInvasionTonight(World world) {
 		//add 1 day because calculation is off, eg: if we want 1 warmup day, we dont want first night to be an invasion
-		int dayAdjust = ConfigInvasion.warmupDaysToFirstInvasion + 1;
-		long dayNumber = (world.getWorldTime() / 24000) + 1;
-		return dayNumber >= dayAdjust && (dayNumber-dayAdjust == 0 || (dayNumber-dayAdjust) % Math.max(1, ConfigInvasion.daysBetweenInvasions) == 0);
+		//switching to 0 indexed
+
+		//adding +1 to ConfigInvasion.daysBetweenInvasions for the math because, eg:
+		//- for 2, we want an invasion every 3rd day, so to skip 2 days, not do an invasion every 2 days
+
+		int dayAdjust = ConfigInvasion.warmupDaysToFirstInvasion;
+		long dayNumber = (world.getWorldTime() / 24000);
+		return dayNumber >= dayAdjust &&
+				(dayNumber-dayAdjust == 0 ||
+						(dayNumber-dayAdjust) % Math.max(1, ConfigInvasion.daysBetweenInvasions + 1) == 0);
 	}
 	
 	public int getSpawnCountBuff(float difficultyScale) {
