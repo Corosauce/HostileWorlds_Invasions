@@ -1,19 +1,16 @@
 package com.corosus.inv;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.util.*;
+import com.corosus.inv.capabilities.ExtendedPlayerStorage;
+import com.corosus.inv.capabilities.PlayerDataInstance;
+import com.google.gson.Gson;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.IEntityLivingData;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.*;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
@@ -22,13 +19,19 @@ import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayer.SleepResult;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
@@ -63,8 +66,9 @@ public class EventHandlerForge {
 	public static String dataPlayerInvasionWaveCountCur = "HW_dataPlayerInvasionWaveCountCur";
 	public static String dataPlayerInvasionWaveCountMax = "HW_dataPlayerInvasionWaveCountMax";
 	public static String dataCreatureLastPathWithDelay = "CoroAI_HW_CreatureLastPathWithDelay";
+	public static String dataPlayerInvasionData = "HW_dataPlayerInvasionData";
 
-
+	//public static HashMap<String, InvasionWave> lookupUUIDToInvasionWave = new HashMap<>();
 
     /**
      *
@@ -168,6 +172,35 @@ public class EventHandlerForge {
 		}
 		return false;
 	}
+
+	@SubscribeEvent
+	public void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
+		if (event.getObject() instanceof EntityPlayer) {
+			event.addCapability(new ResourceLocation(Invasion.modID, "PlayerDataInstance"), new ICapabilitySerializable<NBTTagCompound>() {
+				PlayerDataInstance instance = Invasion.PLAYER_DATA_INSTANCE.getDefaultInstance();
+
+				@Override
+				public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
+					return capability == Invasion.PLAYER_DATA_INSTANCE;
+				}
+
+				@Override
+				public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+					return capability == Invasion.PLAYER_DATA_INSTANCE ? Invasion.PLAYER_DATA_INSTANCE.<T>cast(this.instance) : null;
+				}
+
+				@Override
+				public NBTTagCompound serializeNBT() {
+					return (NBTTagCompound) Invasion.PLAYER_DATA_INSTANCE.getStorage().writeNBT(Invasion.PLAYER_DATA_INSTANCE, this.instance, null);
+				}
+
+				@Override
+				public void deserializeNBT(NBTTagCompound nbt) {
+					Invasion.PLAYER_DATA_INSTANCE.getStorage().readNBT(Invasion.PLAYER_DATA_INSTANCE, this.instance, null, nbt);
+				}
+			});
+		}
+	}
 	
 	@SubscribeEvent
 	public void canSleep(PlayerSleepInBedEvent event) {
@@ -228,8 +261,8 @@ public class EventHandlerForge {
 			World world = player.worldObj;
 			net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(player.posX, player.posY + (player.getEyeHeight() - player.getDefaultEyeHeight()), player.posZ);//player.getPosition(1F);
 			BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
-			
-			
+
+			tickInvasionData(player);
 			
 			float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
 			///Chunk chunk = world.getChunkFromBlockCoords(pos);
@@ -386,6 +419,38 @@ public class EventHandlerForge {
 						}
 					}
 				}
+
+				/**
+				 * new json backed spawn system
+				 *
+				 * - need way to support randomizing between types of invasions
+				 * -- frost invaders
+				 * -- flame invaders
+				 *
+				 * - look through all mob spawn profiles
+				 * - filter by conditions except random one
+				 * - do random one last
+				 * -- random weight based evaluating
+				 *
+				 * - now we have a list of entities with cmods to spawn
+				 * - transfer that list into a new currently unmade wave data class
+				 * -- set invasion state to use decided entity list
+				 *
+				 * - class needs:
+				 * -- per entity list
+				 * --- entity to spawn
+				 * --- amount spawned already
+				 * --- amount to spawn (max)
+				 * --- the cmods?
+				 *
+				 * - same experience for each player?
+				 * -- simple option i guess
+				 *
+				 * - invasion instance per player either way
+				 * -- player nbt json structure <-> invasion instance?
+				 */
+
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -662,4 +727,31 @@ public class EventHandlerForge {
 		listDefault.add(EntityZombie.class);
 		return listDefault;
 	}
+
+	//test method?
+	public static void tickInvasionData(EntityPlayer player) {
+
+		PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+
+		System.out.println(storage.invasionWave);
+
+		/*String uuid = player.getPersistentID().toString();
+		if (!lookupUUIDToInvasionWave.containsKey(uuid)) {
+			lookupUUIDToInvasionWave.put(uuid, new InvasionWave());
+		}
+
+		InvasionWave data = lookupUUIDToInvasionWave.get(uuid);
+
+		writeInvasionNBT(player);*/
+	}
+
+	/*public static void writeInvasionNBT(EntityPlayer player) {
+		String uuid = player.getPersistentID().toString();
+		InvasionWave data = lookupUUIDToInvasionWave.get(uuid);
+
+		Gson json = new Gson();
+		String dataJson = json.toJson(data);
+
+		NBTTagCompound nbt = player.getEntityData().getCompoundTag(dataPlayerInvasionData);
+	}*/
 }

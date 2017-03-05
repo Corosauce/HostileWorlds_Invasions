@@ -1,7 +1,12 @@
 package com.corosus.inv;
 
+import com.corosus.inv.capabilities.ExtendedPlayerStorage;
+import com.corosus.inv.capabilities.PlayerDataInstance;
 import modconfig.ConfigMod;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -20,6 +25,9 @@ public class Invasion {
 	@Mod.Instance( value = "hw_inv" )
 	public static Invasion instance;
 	public static String modID = "hw_inv";
+
+    @CapabilityInject(PlayerDataInstance.class)
+    public static final Capability<PlayerDataInstance> PLAYER_DATA_INSTANCE = null;
     
 	@Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -27,6 +35,8 @@ public class Invasion {
 		ConfigMod.addConfigFile(event, new ConfigInvasion());
 		ConfigMod.addConfigFile(event, new ConfigAdvancedSpawning());
 		ConfigMod.addConfigFile(event, new ConfigAdvancedOptions());
+
+        CapabilityManager.INSTANCE.register(PlayerDataInstance.class, new ExtendedPlayerStorage(), PlayerDataInstance.class);
     }
     
 	@Mod.EventHandler
