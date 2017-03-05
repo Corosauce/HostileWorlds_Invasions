@@ -43,7 +43,6 @@ public class Invasion {
     public void load(FMLInitializationEvent event)
     {
 		MinecraftForge.EVENT_BUS.register(new EventHandlerForge());
-		FMLCommonHandler.instance().bus().register(new EventHandlerForge());
     }
     
     @Mod.EventHandler
