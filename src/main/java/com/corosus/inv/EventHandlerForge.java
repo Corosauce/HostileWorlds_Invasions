@@ -180,7 +180,7 @@ public class EventHandlerForge {
 	public void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
 		if (event.getObject() instanceof EntityPlayer) {
 			event.addCapability(new ResourceLocation(Invasion.modID, "PlayerDataInstance"), new ICapabilitySerializable<NBTTagCompound>() {
-				PlayerDataInstance instance = Invasion.PLAYER_DATA_INSTANCE.getDefaultInstance();
+				PlayerDataInstance instance = Invasion.PLAYER_DATA_INSTANCE.getDefaultInstance().setPlayer((EntityPlayer)event.getObject());
 
 				@Override
 				public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
@@ -734,7 +734,7 @@ public class EventHandlerForge {
 		return listDefault;
 	}
 
-	public static void chooseInvasionProfile(EntityPlayer player, float difficulty) {
+	public static DataMobSpawnsTemplate chooseInvasionProfile(EntityPlayer player, float difficulty) {
 		List<DataMobSpawnsTemplate> listPhase2 = new ArrayList<>();
 
 		System.out.println("phase 1 choice count: " + DifficultyDataReader.getData().listMobSpawnTemplates.size());
@@ -757,15 +757,12 @@ public class EventHandlerForge {
 
 		}
 
-		//TODO: what if 2 templates dont use random, what if 1 doesnt?
-		//maybe assume a weight of 1 if no ConditionRandom present, lets try
-
 		//do weighted random
 		int totalWeight = 0;
 
 		//index of weight should match index of listPhase2 entries
 		List<Integer> listWeights = new ArrayList<>();
-		System.out.println("phase 1 choice count: " + listPhase2.size());
+		//System.out.println("phase 1 choice count: " + listPhase2.size());
 		for (DataMobSpawnsTemplate spawns : listPhase2) {
 
 			//default 1 if no random found
@@ -796,24 +793,34 @@ public class EventHandlerForge {
 		}
 
 		if (index != -1) {
-			DataMobSpawnsTemplate spawn = listPhase2.get(index);
+			return listPhase2.get(index);
 
-			System.out.println("final choice: " + spawn.name);
+			//System.out.println("final choice: " + spawn.name);
 		} else {
-			System.out.println("design flaw!");
+			//System.out.println("design flaw!");
 		}
 
 		//temp
+		return null;
+	}
 
+	public static void initNewInvasion(EntityPlayer player, float difficulty) {
+		PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+		/*storage.val++;
+
+		System.out.println(storage.val);*/
+
+		//test code to start a new invasion
+		DataMobSpawnsTemplate profile = chooseInvasionProfile(player, difficulty);
+		if (profile != null) {
+			storage.initNewInvasion(profile);
+		} else {
+			//TODO: no invasions for you! also this is bad?, perhaps hardcode a fallback default, what if no invasion is modpack makers intent
+		}
 	}
 
 	//test method?
 	public static void tickInvasionData(EntityPlayer player, float difficulty) {
-
-		PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
-		storage.val++;
-
-		System.out.println(storage.val);
 
 
 

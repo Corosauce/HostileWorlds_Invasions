@@ -1,17 +1,52 @@
 package com.corosus.inv;
 
+import CoroUtil.difficulty.data.DataActionMobSpawns;
 import CoroUtil.difficulty.data.DataCmod;
+import CoroUtil.difficulty.data.DeserializerAllJson;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import net.minecraft.nbt.NBTTagCompound;
 
 import java.util.List;
 
 /**
+ * Runtime instance of DataActionMobSpawns
+ *
  * Created by Corosus on 3/4/2017.
  */
 public class InvasionEntitySpawn {
 
-    public String entityName;
+    public DataActionMobSpawns spawnProfile;
     public int spawnCountCurrent;
-    public int spawnCountMax;
-    public List<DataCmod> listCmods;
 
+    /*public List<String> listEntityNames;
+
+    public int spawnCountMax;
+    public List<DataCmod> listCmods;*/
+
+    public void clear() {
+        spawnProfile.cmods.clear();
+        spawnProfile.entities.clear();
+    }
+
+    public void readNBT(NBTTagCompound nbtTagCompound) {
+        spawnCountCurrent = nbtTagCompound.getInteger("spawnCountCurrent");
+        //spawnProfile = (new Gson()).fromJson(nbtTagCompound.getString("json"), DataActionMobSpawns.class);
+        JsonObject json = (new JsonParser()).parse(nbtTagCompound.getString("json")).getAsJsonObject();
+        try {
+            spawnProfile = DeserializerAllJson.deserializeSpawns(json);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+
+    }
+
+    public void writeNBT(NBTTagCompound nbtTagCompound) {
+        nbtTagCompound.setInteger("spawnCountCurrent", spawnCountCurrent);
+        //nbtTagCompound.setString("json", (new Gson()).toJson(spawnProfile, DataActionMobSpawns.class));
+        nbtTagCompound.setString("json", DeserializerAllJson.serializeSpawns(spawnProfile).toString());
+    }
 }

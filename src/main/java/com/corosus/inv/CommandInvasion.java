@@ -91,11 +91,11 @@ public class CommandInvasion extends CommandBase {
 					} else {
 						var1.addChatMessage(new TextComponentString("requires player reference"));
 					}
-				} else if (var2[0].equalsIgnoreCase("testInvasion")) {
+				} else if (var2[0].equalsIgnoreCase("ti")) {
 					if (player != null) {
 						BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 						float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
-						EventHandlerForge.chooseInvasionProfile(player, difficultyScale);
+						EventHandlerForge.initNewInvasion(player, difficultyScale);
 					}
 				}
 	        	
