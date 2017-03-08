@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Created by Corosus on 3/4/2017.
  */
-public class InvasionWave {
+public class InvasionEntitySpawn {
 
     public String entityName;
     public int spawnCountCurrent;

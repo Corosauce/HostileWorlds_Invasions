@@ -3,10 +3,15 @@ package com.corosus.inv;
 import java.util.*;
 
 import CoroUtil.difficulty.UtilEntityBuffs;
+import CoroUtil.difficulty.data.DataCondition;
+import CoroUtil.difficulty.data.DataMobSpawnsTemplate;
+import CoroUtil.difficulty.data.DifficultyDataReader;
+import CoroUtil.difficulty.data.conditions.ConditionContext;
+import CoroUtil.difficulty.data.conditions.ConditionDifficulty;
+import CoroUtil.difficulty.data.conditions.ConditionInvasionNumber;
+import CoroUtil.difficulty.data.conditions.ConditionRandom;
 import CoroUtil.util.*;
-import com.corosus.inv.capabilities.ExtendedPlayerStorage;
 import com.corosus.inv.capabilities.PlayerDataInstance;
-import com.google.gson.Gson;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -32,7 +37,6 @@ import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
@@ -42,7 +46,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import CoroUtil.difficulty.DynamicDifficulty;
 
 import com.corosus.inv.ai.BehaviorModifier;
-import CoroUtil.ai.tasks.TaskDigTowardsTarget;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
@@ -68,7 +71,7 @@ public class EventHandlerForge {
 	public static String dataCreatureLastPathWithDelay = "CoroAI_HW_CreatureLastPathWithDelay";
 	public static String dataPlayerInvasionData = "HW_dataPlayerInvasionData";
 
-	//public static HashMap<String, InvasionWave> lookupUUIDToInvasionWave = new HashMap<>();
+	//public static HashMap<String, InvasionEntitySpawn> lookupUUIDToInvasionWave = new HashMap<>();
 
     /**
      *
@@ -262,9 +265,12 @@ public class EventHandlerForge {
 			net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(player.posX, player.posY + (player.getEyeHeight() - player.getDefaultEyeHeight()), player.posZ);//player.getPosition(1F);
 			BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 
-			tickInvasionData(player);
+
 			
 			float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
+
+			//tickInvasionData(player, difficultyScale);
+
 			///Chunk chunk = world.getChunkFromBlockCoords(pos);
 			//long inhabTime = chunk.getInhabitedTime();
 			//System.out.println("difficultyScale: " + difficultyScale);
@@ -728,26 +734,125 @@ public class EventHandlerForge {
 		return listDefault;
 	}
 
+	public static void chooseInvasionProfile(EntityPlayer player, float difficulty) {
+		List<DataMobSpawnsTemplate> listPhase2 = new ArrayList<>();
+
+		System.out.println("phase 1 choice count: " + DifficultyDataReader.getData().listMobSpawnTemplates.size());
+		for (DataMobSpawnsTemplate spawns : DifficultyDataReader.getData().listMobSpawnTemplates) {
+
+			boolean fail = false;
+			for (DataCondition condition : spawns.getConditionsFlattened()) {
+
+				if (!(condition instanceof ConditionRandom)) {
+					if (!evaluateCondition(player, condition, difficulty)) {
+						fail = true;
+						break;
+					}
+				}
+			}
+
+			if (!fail) {
+				listPhase2.add(spawns);
+			}
+
+		}
+
+		//TODO: what if 2 templates dont use random, what if 1 doesnt?
+		//maybe assume a weight of 1 if no ConditionRandom present, lets try
+
+		//do weighted random
+		int totalWeight = 0;
+
+		//index of weight should match index of listPhase2 entries
+		List<Integer> listWeights = new ArrayList<>();
+		System.out.println("phase 1 choice count: " + listPhase2.size());
+		for (DataMobSpawnsTemplate spawns : listPhase2) {
+
+			//default 1 if no random found
+			int weight = 1;
+			for (DataCondition condition : spawns.getConditionsFlattened()) {
+
+				//break on first match
+				//TODO: how to deal with duplicates? (bad design if used)
+				if (condition instanceof ConditionRandom) {
+					weight = ((ConditionRandom) condition).weight;
+					break;
+				}
+			}
+
+			listWeights.add(weight);
+			totalWeight += weight;
+		}
+
+		Random rand = new Random();
+		int randVal = rand.nextInt(totalWeight);
+		int index = -1;
+		for (int i = 0; i < listWeights.size(); i++) {
+			if (randVal < listWeights.get(i)) {
+				index = i;
+				break;
+			}
+			randVal -= listWeights.get(i);
+		}
+
+		if (index != -1) {
+			DataMobSpawnsTemplate spawn = listPhase2.get(index);
+
+			System.out.println("final choice: " + spawn.name);
+		} else {
+			System.out.println("design flaw!");
+		}
+
+		//temp
+
+	}
+
 	//test method?
-	public static void tickInvasionData(EntityPlayer player) {
+	public static void tickInvasionData(EntityPlayer player, float difficulty) {
 
 		PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+		storage.val++;
 
-		System.out.println(storage.invasionWave);
+		System.out.println(storage.val);
+
+
+
+
+
+		//TODO: uhh
+		//DataMobSpawnsTemplate <-> storage.List<InvasionEntitySpawn>
+		//dont need conditions
+		//need instance info about actively spawned amount, go
+
+		//storage.invasionEntitySpawn.
 
 		/*String uuid = player.getPersistentID().toString();
 		if (!lookupUUIDToInvasionWave.containsKey(uuid)) {
-			lookupUUIDToInvasionWave.put(uuid, new InvasionWave());
+			lookupUUIDToInvasionWave.put(uuid, new InvasionEntitySpawn());
 		}
 
-		InvasionWave data = lookupUUIDToInvasionWave.get(uuid);
+		InvasionEntitySpawn data = lookupUUIDToInvasionWave.get(uuid);
 
 		writeInvasionNBT(player);*/
 	}
 
+
+
+	public static boolean evaluateCondition(EntityPlayer player, DataCondition condition, float difficulty) {
+		if (condition instanceof ConditionContext) {
+			return true;
+		} else if (condition instanceof ConditionDifficulty) {
+			return difficulty >= ((ConditionDifficulty)condition).min && difficulty <= ((ConditionDifficulty)condition).max;
+		} else if (condition instanceof ConditionInvasionNumber) {
+			//TODO: implement invasion numbers, global or per player tracked?
+			return false;
+		}
+		return false;
+	}
+
 	/*public static void writeInvasionNBT(EntityPlayer player) {
 		String uuid = player.getPersistentID().toString();
-		InvasionWave data = lookupUUIDToInvasionWave.get(uuid);
+		InvasionEntitySpawn data = lookupUUIDToInvasionWave.get(uuid);
 
 		Gson json = new Gson();
 		String dataJson = json.toJson(data);
