@@ -9,16 +9,19 @@ import net.minecraft.nbt.NBTTagCompound;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by Corosus on 3/4/2017.
  */
 public class PlayerDataInstance {
 
-    //public InvasionEntitySpawn invasionEntitySpawn = new InvasionEntitySpawn();
     List<InvasionEntitySpawn> listSpawnables = new ArrayList<>();
-    public int val;
     private EntityPlayer player;
+
+    public boolean dataPlayerInvasionActive;
+    public boolean dataPlayerInvasionWarned;
+    public long dataCreatureLastPathWithDelay;
 
     public PlayerDataInstance() {
 
@@ -63,12 +66,27 @@ public class PlayerDataInstance {
         listSpawnables.clear();
     }
 
+    public String getRandomEntityClassToSpawn() {
+        List<InvasionEntitySpawn> listSpawnablesTry = new ArrayList<>();
+
+        //filter out ones that are used up
+        for (InvasionEntitySpawn spawns : listSpawnables) {
+            if (spawns.spawnCountCurrent < spawns.spawnProfile.count && spawns.spawnProfile.entities.size() > 0) {
+                listSpawnablesTry.add(spawns);
+            }
+        }
+
+        Random random = new Random();
+        //chose random spawn profile and increment
+        InvasionEntitySpawn spawns = listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
+
+        //TODO: reorder code logic, outside this, spawn could fail so we wouldnt want to increment this!
+        spawns.spawnCountCurrent++; FIX ^
+
+        return spawns.spawnProfile.entities.get(random.nextInt(spawns.spawnProfile.entities.size()));
+    }
+
     public void readNBT(NBTTagCompound nbtTagCompound) {
-
-        //if (true) return;
-
-        System.out.println("read");
-        val = nbtTagCompound.getInteger("val");
 
         NBTTagCompound nbt = nbtTagCompound.getCompoundTag("spawns");
 
@@ -87,8 +105,6 @@ public class PlayerDataInstance {
     }
 
     public void writeNBT(NBTTagCompound nbtTagCompound) {
-        System.out.println("write");
-        nbtTagCompound.setInteger("val", val);
 
         NBTTagCompound nbt = new NBTTagCompound();
         for (int i = 0; i < listSpawnables.size(); i++) {

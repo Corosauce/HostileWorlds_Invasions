@@ -87,7 +87,7 @@ public class CommandInvasion extends CommandBase {
 
 				} else if (var2[0].equalsIgnoreCase("skip")) {
 					if (player != null) {
-						EventHandlerForge.skipNextInvasionForPlayer(player);
+						InvasionManager.skipNextInvasionForPlayer(player);
 					} else {
 						var1.addChatMessage(new TextComponentString("requires player reference"));
 					}
@@ -95,7 +95,7 @@ public class CommandInvasion extends CommandBase {
 					if (player != null) {
 						BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 						float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
-						EventHandlerForge.initNewInvasion(player, difficultyScale);
+						InvasionManager.initNewInvasion(player, difficultyScale);
 					}
 				}
 	        	
