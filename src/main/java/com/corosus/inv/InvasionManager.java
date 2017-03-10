@@ -19,10 +19,7 @@ import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.IEntityLivingData;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.*;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
@@ -331,7 +328,10 @@ public class InvasionManager {
                  */
 
                 if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateSpawning == 0) {
-                    int spawnCountCur = player.getEntityData().getInteger(dataPlayerInvasionWaveCountCur);
+
+                    spawnNewMobFromProfile(player, difficultyScale);
+
+                    /*int spawnCountCur = player.getEntityData().getInteger(dataPlayerInvasionWaveCountCur);
                     int spawnCountMax = player.getEntityData().getInteger(dataPlayerInvasionWaveCountMax);
                     if (spawnCountCur < spawnCountMax) {
                         boolean spawned = spawnNewMobSurface(player, difficultyScale);
@@ -340,7 +340,7 @@ public class InvasionManager {
                             player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, spawnCountCur);
                             //System.out.println("spawned mob, wave count: " + spawnCountCur + " of " + spawnCountMax);
                         }
-                    }
+                    }*/
                 }
 
                 //tickSpawning(player, difficultyScale);
@@ -396,10 +396,21 @@ public class InvasionManager {
             player.addChatMessage(new TextComponentString(ChatFormatting.RED + "An invasion has started! Be prepared!"));
         }
 
+        //initNewInvasion(player, difficultyScale);
+
+        storage.resetInvasion();
         storage.dataPlayerInvasionActive = true;
 
-        player.getEntityData().setInteger(dataPlayerInvasionWaveCountMax, getSpawnCountBuff(difficultyScale));
-        player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, 0);
+        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, difficultyScale);
+        if (profile != null) {
+            storage.initNewInvasion(profile);
+        } else {
+            //TODO: no invasions for you! also this is bad?, perhaps hardcode a fallback default, what if no invasion is modpack makers intent
+        }
+
+        //TODO: readd spawn count scaling as an option via json
+        //player.getEntityData().setInteger(dataPlayerInvasionWaveCountMax, getSpawnCountBuff(difficultyScale));
+        //player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, 0);
 
         //add buff for player based on how many invasions they skipped (and only if this isnt a skipped invasion)
         if (!player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
@@ -409,6 +420,18 @@ public class InvasionManager {
         }
     }
 
+    public static DataMobSpawnsTemplate getInvasionTestData(EntityPlayer player, float difficultyScale) {
+        PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+
+        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, difficultyScale);
+        /*if (profile != null) {
+            storage.initNewInvasion(profile);
+        } else {
+            //TODO: no invasions for you! also this is bad?, perhaps hardcode a fallback default, what if no invasion is modpack makers intent
+        }*/
+        return profile;
+    }
+
     public static void invasionStopReset(EntityPlayer player) {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion ended");
@@ -416,6 +439,8 @@ public class InvasionManager {
 
         storage.dataPlayerInvasionActive = false;
         storage.dataPlayerInvasionWarned = false;
+        storage.resetInvasion();
+
         player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, false);
 
         //remove invasion specific buff since invasion stopped
@@ -430,64 +455,78 @@ public class InvasionManager {
 
         Random rand = player.worldObj.rand;
 
-        for (int tries = 0; tries < 5; tries++) {
-            int tryX = MathHelper.floor_double(player.posX) - (range/2) + (rand.nextInt(range));
-            int tryZ = MathHelper.floor_double(player.posZ) - (range/2) + (rand.nextInt(range));
-            int tryY = player.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
+        InvasionEntitySpawn randomEntityList = storage.getRandomEntityClassToSpawn();
+
+        if (randomEntityList != null) {
+            for (int tries = 0; tries < 5; tries++) {
+                int tryX = MathHelper.floor_double(player.posX) - (range / 2) + (rand.nextInt(range));
+                int tryZ = MathHelper.floor_double(player.posZ) - (range / 2) + (rand.nextInt(range));
+                int tryY = player.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 
 
-            if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist ||
-                    !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
-                //System.out.println("light: " + player.worldObj.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
-                continue;
+                //TODO: make spawn check rules use entities own rules
+                if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist ||
+                        !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
+                    //System.out.println("light: " + player.worldObj.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
+                    continue;
+                }
+
+                try {
+
+
+                    String spawn = randomEntityList.spawnProfile.entities.get(rand.nextInt(randomEntityList.spawnProfile.entities.size()));
+                    Class classToSpawn = CoroUtilEntity.getClassFromRegisty(spawn);
+                    if (classToSpawn != null) {
+                        EntityCreature ent = (EntityCreature) classToSpawn.getConstructor(new Class[]{World.class}).newInstance(new Object[]{player.worldObj});
+
+                        ent.setPosition(tryX, tryY, tryZ);
+                        ent.onInitialSpawn(ent.worldObj.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData) null);
+                        ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
+
+                        //TODO: here we need to apply the cmods chosen for it
+
+                        //old way
+                        enhanceMobForDifficulty(ent, difficultyScale);
+
+                        player.worldObj.spawnEntityInWorld(ent);
+                        ent.setAttackTarget(player);
+
+                        randomEntityList.spawnCountCurrent++;
+                    } else {
+                        System.out.println("could not find registered class for entity name: " + spawn);
+                    }
+
+                    //String spawn = storage.getRandomEntityClassToSpawn();
+
+
+                    //Class classToSpawn = spawnables.get(randSpawn);
+
+
+                } catch (Exception e) {
+                    System.out.println("HW_Invasions: error spawning invasion entity: ");
+                    e.printStackTrace();
+                }
+
+
+                /*EntityZombie entZ = new EntityZombie(player.worldObj);
+                entZ.setPosition(tryX, tryY, tryZ);
+                entZ.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockCoord(entZ)), (IEntityLivingData)null);
+                enhanceMobForDifficulty(entZ, difficultyScale);
+                player.worldObj.spawnEntityInWorld(entZ);
+
+                entZ.setAttackTarget(player);*/
+
+                //if (ZAConfig.debugConsoleSpawns) ZombieAwareness.dbg("spawnNewMobSurface: " + tryX + ", " + tryY + ", " + tryZ);
+                //System.out.println("spawnNewMobSurface: " + tryX + ", " + tryY + ", " + tryZ);
+
+                return true;
             }
-
-
-
-
-            try {
-                //int randSpawn = rand.nextInt(spawnables.size());
-
-                //TODO: put count incrememnting and spawn attempt fails in same section of code!
-
-                String spawn = storage.getRandomEntityClassToSpawn();
-
-                //TODO: convert string to class
-
-
-                Class classToSpawn = spawnables.get(randSpawn);
-
-                EntityCreature ent = (EntityCreature)classToSpawn.getConstructor(new Class[] {World.class}).newInstance(new Object[] {player.worldObj});
-
-                ent.setPosition(tryX, tryY, tryZ);
-                ent.onInitialSpawn(ent.worldObj.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData)null);
-                ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
-                enhanceMobForDifficulty(ent, difficultyScale);
-                player.worldObj.spawnEntityInWorld(ent);
-                ent.setAttackTarget(player);
-            } catch (Exception e) {
-                System.out.println("HW_Invasions: error spawning invasion entity: ");
-                e.printStackTrace();
-            }
-
-
-	        /*EntityZombie entZ = new EntityZombie(player.worldObj);
-			entZ.setPosition(tryX, tryY, tryZ);
-			entZ.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockCoord(entZ)), (IEntityLivingData)null);
-			enhanceMobForDifficulty(entZ, difficultyScale);
-			player.worldObj.spawnEntityInWorld(entZ);
-
-			entZ.setAttackTarget(player);*/
-
-            //if (ZAConfig.debugConsoleSpawns) ZombieAwareness.dbg("spawnNewMobSurface: " + tryX + ", " + tryY + ", " + tryZ);
-            //System.out.println("spawnNewMobSurface: " + tryX + ", " + tryY + ", " + tryZ);
-
-            return true;
         }
 
         return false;
     }
 
+    @Deprecated
     public static boolean spawnNewMobSurface(EntityLivingBase player, float difficultyScale) {
 
         //adjusted to work best with new targetting range base value of 30
@@ -643,12 +682,12 @@ public class InvasionManager {
                         (dayNumber-dayAdjust) % Math.max(1, ConfigInvasion.daysBetweenInvasions + 1) == 0);
     }
 
-    public static int getSpawnCountBuff(float difficultyScale) {
+    /*public static int getSpawnCountBuff(float difficultyScale) {
         int initialSpawns = ConfigInvasion.invasion_Spawns_Min;
         int maxSpawnsAllowed = ConfigInvasion.invasion_Spawns_Max;
         float scaleRate = (float) ConfigInvasion.invasion_Spawns_ScaleRate;
         return MathHelper.clamp_int(((int) ((float)(maxSpawnsAllowed) * difficultyScale * scaleRate)), initialSpawns, maxSpawnsAllowed);
-    }
+    }*/
 
     public static int getTargettingRangeBuff(float difficultyScale) {
         int initialRange = ConfigInvasion.invasion_TargettingRange_Min;
@@ -729,7 +768,7 @@ public class InvasionManager {
     public static DataMobSpawnsTemplate chooseInvasionProfile(EntityPlayer player, float difficulty) {
         List<DataMobSpawnsTemplate> listPhase2 = new ArrayList<>();
 
-        System.out.println("phase 1 choice count: " + DifficultyDataReader.getData().listMobSpawnTemplates.size());
+        //System.out.println("phase 1 choice count: " + DifficultyDataReader.getData().listMobSpawnTemplates.size());
         for (DataMobSpawnsTemplate spawns : DifficultyDataReader.getData().listMobSpawnTemplates) {
 
             boolean fail = false;
@@ -794,21 +833,6 @@ public class InvasionManager {
 
         //temp
         return null;
-    }
-
-    public static void initNewInvasion(EntityPlayer player, float difficulty) {
-        PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
-		/*storage.val++;
-
-		System.out.println(storage.val);*/
-
-        //test code to start a new invasion
-        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, difficulty);
-        if (profile != null) {
-            storage.initNewInvasion(profile);
-        } else {
-            //TODO: no invasions for you! also this is bad?, perhaps hardcode a fallback default, what if no invasion is modpack makers intent
-        }
     }
 
     //test method?

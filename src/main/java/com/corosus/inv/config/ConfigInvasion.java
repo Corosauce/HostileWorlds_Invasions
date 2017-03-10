@@ -13,12 +13,12 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("Days between each invasion")
 	public static int daysBetweenInvasions = 3;
 	
-	@ConfigComment("Max allowed extra spawns at highest difficulty")
+	/*@ConfigComment("Max allowed extra spawns at highest difficulty")
 	public static int invasion_Spawns_Max = 50;
 	@ConfigComment("Starting spawncount at lowest difficulty")
 	public static int invasion_Spawns_Min = 10;
 	@ConfigComment("How fast it increases spawnrate as the difficulty increases, 2 = doubled rate, 0.5 = halved rate")
-	public static double invasion_Spawns_ScaleRate = 1D;
+	public static double invasion_Spawns_ScaleRate = 1D;*/
 	
 	@ConfigComment("Max allowed target range of mobs at highest difficulty")
 	public static int invasion_TargettingRange_Max = 256;

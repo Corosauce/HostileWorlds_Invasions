@@ -1,5 +1,7 @@
 package com.corosus.inv;
 
+import CoroUtil.difficulty.data.DataMobSpawnsTemplate;
+import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.CommandBase;
@@ -18,6 +20,8 @@ import CoroUtil.util.CoroUtilMisc;
 import CoroUtil.difficulty.DynamicDifficulty;
 
 import CoroUtil.util.UtilMining;
+
+import java.util.List;
 
 public class CommandInvasion extends CommandBase {
 
@@ -91,11 +95,20 @@ public class CommandInvasion extends CommandBase {
 					} else {
 						var1.addChatMessage(new TextComponentString("requires player reference"));
 					}
-				} else if (var2[0].equalsIgnoreCase("ti")) {
+				} else if (var2[0].equalsIgnoreCase("ti") || var2[0].equalsIgnoreCase("testInvasion")) {
 					if (player != null) {
 						BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
 						float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
-						InvasionManager.initNewInvasion(player, difficultyScale);
+						if (var2.length >= 2) difficultyScale = Float.valueOf(var2[1]);
+						DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, difficultyScale);
+
+						var1.addChatMessage(new TextComponentString(ChatFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale));
+						String data = profile.toString();
+						String[] list = data.split(" \\| ");
+						for (String entry : list) {
+							var1.addChatMessage(new TextComponentString(entry));
+						}
+
 					}
 				}
 	        	

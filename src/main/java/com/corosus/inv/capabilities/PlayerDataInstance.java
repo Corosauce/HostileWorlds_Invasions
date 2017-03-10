@@ -37,7 +37,7 @@ public class PlayerDataInstance {
     }
 
     public void initNewInvasion(DataMobSpawnsTemplate profile) {
-        resetInvasion();
+        //resetInvasion();
 
         //convert data to runtime
         for (DataActionMobSpawns spawns : profile.spawns) {
@@ -66,7 +66,7 @@ public class PlayerDataInstance {
         listSpawnables.clear();
     }
 
-    public String getRandomEntityClassToSpawn() {
+    public InvasionEntitySpawn getRandomEntityClassToSpawn() {
         List<InvasionEntitySpawn> listSpawnablesTry = new ArrayList<>();
 
         //filter out ones that are used up
@@ -78,12 +78,14 @@ public class PlayerDataInstance {
 
         Random random = new Random();
         //chose random spawn profile and increment
-        InvasionEntitySpawn spawns = listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
+        //InvasionEntitySpawn spawns = listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
 
         //TODO: reorder code logic, outside this, spawn could fail so we wouldnt want to increment this!
-        spawns.spawnCountCurrent++; FIX ^
+        //spawns.spawnCountCurrent++; FIX ^
 
-        return spawns.spawnProfile.entities.get(random.nextInt(spawns.spawnProfile.entities.size()));
+        //return spawns.spawnProfile.entities.get(random.nextInt(spawns.spawnProfile.entities.size()));
+
+        return listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
     }
 
     public void readNBT(NBTTagCompound nbtTagCompound) {
