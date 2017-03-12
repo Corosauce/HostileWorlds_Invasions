@@ -4,6 +4,7 @@ import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.difficulty.data.DataCondition;
 import CoroUtil.difficulty.data.DataMobSpawnsTemplate;
+import CoroUtil.difficulty.data.DeserializerAllJson;
 import CoroUtil.difficulty.data.DifficultyDataReader;
 import CoroUtil.difficulty.data.conditions.ConditionContext;
 import CoroUtil.difficulty.data.conditions.ConditionDifficulty;
@@ -32,7 +33,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -486,7 +486,14 @@ public class InvasionManager {
                         //TODO: here we need to apply the cmods chosen for it
 
                         //old way
-                        enhanceMobForDifficulty(ent, difficultyScale);
+                        //enhanceMobForDifficulty(ent, difficultyScale);
+
+                        //set cmod data to entity
+                        //JsonArray array = DeserializerAllJson.serializeCmods(randomEntityList.spawnProfile.cmods);
+                        UtilEntityBuffs.registerAndApplyCmods(ent, randomEntityList.spawnProfile.cmods, difficultyScale);
+
+                        //apply cmods from data
+                        //UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_Inventory, ent, difficultyScale);
 
                         player.worldObj.spawnEntityInWorld(ent);
                         ent.setAttackTarget(player);
@@ -772,7 +779,7 @@ public class InvasionManager {
         for (DataMobSpawnsTemplate spawns : DifficultyDataReader.getData().listMobSpawnTemplates) {
 
             boolean fail = false;
-            for (DataCondition condition : spawns.getConditionsFlattened()) {
+            for (DataCondition condition : DeserializerAllJson.getConditionsFlattened(spawns.conditions)) {
 
                 if (!(condition instanceof ConditionRandom)) {
                     if (!evaluateCondition(player, condition, difficulty)) {
@@ -798,7 +805,7 @@ public class InvasionManager {
 
             //default 1 if no random found
             int weight = 1;
-            for (DataCondition condition : spawns.getConditionsFlattened()) {
+            for (DataCondition condition : DeserializerAllJson.getConditionsFlattened(spawns.conditions)) {
 
                 //break on first match
                 //TODO: how to deal with duplicates? (bad design if used)
