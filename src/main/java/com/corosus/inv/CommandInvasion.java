@@ -114,37 +114,6 @@ public class CommandInvasion extends CommandBase {
 						}
 
 					}
-				} else if (var2[0].equalsIgnoreCase("tp") || var2[0].equalsIgnoreCase("testProfile")) {
-					if (player != null) {
-						String profileName = var2[1];
-						DataMobSpawnsTemplate profileFound = null;
-						for (DataMobSpawnsTemplate profile : DifficultyDataReader.getData().listMobSpawnTemplates) {
-							if (profile.name.equals(profileName)) {
-								profileFound = profile;
-								break;
-							}
-						}
-
-						if (profileFound != null) {
-							var1.addChatMessage(new TextComponentString(ChatFormatting.GREEN + "Invasion profile validation test"));
-							String data = profileFound.toString();
-							String[] list = data.split(" \\| ");
-							for (String entry : list) {
-								var1.addChatMessage(new TextComponentString(entry));
-							}
-						} else {
-							var1.addChatMessage(new TextComponentString("Could not find profile by name " + profileName));
-						}
-
-					}
-				} else if (var2[0].equalsIgnoreCase("reloadData")) {
-					DifficultyDataReader.loadFiles();
-					var1.addChatMessage(new TextComponentString("Difficulty data reloaded"));
-				} else if (var2[0].equalsIgnoreCase("registry")) {
-					for (Map.Entry<String, Class <? extends Entity>> entry : EntityList.NAME_TO_CLASS.entrySet()) {
-						var1.addChatMessage(new TextComponentString(entry.getKey()));
-						System.out.println(entry.getKey());
-					}
 				}
 	        	
 	        	
