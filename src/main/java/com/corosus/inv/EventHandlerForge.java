@@ -1,36 +1,15 @@
 package com.corosus.inv;
 
-import java.util.*;
-
 import CoroUtil.difficulty.UtilEntityBuffs;
-import CoroUtil.difficulty.data.DataCondition;
-import CoroUtil.difficulty.data.DataMobSpawnsTemplate;
-import CoroUtil.difficulty.data.DifficultyDataReader;
-import CoroUtil.difficulty.data.conditions.ConditionContext;
-import CoroUtil.difficulty.data.conditions.ConditionDifficulty;
-import CoroUtil.difficulty.data.conditions.ConditionInvasionNumber;
-import CoroUtil.difficulty.data.conditions.ConditionRandom;
 import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.monster.EntityCreeper;
-import net.minecraft.entity.monster.EntityEnderman;
-import net.minecraft.entity.monster.EntityZombie;
-import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayer.SleepResult;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
@@ -43,13 +22,9 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
-import CoroUtil.difficulty.DynamicDifficulty;
 
-import com.corosus.inv.ai.BehaviorModifier;
 import com.corosus.inv.config.ConfigAdvancedOptions;
-import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
-import com.mojang.realmsclient.gui.ChatFormatting;
 
 public class EventHandlerForge {
 

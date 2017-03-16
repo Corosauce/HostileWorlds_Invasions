@@ -1,7 +1,7 @@
 package com.corosus.inv.capabilities;
 
-import CoroUtil.difficulty.data.DataActionMobSpawns;
-import CoroUtil.difficulty.data.DataMobSpawnsTemplate;
+import CoroUtil.difficulty.data.spawns.DataActionMobSpawns;
+import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
 import com.corosus.inv.InvasionEntitySpawn;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;

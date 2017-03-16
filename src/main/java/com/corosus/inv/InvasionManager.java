@@ -3,7 +3,7 @@ package com.corosus.inv;
 import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.difficulty.data.DataCondition;
-import CoroUtil.difficulty.data.DataMobSpawnsTemplate;
+import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
 import CoroUtil.difficulty.data.DeserializerAllJson;
 import CoroUtil.difficulty.data.DifficultyDataReader;
 import CoroUtil.difficulty.data.conditions.ConditionContext;

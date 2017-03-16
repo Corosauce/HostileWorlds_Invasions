@@ -1,14 +1,11 @@
 package com.corosus.inv;
 
-import CoroUtil.difficulty.data.DataMobSpawnsTemplate;
-import CoroUtil.difficulty.data.DifficultyDataReader;
+import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
 import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -23,9 +20,6 @@ import CoroUtil.util.CoroUtilMisc;
 import CoroUtil.difficulty.DynamicDifficulty;
 
 import CoroUtil.util.UtilMining;
-
-import java.util.List;
-import java.util.Map;
 
 public class CommandInvasion extends CommandBase {
 
