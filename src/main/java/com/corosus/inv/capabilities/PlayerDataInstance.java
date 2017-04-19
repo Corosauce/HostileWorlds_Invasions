@@ -85,7 +85,15 @@ public class PlayerDataInstance {
 
         //return spawns.spawnProfile.entities.get(random.nextInt(spawns.spawnProfile.entities.size()));
 
-        return listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
+        if (listSpawnablesTry.size() > 0) {
+            return listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
+        } else {
+            System.out.println("nothing to spawn!");
+            //return new InvasionEntitySpawn();
+            return null;
+        }
+
+
     }
 
     public void readNBT(NBTTagCompound nbtTagCompound) {
