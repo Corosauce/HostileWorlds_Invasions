@@ -61,7 +61,9 @@ public class EventHandlerForge {
 			});
 		}
 	}
-	
+
+	//TODO: cancel EntityTravelToDimensionEvent during invasions, no teleporting away!
+
 	@SubscribeEvent
 	public void canSleep(PlayerSleepInBedEvent event) {
 		if (event.getEntityPlayer().worldObj.isRemote) return;
