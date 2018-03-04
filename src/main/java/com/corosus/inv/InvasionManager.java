@@ -146,20 +146,20 @@ public class InvasionManager {
                         skipCount++;
                         player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, true);
                         player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCount, skipCount);
-                        player.addChatComponentMessage(new TextComponentString("Skipping tonights invasion, skip count: " + skipCount));
+                        player.sendMessage(new TextComponentString("Skipping tonights invasion, skip count: " + skipCount));
                         return true;
                     } else {
-                        player.addChatComponentMessage(new TextComponentString("You've already skipped invasions " + skipCountMax + " times!"));
+                        player.sendMessage(new TextComponentString("You've already skipped invasions " + skipCountMax + " times!"));
                     }
 
                 } else {
-                    player.addChatComponentMessage(new TextComponentString("Too late, invasion already started!"));
+                    player.sendMessage(new TextComponentString("Too late, invasion already started!"));
                 }
             } else {
-                player.addChatComponentMessage(new TextComponentString("Cant skip yet!"));
+                player.sendMessage(new TextComponentString("Cant skip yet!"));
             }
         } else {
-            player.addChatComponentMessage(new TextComponentString("You are already skipping this nights invasion!"));
+            player.sendMessage(new TextComponentString("You are already skipping this nights invasion!"));
         }
         return false;
     }
@@ -210,7 +210,7 @@ public class InvasionManager {
 
             if (invasionOnThisNight && world.isDaytime()) {
                 if (!storage.dataPlayerInvasionWarned) {
-                    player.addChatComponentMessage(new TextComponentString(ChatFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!"));
+                    player.sendMessage(new TextComponentString(ChatFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!"));
                     storage.dataPlayerInvasionWarned = true;
                 }
             }
