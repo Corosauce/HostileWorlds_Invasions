@@ -66,12 +66,12 @@ public class EventHandlerForge {
 
 	@SubscribeEvent
 	public void canSleep(PlayerSleepInBedEvent event) {
-		if (event.getEntityPlayer().worldObj.isRemote) return;
+		if (event.getEntityPlayer().world.isRemote) return;
 		if (ConfigInvasion.preventSleepDuringInvasions) {
-			if (!event.getEntityPlayer().worldObj.isDaytime() && InvasionManager.isInvasionTonight(event.getEntityPlayer().worldObj)) {
+			if (!event.getEntityPlayer().world.isDaytime() && InvasionManager.isInvasionTonight(event.getEntityPlayer().world)) {
 				EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
 				if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
-					player.addChatMessage(new TextComponentString("You can't sleep during invasion nights!"));
+					player.sendMessage(new TextComponentString("You can't sleep during invasion nights!"));
 					event.setResult(SleepResult.NOT_SAFE);
 				}
 			} else {
@@ -85,7 +85,7 @@ public class EventHandlerForge {
 
 		//prevent invasion spawned entities from despawning during invasion if they are too far away
 
-		if (!event.getEntity().worldObj.isDaytime() && InvasionManager.isInvasionTonight(event.getEntity().worldObj)) {
+		if (!event.getEntity().world.isDaytime() && InvasionManager.isInvasionTonight(event.getEntity().world)) {
 			if (event.getEntity().getEntityData().getBoolean(UtilEntityBuffs.dataEntityWaveSpawned)) {
 				event.setResult(Event.Result.DENY);
 			}

@@ -60,8 +60,8 @@ public class ConfigInvasion implements IConfigCategory {
 	@Override
 	public void hookUpdatedValues() {
 		
-		warmupDaysToFirstInvasion = MathHelper.clamp_int(warmupDaysToFirstInvasion, 0, 99);
-		daysBetweenInvasions = MathHelper.clamp_int(daysBetweenInvasions, 0, 99);
+		warmupDaysToFirstInvasion = MathHelper.clamp(warmupDaysToFirstInvasion, 0, 99);
+		daysBetweenInvasions = MathHelper.clamp(daysBetweenInvasions, 0, 99);
 		
 	}
 

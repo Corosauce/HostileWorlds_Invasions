@@ -134,7 +134,7 @@ public class InvasionManager {
          * apply a +50% difficulty buff * skip count
          * somehow remove after invasion over
          */
-        World world = player.worldObj;
+        World world = player.world;
         boolean skipped = player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping);
         if (!skipped) {
             if (isInvasionTonight(world)) {
@@ -173,9 +173,9 @@ public class InvasionManager {
      */
     public static void tickPlayer(EntityPlayer player) {
         try {
-            World world = player.worldObj;
+            World world = player.world;
             net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(player.posX, player.posY + (player.getEyeHeight() - player.getDefaultEyeHeight()), player.posZ);//player.getPosition(1F);
-            BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
+            BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
 
 
 
@@ -287,7 +287,7 @@ public class InvasionManager {
                                 {
                                     PathPoint finalPathPoint = ent.getNavigator().getPath().getFinalPathPoint();
                                     //if final path point is near player, thats good!
-                                    if (finalPathPoint != null && player.getDistanceSq(finalPathPoint.xCoord, finalPathPoint.yCoord, finalPathPoint.zCoord) < 1)
+                                    if (finalPathPoint != null && player.getDistanceSq(finalPathPoint.x, finalPathPoint.y, finalPathPoint.z) < 1)
                                     {
                                         pathFindingDelay = ConfigAdvancedOptions.pathDelayBase;
                                     }
@@ -391,9 +391,9 @@ public class InvasionManager {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion started");
         if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
-            player.addChatMessage(new TextComponentString(ChatFormatting.GREEN + "An invasion has started! But skipped for you!"));
+            player.sendMessage(new TextComponentString(ChatFormatting.GREEN + "An invasion has started! But skipped for you!"));
         } else {
-            player.addChatMessage(new TextComponentString(ChatFormatting.RED + "An invasion has started! Be prepared!"));
+            player.sendMessage(new TextComponentString(ChatFormatting.RED + "An invasion has started! Be prepared!"));
         }
 
         //initNewInvasion(player, difficultyScale);
@@ -435,7 +435,7 @@ public class InvasionManager {
     public static void invasionStopReset(EntityPlayer player) {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion ended");
-        player.addChatMessage(new TextComponentString(ChatFormatting.GREEN + "The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
+        player.sendMessage(new TextComponentString(ChatFormatting.GREEN + "The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
 
         storage.dataPlayerInvasionActive = false;
         storage.dataPlayerInvasionWarned = false;
@@ -453,21 +453,21 @@ public class InvasionManager {
         int maxDist = ConfigAdvancedOptions.spawnRangeMax;//ZAConfigSpawning.extraSpawningDistMax;
         int range = maxDist*2;
 
-        Random rand = player.worldObj.rand;
+        Random rand = player.world.rand;
 
         InvasionEntitySpawn randomEntityList = storage.getRandomEntityClassToSpawn();
 
         if (randomEntityList != null) {
             for (int tries = 0; tries < 5; tries++) {
-                int tryX = MathHelper.floor_double(player.posX) - (range / 2) + (rand.nextInt(range));
-                int tryZ = MathHelper.floor_double(player.posZ) - (range / 2) + (rand.nextInt(range));
-                int tryY = player.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
+                int tryX = MathHelper.floor(player.posX) - (range / 2) + (rand.nextInt(range));
+                int tryZ = MathHelper.floor(player.posZ) - (range / 2) + (rand.nextInt(range));
+                int tryY = player.world.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 
 
                 //TODO: make spawn check rules use entities own rules
                 if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist ||
-                        !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
-                    //System.out.println("light: " + player.worldObj.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
+                        !canSpawnMob(player.world, tryX, tryY, tryZ) || player.world.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
+                    //System.out.println("light: " + player.world.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
                     continue;
                 }
 
@@ -477,10 +477,10 @@ public class InvasionManager {
                     String spawn = randomEntityList.spawnProfile.entities.get(rand.nextInt(randomEntityList.spawnProfile.entities.size()));
                     Class classToSpawn = CoroUtilEntity.getClassFromRegisty(spawn);
                     if (classToSpawn != null) {
-                        EntityCreature ent = (EntityCreature) classToSpawn.getConstructor(new Class[]{World.class}).newInstance(new Object[]{player.worldObj});
+                        EntityCreature ent = (EntityCreature) classToSpawn.getConstructor(new Class[]{World.class}).newInstance(new Object[]{player.world});
 
                         ent.setPosition(tryX, tryY, tryZ);
-                        ent.onInitialSpawn(ent.worldObj.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData) null);
+                        ent.onInitialSpawn(ent.world.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData) null);
                         ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
 
                         //TODO: here we need to apply the cmods chosen for it
@@ -495,7 +495,7 @@ public class InvasionManager {
                         //apply cmods from data
                         //UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_Inventory, ent, difficultyScale);
 
-                        player.worldObj.spawnEntityInWorld(ent);
+                        player.world.spawnEntity(ent);
                         ent.setAttackTarget(player);
 
                         randomEntityList.spawnCountCurrent++;
@@ -515,11 +515,11 @@ public class InvasionManager {
                 }
 
 
-                /*EntityZombie entZ = new EntityZombie(player.worldObj);
+                /*EntityZombie entZ = new EntityZombie(player.world);
                 entZ.setPosition(tryX, tryY, tryZ);
-                entZ.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockCoord(entZ)), (IEntityLivingData)null);
+                entZ.onInitialSpawn(player.world.getDifficultyForLocation(new BlockCoord(entZ)), (IEntityLivingData)null);
                 enhanceMobForDifficulty(entZ, difficultyScale);
-                player.worldObj.spawnEntityInWorld(entZ);
+                player.world.spawnEntityInWorld(entZ);
 
                 entZ.setAttackTarget(player);*/
 
@@ -541,21 +541,21 @@ public class InvasionManager {
         int maxDist = ConfigAdvancedOptions.spawnRangeMax;//ZAConfigSpawning.extraSpawningDistMax;
         int range = maxDist*2;
 
-        Random rand = player.worldObj.rand;
+        Random rand = player.world.rand;
 
         List<Class> spawnables = getSpawnableEntitiesForDifficulty(difficultyScale);
 
         if (spawnables.size() == 0) return false;
 
         for (int tries = 0; tries < 5; tries++) {
-            int tryX = MathHelper.floor_double(player.posX) - (range/2) + (rand.nextInt(range));
-            int tryZ = MathHelper.floor_double(player.posZ) - (range/2) + (rand.nextInt(range));
-            int tryY = player.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
+            int tryX = MathHelper.floor(player.posX) - (range/2) + (rand.nextInt(range));
+            int tryZ = MathHelper.floor(player.posZ) - (range/2) + (rand.nextInt(range));
+            int tryY = player.world.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 
 
             if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist ||
-                    !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
-                //System.out.println("light: " + player.worldObj.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
+                    !canSpawnMob(player.world, tryX, tryY, tryZ) || player.world.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
+                //System.out.println("light: " + player.world.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
                 continue;
             }
 
@@ -566,13 +566,13 @@ public class InvasionManager {
                 int randSpawn = rand.nextInt(spawnables.size());
                 Class classToSpawn = spawnables.get(randSpawn);
 
-                EntityCreature ent = (EntityCreature)classToSpawn.getConstructor(new Class[] {World.class}).newInstance(new Object[] {player.worldObj});
+                EntityCreature ent = (EntityCreature)classToSpawn.getConstructor(new Class[] {World.class}).newInstance(new Object[] {player.world});
 
                 ent.setPosition(tryX, tryY, tryZ);
-                ent.onInitialSpawn(ent.worldObj.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData)null);
+                ent.onInitialSpawn(ent.world.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData)null);
                 ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
                 enhanceMobForDifficulty(ent, difficultyScale);
-                player.worldObj.spawnEntityInWorld(ent);
+                player.world.spawnEntity(ent);
                 ent.setAttackTarget(player);
             } catch (Exception e) {
                 System.out.println("HW_Invasions: error spawning invasion entity: ");
@@ -580,11 +580,11 @@ public class InvasionManager {
             }
 
 
-	        /*EntityZombie entZ = new EntityZombie(player.worldObj);
+	        /*EntityZombie entZ = new EntityZombie(player.world);
 			entZ.setPosition(tryX, tryY, tryZ);
-			entZ.onInitialSpawn(player.worldObj.getDifficultyForLocation(new BlockCoord(entZ)), (IEntityLivingData)null);
+			entZ.onInitialSpawn(player.world.getDifficultyForLocation(new BlockCoord(entZ)), (IEntityLivingData)null);
 			enhanceMobForDifficulty(entZ, difficultyScale);
-			player.worldObj.spawnEntityInWorld(entZ);
+			player.world.spawnEntityInWorld(entZ);
 
 			entZ.setAttackTarget(player);*/
 
@@ -639,7 +639,7 @@ public class InvasionManager {
 
         //movement speed buff
         //TODO: clamp to 1.0 or account for other mods speed boosting, or both!
-        double randBoost = ent.worldObj.rand.nextDouble() * ConfigAdvancedOptions.speedBoostBase * difficultyScale;
+        double randBoost = ent.world.rand.nextDouble() * ConfigAdvancedOptions.speedBoostBase * difficultyScale;
         AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "Invasion speed boost", randBoost, EnumAttribModifierType.INCREMENT_MULTIPLY_BASE.ordinal());
         if (!ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier)) {
             ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
@@ -700,14 +700,14 @@ public class InvasionManager {
         int initialRange = ConfigInvasion.invasion_TargettingRange_Min;
         int max = ConfigInvasion.invasion_TargettingRange_Max;
         float scaleRate = (float) ConfigInvasion.invasion_TargettingRange_ScaleRate;
-        return MathHelper.clamp_int(((int) ((float)(max) * difficultyScale * scaleRate)), initialRange, max);
+        return MathHelper.clamp(((int) ((float)(max) * difficultyScale * scaleRate)), initialRange, max);
     }
 
     public static float getDigChanceBuff(float difficultyScale) {
         float initial = (float) ConfigInvasion.invasion_DiggerConvertChance_Min;
         float max = (float) ConfigInvasion.invasion_DiggerConvertChance_Max;
         float scaleRate = (float) ConfigInvasion.invasion_DiggerConvertChance_ScaleRate;
-        return MathHelper.clamp_float((((float)(max) * difficultyScale * scaleRate)), initial, max);
+        return MathHelper.clamp((((float)(max) * difficultyScale * scaleRate)), initial, max);
     }
 
 	/*public String getInvasionDebug(float difficultyScale) {

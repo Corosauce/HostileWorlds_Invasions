@@ -24,12 +24,12 @@ import CoroUtil.util.UtilMining;
 public class CommandInvasion extends CommandBase {
 
 	@Override
-	public String getCommandName() {
+	public String getName() {
 		return "hw_invasions";
 	}
 
 	@Override
-	public String getCommandUsage(ICommandSender icommandsender) {
+	public String getUsage(ICommandSender icommandsender) {
 		return "";
 	}
 
@@ -61,11 +61,11 @@ public class CommandInvasion extends CommandBase {
 					EntityPlayerMP ent = (EntityPlayerMP) var1;
 		    		//net.minecraft.util.Vec3 posVec = ent.getPosition(1F);
 		    		/*net.minecraft.util.math.Vec3d */posVec = new net.minecraft.util.math.Vec3d(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
-		    		BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
+		    		BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
 		    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
-		    		CoroUtilMisc.sendCommandSenderMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + DynamicDifficulty.getDifficultyScaleAverage(ent.worldObj, ent, pos));
+		    		CoroUtilMisc.sendCommandSenderMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + DynamicDifficulty.getDifficultyScaleAverage(ent.world, ent, pos));
 				} else {
-					var1.addChatMessage(new TextComponentString("day: " + dayNumber));
+					var1.sendMessage(new TextComponentString("day: " + dayNumber));
 		    		//CoroUtil.sendPlayerMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + EventHandlerForge.getDifficultyScaleAverage(ent.worldObj, ent, pos));
 				}
 	        }
@@ -84,27 +84,27 @@ public class CommandInvasion extends CommandBase {
 						boolean canMine = UtilMining.canMineBlock(world, new BlockCoord(x, y, z), block);
 						float blockStrength = state.getBlockHardness(world, pos);
 
-						var1.addChatMessage(new TextComponentString("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
+						var1.sendMessage(new TextComponentString("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
 					}
 
 				} else if (var2[0].equalsIgnoreCase("skip")) {
 					if (player != null) {
 						InvasionManager.skipNextInvasionForPlayer(player);
 					} else {
-						var1.addChatMessage(new TextComponentString("requires player reference"));
+						var1.sendMessage(new TextComponentString("requires player reference"));
 					}
 				} else if (var2[0].equalsIgnoreCase("ti") || var2[0].equalsIgnoreCase("testInvasion")) {
 					if (player != null) {
-						BlockCoord pos = new BlockCoord(MathHelper.floor_double(posVec.xCoord), MathHelper.floor_double(posVec.yCoord), MathHelper.floor_double(posVec.zCoord));
+						BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
 						float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
 						if (var2.length >= 2) difficultyScale = Float.valueOf(var2[1]);
 						DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, difficultyScale);
 
-						var1.addChatMessage(new TextComponentString(ChatFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale));
+						var1.sendMessage(new TextComponentString(ChatFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale));
 						String data = profile.toString();
 						String[] list = data.split(" \\| ");
 						for (String entry : list) {
-							var1.addChatMessage(new TextComponentString(entry));
+							var1.sendMessage(new TextComponentString(entry));
 						}
 
 					}
