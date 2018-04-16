@@ -9,6 +9,7 @@ import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
@@ -24,7 +25,10 @@ public class Invasion {
 	
 	@Mod.Instance( value = "hw_inv" )
 	public static Invasion instance;
-	public static String modID = "hw_inv";
+	public static final String modID = "hw_inv";
+
+    @SidedProxy(clientSide = "com.corosus.inv.ClientProxy", serverSide = "com.corosus.inv.CommonProxy")
+    public static CommonProxy proxy;
 
     @CapabilityInject(PlayerDataInstance.class)
     public static final Capability<PlayerDataInstance> PLAYER_DATA_INSTANCE = null;

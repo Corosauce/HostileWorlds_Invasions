@@ -317,7 +317,10 @@ public class InvasionManager {
 
                     int modifyRange = ConfigAdvancedOptions.aiEnhanceRange;
                     float chanceToEnhance = getDigChanceBuff(difficultyScale);
-                    //TODO: consider making the digging tasks disable after invasions "ends" so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
+                    /**
+                     * TODO: consider making the digging tasks disable after invasions "ends"
+                     * so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
+                     */
                     BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ),
 							/*UtilEntityBuffs.tasksToInject, UtilEntityBuffs.taskPriorities[0],*/
                             modifyRange, chanceToEnhance);
