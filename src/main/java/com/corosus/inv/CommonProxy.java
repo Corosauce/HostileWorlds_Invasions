@@ -1,8 +1,7 @@
 package com.corosus.inv;
 
-import CoroUtil.block.BlockSacrifice;
+import com.corosus.inv.block.BlockSacrifice;
 import net.minecraft.block.Block;
-import net.minecraft.client.audio.SoundRegistry;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
