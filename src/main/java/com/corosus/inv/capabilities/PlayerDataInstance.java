@@ -88,6 +88,7 @@ public class PlayerDataInstance {
         if (listSpawnablesTry.size() > 0) {
             return listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
         } else {
+            //this should be ok, happens when all the things that will spawn have spawned
             System.out.println("nothing to spawn!");
             //return new InvasionEntitySpawn();
             return null;

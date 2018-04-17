@@ -12,6 +12,9 @@ public class ConfigInvasion implements IConfigCategory {
 	public static int warmupDaysToFirstInvasion = 3;
 	@ConfigComment("Days between each invasion")
 	public static int daysBetweenInvasions = 3;
+
+	@ConfigComment("Max amount of invasions you can skip in a row before you are forced to deal with one")
+	public static int maxConsecutiveInvasionSkips = 3;
 	
 	/*@ConfigComment("Max allowed extra spawns at highest difficulty")
 	public static int invasion_Spawns_Max = 50;
@@ -36,6 +39,15 @@ public class ConfigInvasion implements IConfigCategory {
 	
 	@ConfigComment("Prevent players from sleeping through the night during invasion nights")
 	public static boolean preventSleepDuringInvasions = true;
+
+	@ConfigComment("For seldom used but important things to print out in production")
+	public static boolean useLoggingLog = true;
+
+	@ConfigComment("For debugging things")
+	public static boolean useLoggingDebug = false;
+
+	@ConfigComment("For logging warnings/errors")
+	public static boolean useLoggingError = true;
 
 	@Override
 	public String getName() {

@@ -32,6 +32,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
@@ -140,26 +141,25 @@ public class InvasionManager {
             if (isInvasionTonight(world)) {
                 //only allow skip during day before its actually active
                 if (world.isDaytime()) {
-                    int skipCountMax = 3;
                     int skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCount);
-                    if (skipCount < skipCountMax) {
+                    if (skipCount < ConfigInvasion.maxConsecutiveInvasionSkips) {
                         skipCount++;
                         player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, true);
                         player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCount, skipCount);
-                        player.sendMessage(new TextComponentString("Skipping tonights invasion, skip count: " + skipCount));
+                        player.sendMessage(new TextComponentString(TextFormatting.GREEN + "Skipping tonights invasion, skip count: " + skipCount));
                         return true;
                     } else {
-                        player.sendMessage(new TextComponentString("You've already skipped invasions " + skipCountMax + " times!"));
+                        player.sendMessage(new TextComponentString(TextFormatting.RED + "You've already skipped invasions " + ConfigInvasion.maxConsecutiveInvasionSkips + " times! You must fight!"));
                     }
 
                 } else {
-                    player.sendMessage(new TextComponentString("Too late, invasion already started!"));
+                    player.sendMessage(new TextComponentString(TextFormatting.RED + "Too late, invasion already started!"));
                 }
             } else {
-                player.sendMessage(new TextComponentString("Cant skip yet!"));
+                player.sendMessage(new TextComponentString("Not an invasion night, cant skip yet!"));
             }
         } else {
-            player.sendMessage(new TextComponentString("You are already skipping this nights invasion!"));
+            player.sendMessage(new TextComponentString(TextFormatting.GREEN + "You are already skipping this nights invasion!"));
         }
         return false;
     }
@@ -502,8 +502,10 @@ public class InvasionManager {
                         ent.setAttackTarget(player);
 
                         randomEntityList.spawnCountCurrent++;
+
+                        InvLog.dbg("Spawned " + randomEntityList.spawnCountCurrent + " mobs now: " + ent.getDisplayName().toString());
                     } else {
-                        System.out.println("could not find registered class for entity name: " + spawn);
+                        InvLog.err("could not find registered class for entity name: " + spawn);
                     }
 
                     //String spawn = storage.getRandomEntityClassToSpawn();
@@ -513,7 +515,7 @@ public class InvasionManager {
 
 
                 } catch (Exception e) {
-                    System.out.println("HW_Invasions: error spawning invasion entity: ");
+                    InvLog.err("HW_Invasions: error spawning invasion entity: ");
                     e.printStackTrace();
                 }
 

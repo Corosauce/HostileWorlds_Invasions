@@ -5,10 +5,12 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
 public class TileEntitySacrifice extends TileEntity implements ITickable
@@ -36,6 +38,12 @@ public class TileEntitySacrifice extends TileEntity implements ITickable
     }
 
     public void onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        InvasionManager.skipNextInvasionForPlayer(playerIn);
+        if (InvasionManager.skipNextInvasionForPlayer(playerIn)) {
+            playerIn.sendMessage(new TextComponentString("Sacrifice received!"));
+            if (!playerIn.isCreative()) {
+                playerIn.attackEntityFrom(DamageSource.MAGIC, 12);
+            }
+        }
+
 	}
 }

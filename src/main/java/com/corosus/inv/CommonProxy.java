@@ -1,6 +1,7 @@
 package com.corosus.inv;
 
 import com.corosus.inv.block.BlockSacrifice;
+import com.corosus.inv.block.TileEntitySacrifice;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -16,7 +17,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(modid = Invasion.modID)
 public class CommonProxy implements IGuiHandler
 {
 
@@ -32,7 +33,7 @@ public class CommonProxy implements IGuiHandler
 
 	@SubscribeEvent
 	public static void registerBlocks(RegistryEvent.Register<Block> event) {
-		Invasion.proxy.addBlock(event, blockSacrifice = (new BlockSacrifice()), block_sacrifice_name);
+		Invasion.proxy.addBlock(event, blockSacrifice = (new BlockSacrifice()), TileEntitySacrifice.class, block_sacrifice_name);
 	}
 
 	@SubscribeEvent
