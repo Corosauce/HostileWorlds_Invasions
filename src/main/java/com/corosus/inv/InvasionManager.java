@@ -220,6 +220,7 @@ public class InvasionManager {
                 invasionActive = true;
                 if (!activeBool) {
                     //System.out.println("triggering invasion start");
+                    InvLog.dbg("attempting to start invasion for player: " + player.getName());
                     invasionStart(player, difficultyScale);
                 }
             } else {
@@ -401,6 +402,7 @@ public class InvasionManager {
 
         //initNewInvasion(player, difficultyScale);
 
+        InvLog.dbg("resetInvasion() for start");
         storage.resetInvasion();
         storage.dataPlayerInvasionActive = true;
 
@@ -419,7 +421,9 @@ public class InvasionManager {
         if (!player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
             float buffBase = 0.5F;
             float skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCount);
-            DynamicDifficulty.setInvasionSkipBuff(player, buffBase * skipCount);
+            float finalCalc = buffBase * skipCount;
+            InvLog.dbg("buffing invasion, inv count: " + skipCount + ", actual buff: " + finalCalc);
+            DynamicDifficulty.setInvasionSkipBuff(player, finalCalc);
         }
     }
 
@@ -442,6 +446,7 @@ public class InvasionManager {
 
         storage.dataPlayerInvasionActive = false;
         storage.dataPlayerInvasionWarned = false;
+        InvLog.dbg("resetInvasion() for stop reset");
         storage.resetInvasion();
 
         player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, false);
@@ -503,7 +508,7 @@ public class InvasionManager {
 
                         randomEntityList.spawnCountCurrent++;
 
-                        InvLog.dbg("Spawned " + randomEntityList.spawnCountCurrent + " mobs now: " + ent.getDisplayName().toString());
+                        InvLog.dbg("Spawned " + randomEntityList.spawnCountCurrent + " mobs now: " + ent.getName());
                     } else {
                         InvLog.err("could not find registered class for entity name: " + spawn);
                     }
@@ -780,21 +785,31 @@ public class InvasionManager {
     public static DataMobSpawnsTemplate chooseInvasionProfile(EntityPlayer player, float difficulty) {
         List<DataMobSpawnsTemplate> listPhase2 = new ArrayList<>();
 
+        InvLog.dbg("choosing invasion profile for player: " + player.getName() + ", difficulty: " + difficulty);
+
         //System.out.println("phase 1 choice count: " + DifficultyDataReader.getData().listMobSpawnTemplates.size());
         for (DataMobSpawnsTemplate spawns : DifficultyDataReader.getData().listMobSpawnTemplates) {
 
             boolean fail = false;
+            InvLog.dbg("evaluating conditions for spawn template: " + spawns.toString());
             for (DataCondition condition : DeserializerAllJson.getConditionsFlattened(spawns.conditions)) {
 
                 if (!(condition instanceof ConditionRandom)) {
+
+                    //TODO: toString() for conditions to output min/max difficulty etc
+
                     if (!evaluateCondition(player, condition, difficulty)) {
+                        InvLog.dbg("evaluating failed for condition: " + condition + ", dbg: " + condition.toString());
                         fail = true;
                         break;
+                    } else {
+                        InvLog.dbg("evaluating passed for condition: " + condition + ", dbg: " + condition.toString());
                     }
                 }
             }
 
             if (!fail) {
+                InvLog.dbg("adding spawn template: " + spawns.name);
                 listPhase2.add(spawns);
             }
 
@@ -824,18 +839,23 @@ public class InvasionManager {
             totalWeight += weight;
         }
 
-        Random rand = new Random();
-        int randVal = rand.nextInt(totalWeight);
         int index = -1;
-        for (int i = 0; i < listWeights.size(); i++) {
-            if (randVal < listWeights.get(i)) {
-                index = i;
-                break;
+        Random rand = new Random();
+
+        if (totalWeight > 0) {
+            int randVal = rand.nextInt(totalWeight);
+
+            for (int i = 0; i < listWeights.size(); i++) {
+                if (randVal < listWeights.get(i)) {
+                    index = i;
+                    break;
+                }
+                randVal -= listWeights.get(i);
             }
-            randVal -= listWeights.get(i);
         }
 
         if (index != -1) {
+            InvLog.dbg("chooseInvasionProfile() for: " + player.getName() + ", " + listPhase2.get(index).toString());
             return listPhase2.get(index);
 
             //System.out.println("final choice: " + spawn.name);
@@ -844,6 +864,7 @@ public class InvasionManager {
         }
 
         //temp
+        InvLog.dbg("chooseInvasionProfile() returned no invasion profile for: " + player.getName());
         return null;
     }
 

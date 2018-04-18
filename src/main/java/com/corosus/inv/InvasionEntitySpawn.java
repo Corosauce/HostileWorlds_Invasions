@@ -44,4 +44,15 @@ public class InvasionEntitySpawn {
         //nbtTagCompound.setString("json", (new Gson()).toJson(spawnProfile, DataActionMobSpawns.class));
         nbtTagCompound.setString("json", DeserializerAllJson.serializeSpawns(spawnProfile).toString());
     }
+
+    public String toString(boolean detailed) {
+        String str = "spawnCountCurrent: " + spawnCountCurrent + ", " + super.toString();
+        return str;
+    }
+
+    @Override
+    public String toString() {
+        String str = "spawnCountCurrent: " + spawnCountCurrent + " of total " + spawnProfile.count + " choosing from " + spawnProfile.entities.size() + " entities";
+        return str;
+    }
 }

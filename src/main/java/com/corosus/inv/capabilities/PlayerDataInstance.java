@@ -2,6 +2,7 @@ package com.corosus.inv.capabilities;
 
 import CoroUtil.difficulty.data.spawns.DataActionMobSpawns;
 import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
+import com.corosus.inv.InvLog;
 import com.corosus.inv.InvasionEntitySpawn;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -40,10 +41,16 @@ public class PlayerDataInstance {
         //resetInvasion();
 
         //convert data to runtime
-        for (DataActionMobSpawns spawns : profile.spawns) {
-            InvasionEntitySpawn newSpawn = new InvasionEntitySpawn();
-            newSpawn.spawnProfile = spawns;
-            listSpawnables.add(newSpawn);
+        InvLog.dbg("init invasion spawn template to runtime data");
+        if (profile.spawns.size() > 0) {
+            for (DataActionMobSpawns spawns : profile.spawns) {
+                InvasionEntitySpawn newSpawn = new InvasionEntitySpawn();
+                newSpawn.spawnProfile = spawns;
+                InvLog.dbg("adding spawns: " + newSpawn.toString(true));
+                listSpawnables.add(newSpawn);
+            }
+        } else {
+            InvLog.dbg("CRITICAL: there was no spawn data to setup!");
         }
 
         //TEST
@@ -60,6 +67,7 @@ public class PlayerDataInstance {
     }
 
     public void resetInvasion() {
+        InvLog.dbg("resetInvasion()");
         for (InvasionEntitySpawn spawns : listSpawnables) {
             spawns.clear();
         }
@@ -86,10 +94,18 @@ public class PlayerDataInstance {
         //return spawns.spawnProfile.entities.get(random.nextInt(spawns.spawnProfile.entities.size()));
 
         if (listSpawnablesTry.size() > 0) {
-            return listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
+            InvasionEntitySpawn spawn = listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
+            InvLog.dbg("returning this to spawn in: " + spawn.toString());
+            return spawn;
         } else {
             //this should be ok, happens when all the things that will spawn have spawned
-            System.out.println("nothing to spawn!");
+            if (listSpawnables.size() <= 0) {
+                InvLog.dbg("nothing to spawn and there was never anything to choose from, nothing to invade, this is bad?");
+            } else {
+                //fine, probably means everything already spawned
+                //InvLog.dbg("all spawnables spawned in");
+            }
+            //System.out.println("nothing to spawn!");
             //return new InvasionEntitySpawn();
             return null;
         }
