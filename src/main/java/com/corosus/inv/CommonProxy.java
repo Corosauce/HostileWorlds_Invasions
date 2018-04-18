@@ -39,6 +39,8 @@ public class CommonProxy implements IGuiHandler
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event) {
 		Invasion.proxy.addItemBlock(event, new ItemBlock(blockSacrifice).setRegistryName(blockSacrifice.getRegistryName()));
+
+
 	}
 
     public void init()
@@ -52,6 +54,8 @@ public class CommonProxy implements IGuiHandler
 
 	public void postInit() {
 		ResourceLocation group = new ResourceLocation(Invasion.modID, "hw_invasion");
+
+		//TODO: RECIPES!!!
 
 		GameRegistry.addShapedRecipe(new ResourceLocation(Invasion.modID, block_sacrifice_name), group,
 				new ItemStack(blockSacrifice, 1), new Object[] {"X X", "   ", "X X", 'X', Items.GOLD_INGOT});
@@ -97,6 +101,8 @@ public class CommonProxy implements IGuiHandler
 		item.setUnlocalizedName(Invasion.modID + "." + name);
 		//item.setRegistryName(new ResourceLocation(Weather.modID, name));
 		item.setRegistryName(name);
+
+		item.setCreativeTab(CreativeTabs.MISC);
 
 		if (event != null) {
 			event.getRegistry().register(item);
