@@ -37,7 +37,7 @@ public class BehaviorModifier {
 		
 		
 		AxisAlignedBB aabb = new AxisAlignedBB(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord, parPos.yCoord, parPos.zCoord);
-		aabb = aabb.expand(modifyRange, modifyRange, modifyRange);
+		aabb = aabb.grow(modifyRange, modifyRange, modifyRange);
 		List list = parWorld.getEntitiesWithinAABB(EntityZombie.class, aabb);
 		
 		int enhanceCount = 0;
@@ -81,24 +81,6 @@ public class BehaviorModifier {
         }
         
         //System.out.println("enhanced " + enhanceCount + " of " + enhanceCountTry + " entities");
-	}
-	
-	public static boolean addTaskIfMissing(EntityCreature ent, Class taskToCheckFor, Class[] taskToInject, int priorityOfTask) {
-		boolean foundTask = UtilEntityBuffs.hasTask(ent, taskToCheckFor);
-
-		if (!foundTask) {
-			//System.out.println("Detected entity was recreated and missing tasks, readding tasks and changes");
-			for (Class clazz : taskToInject) {
-				UtilEntityBuffs.addTask(ent, clazz, priorityOfTask);
-			}
-			performExtraChanges(ent);
-		} else {
-			//temp output to make sure detection works
-			//System.out.println("already has task!");
-		}
-		
-		return !foundTask;
-		
 	}
 
 	@Deprecated

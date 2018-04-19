@@ -1,5 +1,7 @@
 package com.corosus.inv;
 
+import CoroUtil.ai.tasks.EntityAIChaseFromFar;
+import CoroUtil.ai.tasks.EntityAINearestAttackablePlayerOmniscience;
 import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.difficulty.data.DataCondition;
@@ -254,57 +256,83 @@ public class InvasionManager {
                  * Target and path to player code
                  */
 
-                if (player.onGround && world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRatePath == 0) {
+                boolean newTargetting = true;
 
-                    int range = getTargettingRangeBuff(difficultyScale);
-                    double moveSpeedAmp = 1D;
+                if (!newTargetting) {
+                    if (player.onGround && world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRatePath == 0) {
 
-                    //TODO: instead of this expensive method and entity iteration, we could make distant targetting a targetTask!
-                    List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).expand(range, range, range));
+                        int range = getTargettingRangeBuff(difficultyScale);
+                        double moveSpeedAmp = 1D;
 
-                    //System.out.println("ents: " + listEnts.size());
+                        //TODO: instead of this expensive method and entity iteration, we could make distant targetting a targetTask!
+                        List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).grow(range, range, range));
+
+                        //System.out.println("ents: " + listEnts.size());
 
 
+                        for (EntityCreature ent : listEnts) {
+                            if (ent instanceof IMob && ent instanceof EntityCreature && !(ent instanceof EntityCreeper) && !(ent instanceof EntityEnderman)) {
 
-                    for (EntityCreature ent : listEnts) {
-                        if (ent instanceof IMob && ent instanceof EntityCreature && !(ent instanceof EntityCreeper) && !(ent instanceof EntityEnderman)) {
+                                long lastPathWithDelay = storage.dataCreatureLastPathWithDelay;
+                                if (world.getTotalWorldTime() > lastPathWithDelay) {
 
-                            long lastPathWithDelay = storage.dataCreatureLastPathWithDelay;
-                            if (world.getTotalWorldTime() > lastPathWithDelay) {
-
-                                EntityPlayer targetPlayer = null;
-                                if (ent.getAttackTarget() == null || !(ent.getAttackTarget() instanceof EntityPlayer)) {
-                                    targetPlayer = player;
-                                } else {
-                                    targetPlayer = (EntityPlayer) ent.getAttackTarget();
-                                }
-
-                                ent.setAttackTarget(targetPlayer);
-                                CoroUtilPath.tryMoveToEntityLivingLongDist(ent, targetPlayer, moveSpeedAmp);
-
-                                int pathFindingDelay = ConfigAdvancedOptions.pathDelayBase;
-
-                                if (ent.getNavigator().getPath() != null)
-                                {
-                                    PathPoint finalPathPoint = ent.getNavigator().getPath().getFinalPathPoint();
-                                    //if final path point is near player, thats good!
-                                    if (finalPathPoint != null && player.getDistanceSq(finalPathPoint.x, finalPathPoint.y, finalPathPoint.z) < 1)
-                                    {
-                                        pathFindingDelay = ConfigAdvancedOptions.pathDelayBase;
+                                    EntityPlayer targetPlayer = null;
+                                    if (ent.getAttackTarget() == null || !(ent.getAttackTarget() instanceof EntityPlayer)) {
+                                        targetPlayer = player;
+                                    } else {
+                                        targetPlayer = (EntityPlayer) ent.getAttackTarget();
                                     }
-                                    else
-                                    {
+
+                                    ent.setAttackTarget(targetPlayer);
+                                    CoroUtilPath.tryMoveToEntityLivingLongDist(ent, targetPlayer, moveSpeedAmp);
+
+                                    int pathFindingDelay = ConfigAdvancedOptions.pathDelayBase;
+
+                                    if (ent.getNavigator().getPath() != null) {
+                                        PathPoint finalPathPoint = ent.getNavigator().getPath().getFinalPathPoint();
+                                        //if final path point is near player, thats good!
+                                        if (finalPathPoint != null && player.getDistanceSq(finalPathPoint.x, finalPathPoint.y, finalPathPoint.z) < 1) {
+                                            pathFindingDelay = ConfigAdvancedOptions.pathDelayBase;
+                                        } else {
+                                            pathFindingDelay += ConfigAdvancedOptions.pathFailDelayPenalty;
+                                        }
+                                    } else {
                                         pathFindingDelay += ConfigAdvancedOptions.pathFailDelayPenalty;
                                     }
-                                }
-                                else
-                                {
-                                    pathFindingDelay += ConfigAdvancedOptions.pathFailDelayPenalty;
+
+                                    storage.dataCreatureLastPathWithDelay = world.getTotalWorldTime() + pathFindingDelay;
                                 }
 
-                                storage.dataCreatureLastPathWithDelay = world.getTotalWorldTime() + pathFindingDelay;
                             }
+                        }
+                    }
+                } else {
 
+                    if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
+
+                        //TODO: re-evaluate use of this
+                        int range = getTargettingRangeBuff(difficultyScale);
+                        //temp
+                        range = 128;
+
+                        List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).grow(range, range, range));
+
+                        for (EntityCreature ent : listEnts) {
+
+                            //TODO: put wave spawned entity list gathering here to compare against things we should enhance with omniscience
+                            boolean shouldEnhanceEntity = true;
+
+                            if (shouldEnhanceEntity) {
+                                //targetting
+                                if (!UtilEntityBuffs.hasTask(ent, EntityAINearestAttackablePlayerOmniscience.class, true)) {
+                                    UtilEntityBuffs.addTask(ent, EntityAINearestAttackablePlayerOmniscience.class, 10, true);
+                                }
+
+                                //long distance pathing
+                                if (!UtilEntityBuffs.hasTask(ent, EntityAIChaseFromFar.class, false)) {
+                                    UtilEntityBuffs.addTask(ent, EntityAIChaseFromFar.class, 4, false);
+                                }
+                            }
                         }
                     }
                 }
@@ -543,70 +571,6 @@ public class InvasionManager {
         return false;
     }
 
-    @Deprecated
-    public static boolean spawnNewMobSurface(EntityLivingBase player, float difficultyScale) {
-
-        //adjusted to work best with new targetting range base value of 30
-        int minDist = ConfigAdvancedOptions.spawnRangeMin;//20;//ZAConfigSpawning.extraSpawningDistMin;
-        int maxDist = ConfigAdvancedOptions.spawnRangeMax;//ZAConfigSpawning.extraSpawningDistMax;
-        int range = maxDist*2;
-
-        Random rand = player.world.rand;
-
-        List<Class> spawnables = getSpawnableEntitiesForDifficulty(difficultyScale);
-
-        if (spawnables.size() == 0) return false;
-
-        for (int tries = 0; tries < 5; tries++) {
-            int tryX = MathHelper.floor(player.posX) - (range/2) + (rand.nextInt(range));
-            int tryZ = MathHelper.floor(player.posZ) - (range/2) + (rand.nextInt(range));
-            int tryY = player.world.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
-
-
-            if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist ||
-                    !canSpawnMob(player.world, tryX, tryY, tryZ) || player.world.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
-                //System.out.println("light: " + player.world.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
-                continue;
-            }
-
-
-
-
-            try {
-                int randSpawn = rand.nextInt(spawnables.size());
-                Class classToSpawn = spawnables.get(randSpawn);
-
-                EntityCreature ent = (EntityCreature)classToSpawn.getConstructor(new Class[] {World.class}).newInstance(new Object[] {player.world});
-
-                ent.setPosition(tryX, tryY, tryZ);
-                ent.onInitialSpawn(ent.world.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData)null);
-                ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
-                enhanceMobForDifficulty(ent, difficultyScale);
-                player.world.spawnEntity(ent);
-                ent.setAttackTarget(player);
-            } catch (Exception e) {
-                System.out.println("HW_Invasions: error spawning invasion entity: ");
-                e.printStackTrace();
-            }
-
-
-	        /*EntityZombie entZ = new EntityZombie(player.world);
-			entZ.setPosition(tryX, tryY, tryZ);
-			entZ.onInitialSpawn(player.world.getDifficultyForLocation(new BlockCoord(entZ)), (IEntityLivingData)null);
-			enhanceMobForDifficulty(entZ, difficultyScale);
-			player.world.spawnEntityInWorld(entZ);
-
-			entZ.setAttackTarget(player);*/
-
-            //if (ZAConfig.debugConsoleSpawns) ZombieAwareness.dbg("spawnNewMobSurface: " + tryX + ", " + tryY + ", " + tryZ);
-            //System.out.println("spawnNewMobSurface: " + tryX + ", " + tryY + ", " + tryZ);
-
-            return true;
-        }
-
-        return false;
-    }
-
     public static boolean canSpawnMob(World world, int x, int y, int z) {
         //Block id = world.getBlockState(new BlockCoord(x-1,y,z)).getBlock();//Block.pressurePlatePlanks.blockID;
         IBlockState state = world.getBlockState(new BlockPos(x,y,z));
@@ -619,68 +583,6 @@ public class InvasionManager {
             return false;
         }
         return true;
-    }
-
-    public static void enhanceMobForDifficulty(EntityCreature ent, float difficultyScale) {
-		/*settings to consider:
-		 *- health
-		 *- speed
-		 *- inventory
-		 *- potions
-		 */
-
-        //determines what integer stage of inventory we should be at based on the difficulty scale
-        //code adapts for allowing for easily adding in more inventory stages if needed
-
-        //prevent enhanced children zombies
-        if (ent instanceof EntityZombie) {
-            EntityZombie zombie = (EntityZombie) ent;
-            zombie.setChild(false);
-        }
-
-        //extra xp
-		/*try {
-			int xp = ObfuscationReflectionHelper.getPrivateValue(EntityLiving.class, ent, "field_70728_aV", "experienceValue");
-			xp += difficultyScale * 10F;
-			ObfuscationReflectionHelper.setPrivateValue(EntityLiving.class, ent, xp, "field_70728_aV", "experienceValue");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}*/
-
-        //movement speed buff
-        //TODO: clamp to 1.0 or account for other mods speed boosting, or both!
-        double randBoost = ent.world.rand.nextDouble() * ConfigAdvancedOptions.speedBoostBase * difficultyScale;
-        AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "Invasion speed boost", randBoost, EnumAttribModifierType.INCREMENT_MULTIPLY_BASE.ordinal());
-        if (!ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier)) {
-            ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
-        }
-
-        UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_Inventory, ent, difficultyScale);
-
-		/*int inventoryStage = getInventoryStageBuff(difficultyScale);
-
-		EquipmentForDifficulty equipment = lookupDifficultyToEquipment.get(inventoryStage);
-		if (equipment != null) {
-			//allow for original weapon to remain if there was one and we are trying to remove it
-			if (equipment.getWeapon() != null) setEquipment(ent, EntityEquipmentSlot.MAINHAND, equipment.getWeapon());
-			//ent.setCurrentItemOrArmor(0, equipment.getWeapon());
-			for (int i = 0; i < 4; i++) {
-				//TODO: verify 1.10.2 update didnt mess with this, maybe rewrite a bit for new sane slot based system
-				if (equipment.getListArmor().size() >= i+1) {
-					setEquipment(ent, equipment.getSlotForSlotID(i)*//*i+1*//*, equipment.getListArmor().get(i));
-					//ent.setCurrentItemOrArmor(i+1, equipment.getListArmor().get(i));
-				} else {
-					setEquipment(ent, equipment.getSlotForSlotID(i)*//*i+1*//*, null);
-					//ent.setCurrentItemOrArmor(i+1, null);
-
-				}
-			}
-
-		} else {
-			System.out.println("error, couldnt find equipment for difficulty value: " + inventoryStage);
-		}*/
-
-
     }
 
 
@@ -727,60 +629,6 @@ public class InvasionManager {
 				" | inventory stage: " + getInventoryStageBuff(difficultyScale) +
 				" | scale: " + difficultyScale;
 	}*/
-
-    /**
-     * Returns a list of classes that are verified to extend EntityCreature
-     *
-     * @param difficultyScale
-     * @return
-     */
-    public static List<Class> getSpawnableEntitiesForDifficulty(float difficultyScale) {
-        try {
-            List<Class> listSpawns = new ArrayList<Class>();
-            String[] spawnArray = null;
-            if (difficultyScale > 0.9F) {
-                spawnArray = ConfigAdvancedSpawning.difficulty_9.split(",");
-            } else if (difficultyScale > 0.8F) {
-                spawnArray = ConfigAdvancedSpawning.difficulty_8.split(",");
-            } else if (difficultyScale > 0.7F) {
-                spawnArray = ConfigAdvancedSpawning.difficulty_7.split(",");
-            } else if (difficultyScale > 0.6F) {
-                spawnArray = ConfigAdvancedSpawning.difficulty_6.split(",");
-            } else if (difficultyScale > 0.5F) {
-                spawnArray = ConfigAdvancedSpawning.difficulty_5.split(",");
-            } else if (difficultyScale > 0.4F) {
-                spawnArray = ConfigAdvancedSpawning.difficulty_4.split(",");
-            } else if (difficultyScale > 0.3F) {
-                spawnArray = ConfigAdvancedSpawning.difficulty_3.split(",");
-            } else if (difficultyScale > 0.2F) {
-                spawnArray = ConfigAdvancedSpawning.difficulty_2.split(",");
-            } else if (difficultyScale > 0.1F) {
-                spawnArray = ConfigAdvancedSpawning.difficulty_1.split(",");
-            } else if (difficultyScale >= 0F) {
-                spawnArray = ConfigAdvancedSpawning.difficulty_0.split(",");
-            }
-            if (spawnArray != null) {
-                for (String entry : spawnArray) {
-                    try {
-                        Class clazz = Class.forName(entry.trim());
-                        if (!EntityCreature.class.isAssignableFrom(clazz)) {
-                            System.out.println("HW_Invasions: class not compatible, must extend EntityCreature, problem string: " + entry);
-                        } else {
-                            listSpawns.add(clazz);
-                        }
-                    } catch (ClassNotFoundException e) {
-                        System.out.println("HW_Invasions: unable to find class for string: " + entry);
-                    }
-                }
-            }
-            return listSpawns;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        List<Class> listDefault = new ArrayList<Class>();
-        listDefault.add(EntityZombie.class);
-        return listDefault;
-    }
 
     public static DataMobSpawnsTemplate chooseInvasionProfile(EntityPlayer player, float difficulty) {
         List<DataMobSpawnsTemplate> listPhase2 = new ArrayList<>();
