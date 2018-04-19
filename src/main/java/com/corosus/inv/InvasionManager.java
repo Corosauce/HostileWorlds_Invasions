@@ -14,7 +14,6 @@ import CoroUtil.difficulty.data.conditions.ConditionDifficulty;
 import CoroUtil.difficulty.data.conditions.ConditionInvasionNumber;
 import CoroUtil.difficulty.data.conditions.ConditionRandom;
 import CoroUtil.util.*;
-import com.corosus.inv.ai.BehaviorModifier;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigAdvancedSpawning;
@@ -315,36 +314,34 @@ public class InvasionManager {
                          * pretty sure i want anything spawned in to always chase at player
                          * in this case it also does this for same classes already spawned, maybe ok
                          */
-                        //old way
-                        int range = getTargettingRangeBuff(difficultyScale);
-                        //int range = ConfigAdvancedOptions.aiOmniscienceRange;
+                        if (ConfigAdvancedOptions.enhanceAllMobsOfSpawnedTypesForOmniscience) {
+                            //old way
+                            //int range = getTargettingRangeBuff(difficultyScale);
+                            int range = ConfigAdvancedOptions.aiOmniscienceRange;
 
-                        List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).grow(range, range, range));
+                            List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).grow(range, range, range));
 
-                        List<Class> listClassesSpawned = storage.getSpawnableClasses();
+                            List<Class> listClassesSpawned = storage.getSpawnableClasses();
 
-                        for (EntityCreature ent : listEnts) {
+                            for (EntityCreature ent : listEnts) {
 
-                            //TODO: put wave spawned entity list gathering here to compare against things we should enhance with omniscience
-                            boolean shouldEnhanceEntity = listClassesSpawned.contains(ent.getClass());
+                                boolean shouldEnhanceEntity = listClassesSpawned.contains(ent.getClass());
 
-                            if (shouldEnhanceEntity) {
+                                if (shouldEnhanceEntity) {
 
-                                //note, these arent being added in a way where its persistant, which is fine since this runs all the time anyways
-                                //still needs a way to stop after invasion done
+                                    //note, these arent being added in a way where its persistant, which is fine since this runs all the time anyways
+                                    //still needs a way to stop after invasion done
 
-                                //targetting
-                                if (!UtilEntityBuffs.hasTask(ent, EntityAINearestAttackablePlayerOmniscience.class, true)) {
-                                    InvLog.dbg("trying to enhance with omniscience: " + ent.getName());
-                                    UtilEntityBuffs.addTask(ent, EntityAINearestAttackablePlayerOmniscience.class, 10, true);
+                                    //targetting
+                                    if (!UtilEntityBuffs.hasTask(ent, EntityAINearestAttackablePlayerOmniscience.class, true)) {
+                                        InvLog.dbg("trying to enhance with omniscience via pre-existing mob way: " + ent.getName());
+                                        UtilEntityBuffs.addTask(ent, EntityAINearestAttackablePlayerOmniscience.class, 10, true);
+                                    }
 
-                                    //a bit of a temp patch, consider alternative due to maybe messing with non invasion enhanced stuff
-                                    ent.getEntityData().setBoolean(TaskDigTowardsTarget.dataUseInvasionRules, true);
-                                }
-
-                                //long distance pathing
-                                if (!UtilEntityBuffs.hasTask(ent, EntityAIChaseFromFar.class, false)) {
-                                    UtilEntityBuffs.addTask(ent, EntityAIChaseFromFar.class, 4, false);
+                                    //long distance pathing
+                                    if (!UtilEntityBuffs.hasTask(ent, EntityAIChaseFromFar.class, false)) {
+                                        UtilEntityBuffs.addTask(ent, EntityAIChaseFromFar.class, 4, false);
+                                    }
                                 }
                             }
                         }
@@ -547,7 +544,8 @@ public class InvasionManager {
                         //UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_Inventory, ent, difficultyScale);
 
                         player.world.spawnEntity(ent);
-                        ent.setAttackTarget(player);
+                        //leave this to omniscience task if config says so
+                        //ent.setAttackTarget(player);
 
                         randomEntityList.spawnCountCurrent++;
 
