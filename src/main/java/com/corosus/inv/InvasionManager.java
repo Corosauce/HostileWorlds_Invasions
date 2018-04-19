@@ -2,6 +2,7 @@ package com.corosus.inv;
 
 import CoroUtil.ai.tasks.EntityAIChaseFromFar;
 import CoroUtil.ai.tasks.EntityAINearestAttackablePlayerOmniscience;
+import CoroUtil.ai.tasks.TaskDigTowardsTarget;
 import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.difficulty.data.DataCondition;
@@ -310,17 +311,22 @@ public class InvasionManager {
 
                     if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
 
-                        //TODO: re-evaluate use of this
+                        /**TODO: re-evaluate use of this
+                         * pretty sure i want anything spawned in to always chase at player
+                         * in this case it also does this for same classes already spawned, maybe ok
+                         */
+                        //old way
                         int range = getTargettingRangeBuff(difficultyScale);
-                        //temp
-                        range = 128;
+                        //int range = ConfigAdvancedOptions.aiOmniscienceRange;
 
                         List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).grow(range, range, range));
+
+                        List<Class> listClassesSpawned = storage.getSpawnableClasses();
 
                         for (EntityCreature ent : listEnts) {
 
                             //TODO: put wave spawned entity list gathering here to compare against things we should enhance with omniscience
-                            boolean shouldEnhanceEntity = true;
+                            boolean shouldEnhanceEntity = listClassesSpawned.contains(ent.getClass());
 
                             if (shouldEnhanceEntity) {
 
@@ -329,7 +335,11 @@ public class InvasionManager {
 
                                 //targetting
                                 if (!UtilEntityBuffs.hasTask(ent, EntityAINearestAttackablePlayerOmniscience.class, true)) {
+                                    InvLog.dbg("trying to enhance with omniscience: " + ent.getName());
                                     UtilEntityBuffs.addTask(ent, EntityAINearestAttackablePlayerOmniscience.class, 10, true);
+
+                                    //a bit of a temp patch, consider alternative due to maybe messing with non invasion enhanced stuff
+                                    ent.getEntityData().setBoolean(TaskDigTowardsTarget.dataUseInvasionRules, true);
                                 }
 
                                 //long distance pathing
@@ -345,20 +355,20 @@ public class InvasionManager {
                  * Buff with digging
                  */
 
-                boolean enhanceAlreadyAlive = false;
+                /*boolean enhanceAlreadyAlive = false;
                 if (enhanceAlreadyAlive) {
                     if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
 
                         int modifyRange = ConfigAdvancedOptions.aiEnhanceRange;
                         float chanceToEnhance = getDigChanceBuff(difficultyScale);
-                        /**
+                        *//**
                          * TODO: consider making the digging tasks disable after invasions "ends"
                          * so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
-                         */
+                         *//*
                         BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ),
                                 modifyRange, chanceToEnhance);
                     }
-                }
+                }*/
 
                 /**
                  * Spawn extra with buffs

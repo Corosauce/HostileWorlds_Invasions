@@ -108,6 +108,9 @@ public class CommandInvasion extends CommandBase {
 						}
 
 					}
+				} else if (var2[0].equalsIgnoreCase("setInvade")) {
+	        		int amount = (24000 * 3) + (6000 * 2) + (600 * 3);
+	        		world.getWorldInfo().setWorldTime(amount);
 				}
 	        	
 	        	

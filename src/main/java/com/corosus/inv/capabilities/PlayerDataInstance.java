@@ -2,6 +2,7 @@ package com.corosus.inv.capabilities;
 
 import CoroUtil.difficulty.data.spawns.DataActionMobSpawns;
 import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
+import CoroUtil.util.CoroUtilEntity;
 import com.corosus.inv.InvLog;
 import com.corosus.inv.InvasionEntitySpawn;
 import net.minecraft.entity.player.EntityPlayer;
@@ -17,12 +18,14 @@ import java.util.Random;
  */
 public class PlayerDataInstance {
 
-    List<InvasionEntitySpawn> listSpawnables = new ArrayList<>();
+    private List<InvasionEntitySpawn> listSpawnables = new ArrayList<>();
     private EntityPlayer player;
 
     public boolean dataPlayerInvasionActive;
     public boolean dataPlayerInvasionWarned;
     public long dataCreatureLastPathWithDelay;
+
+    private List<Class> listSpawnablesCached = new ArrayList<>();
 
     public PlayerDataInstance() {
 
@@ -45,7 +48,8 @@ public class PlayerDataInstance {
         if (profile.spawns.size() > 0) {
             for (DataActionMobSpawns spawns : profile.spawns) {
                 InvasionEntitySpawn newSpawn = new InvasionEntitySpawn();
-                newSpawn.spawnProfile = spawns;
+                //we must clone the list, not use direct reference, or we will corrupt(blank out) the data later
+                newSpawn.spawnProfile = spawns.copy();
                 InvLog.dbg("adding spawns: " + newSpawn.toString(true));
                 listSpawnables.add(newSpawn);
             }
@@ -68,10 +72,12 @@ public class PlayerDataInstance {
 
     public void resetInvasion() {
         InvLog.dbg("resetInvasion()");
+        //we make a copy of this, but why clear anyways?
         for (InvasionEntitySpawn spawns : listSpawnables) {
             spawns.clear();
         }
         listSpawnables.clear();
+        listSpawnablesCached.clear();
     }
 
     public InvasionEntitySpawn getRandomEntityClassToSpawn() {
@@ -111,6 +117,22 @@ public class PlayerDataInstance {
         }
 
 
+    }
+
+    public List<Class> getSpawnableClasses() {
+        if (listSpawnablesCached.size() == 0) {
+            for (InvasionEntitySpawn spawns : listSpawnables) {
+                for (String spawnable : spawns.spawnProfile.entities) {
+                    Class classToSpawn = CoroUtilEntity.getClassFromRegisty(spawnable);
+                    if (classToSpawn != null) {
+                        if (!listSpawnablesCached.contains(classToSpawn)) {
+                            listSpawnablesCached.add(classToSpawn);
+                        }
+                    }
+                }
+            }
+        }
+        return listSpawnablesCached;
     }
 
     public void readNBT(NBTTagCompound nbtTagCompound) {
