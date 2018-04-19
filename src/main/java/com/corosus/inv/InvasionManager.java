@@ -323,6 +323,10 @@ public class InvasionManager {
                             boolean shouldEnhanceEntity = true;
 
                             if (shouldEnhanceEntity) {
+
+                                //note, these arent being added in a way where its persistant, which is fine since this runs all the time anyways
+                                //still needs a way to stop after invasion done
+
                                 //targetting
                                 if (!UtilEntityBuffs.hasTask(ent, EntityAINearestAttackablePlayerOmniscience.class, true)) {
                                     UtilEntityBuffs.addTask(ent, EntityAINearestAttackablePlayerOmniscience.class, 10, true);
@@ -341,18 +345,19 @@ public class InvasionManager {
                  * Buff with digging
                  */
 
-                if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
-                    //TaskDigTowardsTarget task = new TaskDigTowardsTarget();
+                boolean enhanceAlreadyAlive = false;
+                if (enhanceAlreadyAlive) {
+                    if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
 
-                    int modifyRange = ConfigAdvancedOptions.aiEnhanceRange;
-                    float chanceToEnhance = getDigChanceBuff(difficultyScale);
-                    /**
-                     * TODO: consider making the digging tasks disable after invasions "ends"
-                     * so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
-                     */
-                    BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ),
-							/*UtilEntityBuffs.tasksToInject, UtilEntityBuffs.taskPriorities[0],*/
-                            modifyRange, chanceToEnhance);
+                        int modifyRange = ConfigAdvancedOptions.aiEnhanceRange;
+                        float chanceToEnhance = getDigChanceBuff(difficultyScale);
+                        /**
+                         * TODO: consider making the digging tasks disable after invasions "ends"
+                         * so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
+                         */
+                        BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ),
+                                modifyRange, chanceToEnhance);
+                    }
                 }
 
                 /**
