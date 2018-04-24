@@ -46,7 +46,8 @@ import java.util.Random;
  */
 public class InvasionManager {
 
-
+    public static boolean invasionOnThisNight_Last = false;
+    public static boolean isDayLast = false;
 
     /**
      * TODO: features:
@@ -203,12 +204,20 @@ public class InvasionManager {
             boolean activeBool = storage.dataPlayerInvasionActive;
             boolean skippingBool = player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping);
 
-            //TODO: add a visual cue for invasion coming tonight + active invasion
-
             //track state of invasion for proper init and reset for wave counts, etc
             //new day starts just as sun is rising, so invasion stops just at the right time when sun is imminent, they burn 300 ticks before invasion ends, thats ok
             //FYI night val is based on sunlight level, so its not night ends @ 24000 cycle, its a bit before, 400ish ticks before, thats ok
             boolean invasionOnThisNight = isInvasionTonight(world);
+
+            if (invasionOnThisNight != invasionOnThisNight_Last) {
+                InvLog.dbg("invasionOnThisNight: " + invasionOnThisNight);
+                invasionOnThisNight_Last = invasionOnThisNight;
+            }
+
+            if (world.isDaytime() != isDayLast) {
+                InvLog.dbg("world.isDaytime(): " + world.isDaytime());
+                isDayLast = world.isDaytime();
+            }
 
             if (invasionOnThisNight && world.isDaytime()) {
                 if (!storage.dataPlayerInvasionWarned) {
