@@ -3,6 +3,7 @@ package com.corosus.inv;
 import CoroUtil.ai.tasks.EntityAIChaseFromFar;
 import CoroUtil.ai.tasks.EntityAINearestAttackablePlayerOmniscience;
 import CoroUtil.ai.tasks.TaskDigTowardsTarget;
+import CoroUtil.difficulty.DifficultyQueryContext;
 import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.difficulty.data.DataCondition;
@@ -18,7 +19,6 @@ import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
-import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -221,7 +221,7 @@ public class InvasionManager {
 
             if (invasionOnThisNight && world.isDaytime()) {
                 if (!storage.dataPlayerInvasionWarned) {
-                    player.sendMessage(new TextComponentString(ChatFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!"));
+                    player.sendMessage(new TextComponentString(TextFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!"));
                     storage.dataPlayerInvasionWarned = true;
                 }
             }
@@ -444,9 +444,9 @@ public class InvasionManager {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion started");
         if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
-            player.sendMessage(new TextComponentString(ChatFormatting.GREEN + "An invasion has started! But skipped for you!"));
+            player.sendMessage(new TextComponentString(TextFormatting.GREEN + "An invasion has started! But skipped for you!"));
         } else {
-            player.sendMessage(new TextComponentString(ChatFormatting.RED + "An invasion has started! Be prepared!"));
+            player.sendMessage(new TextComponentString(TextFormatting.RED + "An invasion has started! Be prepared!"));
         }
 
         //initNewInvasion(player, difficultyScale);
@@ -455,7 +455,7 @@ public class InvasionManager {
         storage.resetInvasion();
         storage.dataPlayerInvasionActive = true;
 
-        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, difficultyScale);
+        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, -1, difficultyScale));
         if (profile != null) {
             storage.initNewInvasion(profile);
         } else {
@@ -476,10 +476,10 @@ public class InvasionManager {
         }
     }
 
-    public static DataMobSpawnsTemplate getInvasionTestData(EntityPlayer player, float difficultyScale) {
+    public static DataMobSpawnsTemplate getInvasionTestData(EntityPlayer player, DifficultyQueryContext context) {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
 
-        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, difficultyScale);
+        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, context);
         /*if (profile != null) {
             storage.initNewInvasion(profile);
         } else {
@@ -491,7 +491,7 @@ public class InvasionManager {
     public static void invasionStopReset(EntityPlayer player) {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion ended");
-        player.sendMessage(new TextComponentString(ChatFormatting.GREEN + "The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
+        player.sendMessage(new TextComponentString(TextFormatting.GREEN + "The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
 
         storage.dataPlayerInvasionActive = false;
         storage.dataPlayerInvasionWarned = false;
@@ -652,10 +652,10 @@ public class InvasionManager {
 				" | scale: " + difficultyScale;
 	}*/
 
-    public static DataMobSpawnsTemplate chooseInvasionProfile(EntityPlayer player, float difficulty) {
+    public static DataMobSpawnsTemplate chooseInvasionProfile(EntityPlayer player, DifficultyQueryContext context) {
         List<DataMobSpawnsTemplate> listPhase2 = new ArrayList<>();
 
-        InvLog.dbg("choosing invasion profile for player: " + player.getName() + ", difficulty: " + difficulty);
+        InvLog.dbg("choosing invasion profile for player: " + player.getName() + ", difficulty: " + context.getDifficulty());
 
         //System.out.println("phase 1 choice count: " + DifficultyDataReader.getData().listMobSpawnTemplates.size());
         for (DataMobSpawnsTemplate spawns : DifficultyDataReader.getData().listMobSpawnTemplates) {
@@ -668,7 +668,7 @@ public class InvasionManager {
 
                     //TODO: toString() for conditions to output min/max difficulty etc
 
-                    if (!evaluateCondition(player, condition, difficulty)) {
+                    if (!evaluateCondition(player, condition, context)) {
                         InvLog.dbg("evaluating failed for condition: " + condition + ", dbg: " + condition.toString());
                         fail = true;
                         break;
@@ -764,14 +764,16 @@ public class InvasionManager {
 
 
 
-    public static boolean evaluateCondition(EntityPlayer player, DataCondition condition, float difficulty) {
+    public static boolean evaluateCondition(EntityPlayer player, DataCondition condition, DifficultyQueryContext context) {
         if (condition instanceof ConditionContext) {
-            return true;
+            return context.getContext().equals(((ConditionContext) condition).type);
         } else if (condition instanceof ConditionDifficulty) {
-            return difficulty >= ((ConditionDifficulty)condition).min && difficulty <= ((ConditionDifficulty)condition).max;
+            return context.getDifficulty() >= ((ConditionDifficulty)condition).min &&
+                    context.getDifficulty() <= ((ConditionDifficulty)condition).max;
         } else if (condition instanceof ConditionInvasionNumber) {
-            //TODO: implement invasion numbers, global or per player tracked?
-            return false;
+            //TODO: global or per player tracked?
+            return context.getInvasionNumber() >= ((ConditionInvasionNumber)condition).min &&
+                    context.getInvasionNumber() <= ((ConditionInvasionNumber)condition).max;
         }
         return false;
     }

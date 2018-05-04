@@ -1,9 +1,11 @@
 package com.corosus.inv;
 
+import CoroUtil.difficulty.DifficultyQueryContext;
+import CoroUtil.difficulty.data.conditions.ConditionContext;
 import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
-import com.mojang.realmsclient.gui.ChatFormatting;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
@@ -13,6 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import CoroUtil.util.BlockCoord;
@@ -95,20 +98,28 @@ public class CommandInvasion extends CommandBase {
 					}
 				} else if (var2[0].equalsIgnoreCase("ti") || var2[0].equalsIgnoreCase("testInvasion")) {
 					if (player != null) {
+
+						Minecraft.getMinecraft().mouseHelper.ungrabMouseCursor();
+
 						BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
 						float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
 						if (var2.length >= 2) difficultyScale = Float.valueOf(var2[1]);
-						DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, difficultyScale);
+						DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, -1, difficultyScale));
 
-						var1.sendMessage(new TextComponentString(ChatFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale));
-						String data = profile.toString();
-						String[] list = data.split(" \\| ");
-						for (String entry : list) {
-							var1.sendMessage(new TextComponentString(entry));
+						var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale));
+						if (profile != null) {
+
+							String data = profile.toString();
+							String[] list = data.split(" \\| ");
+							for (String entry : list) {
+								var1.sendMessage(new TextComponentString(entry));
+							}
+						} else {
+							var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "profile null"));
 						}
 
 					}
-				} else if (var2[0].equalsIgnoreCase("setInvade")) {
+				} else if (var2[0].equalsIgnoreCase("forceInvasion")) {
 	        		int amount = (24000 * 3) + (6000 * 2) + (600 * 3);
 	        		world.getWorldInfo().setWorldTime(amount);
 				}
