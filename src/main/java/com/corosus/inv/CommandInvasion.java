@@ -99,8 +99,6 @@ public class CommandInvasion extends CommandBase {
 				} else if (var2[0].equalsIgnoreCase("ti") || var2[0].equalsIgnoreCase("testInvasion")) {
 					if (player != null) {
 
-						Minecraft.getMinecraft().mouseHelper.ungrabMouseCursor();
-
 						BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
 						float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
 						if (var2.length >= 2) difficultyScale = Float.valueOf(var2[1]);
