@@ -7,7 +7,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -25,7 +24,7 @@ public class Invasion {
 	
 	@Mod.Instance( value = "hw_inv" )
 	public static Invasion instance;
-	public static final String modID = "hw_inv";
+	public static final String modID = CoroUtil.forge.CoroUtil.modID_HWInvasions;
 
     @SidedProxy(clientSide = "com.corosus.inv.ClientProxy", serverSide = "com.corosus.inv.CommonProxy")
     public static CommonProxy proxy;

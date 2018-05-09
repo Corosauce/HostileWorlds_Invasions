@@ -562,6 +562,7 @@ public class InvasionManager {
                         ent.setPosition(tryX, tryY + 1, tryZ);
                         ent.onInitialSpawn(ent.world.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData) null);
                         ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
+                        ent.getEntityData().setBoolean(TaskDigTowardsTarget.dataUseInvasionRules, true);
 
                         //TODO: here we need to apply the cmods chosen for it
 
