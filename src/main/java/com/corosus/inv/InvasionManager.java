@@ -576,7 +576,9 @@ public class InvasionManager {
                         //apply cmods from data
                         //UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_Inventory, ent, difficultyScale);
 
+                        ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, true);
                         player.world.spawnEntity(ent);
+                        ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, false);
                         //leave this to omniscience task if config says so
                         //ent.setAttackTarget(player);
 
