@@ -14,6 +14,7 @@ import CoroUtil.difficulty.data.conditions.ConditionContext;
 import CoroUtil.difficulty.data.conditions.ConditionDifficulty;
 import CoroUtil.difficulty.data.conditions.ConditionInvasionNumber;
 import CoroUtil.difficulty.data.conditions.ConditionRandom;
+import CoroUtil.forge.CULog;
 import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
@@ -520,11 +521,32 @@ public class InvasionManager {
                 int tryZ = MathHelper.floor(player.posZ) - (range / 2) + (rand.nextInt(range));
                 int tryY = player.world.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 
+                //set position in the solid ground
+                //previously it was targetting above ground but not excluding things like tallgrass
+                //eg: this fixes mobs not spawning in desert where theres no tallgrass
+                tryY--;
+
+                //dont factor in y for high elevation change based spawns, otherwise things wont spawn in certain conditions, eg base on high hill
+                double dist = player.getDistance(tryX, player.posY, tryZ);
 
                 //TODO: make spawn check rules use entities own rules
-                if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist ||
+                /*if (dist < minDist || dist > maxDist ||
                         !canSpawnMob(player.world, tryX, tryY, tryZ) || player.world.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
-                    //System.out.println("light: " + player.world.getLightFromNeighbors(new BlockCoord(tryX, tryY, tryZ)));
+                    continue;
+                }*/
+
+                if (dist < minDist || dist > maxDist) {
+                    CULog.dbg("spawnNewMobFromProfile: dist fail, minDist: " + minDist + ", maxDist: " + maxDist + ", tryDist: " + dist);
+                    continue;
+                }
+
+                if (!canSpawnMob(player.world, tryX, tryY, tryZ)) {
+                    CULog.dbg("spawnNewMobFromProfile: canSpawnMob fail");
+                    continue;
+                }
+
+                if (player.world.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
+                    CULog.dbg("spawnNewMobFromProfile: getLightFromNeighbors fail");
                     continue;
                 }
 
@@ -536,7 +558,8 @@ public class InvasionManager {
                     if (classToSpawn != null) {
                         EntityCreature ent = (EntityCreature) classToSpawn.getConstructor(new Class[]{World.class}).newInstance(new Object[]{player.world});
 
-                        ent.setPosition(tryX, tryY, tryZ);
+                        //set to above the solid block we can spawn on
+                        ent.setPosition(tryX, tryY + 1, tryZ);
                         ent.onInitialSpawn(ent.world.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData) null);
                         ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
 

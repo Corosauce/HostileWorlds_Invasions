@@ -2,6 +2,7 @@ package com.corosus.inv.capabilities;
 
 import CoroUtil.difficulty.data.spawns.DataActionMobSpawns;
 import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
+import CoroUtil.forge.CULog;
 import CoroUtil.util.CoroUtilEntity;
 import com.corosus.inv.InvLog;
 import com.corosus.inv.InvasionEntitySpawn;
@@ -150,7 +151,10 @@ public class PlayerDataInstance {
             listSpawnables.add(spawn);
         }
 
-        System.out.println("read done");
+        dataPlayerInvasionActive = nbtTagCompound.getBoolean("dataPlayerInvasionActive");
+        dataPlayerInvasionWarned = nbtTagCompound.getBoolean("dataPlayerInvasionWarned");
+
+        CULog.dbg("read done");
     }
 
     public void writeNBT(NBTTagCompound nbtTagCompound) {
@@ -163,6 +167,9 @@ public class PlayerDataInstance {
             nbt.setTag("spawn_" + i, nbtEntry);
         }
         nbtTagCompound.setTag("spawns", nbt);
+
+        nbtTagCompound.setBoolean("dataPlayerInvasionActive", dataPlayerInvasionActive);
+        nbtTagCompound.setBoolean("dataPlayerInvasionWarned", dataPlayerInvasionWarned);
     }
 
 }
