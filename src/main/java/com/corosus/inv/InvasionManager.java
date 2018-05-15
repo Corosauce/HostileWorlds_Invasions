@@ -7,13 +7,10 @@ import CoroUtil.difficulty.DifficultyQueryContext;
 import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.difficulty.data.DataCondition;
+import CoroUtil.difficulty.data.conditions.*;
 import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
 import CoroUtil.difficulty.data.DeserializerAllJson;
 import CoroUtil.difficulty.data.DifficultyDataReader;
-import CoroUtil.difficulty.data.conditions.ConditionContext;
-import CoroUtil.difficulty.data.conditions.ConditionDifficulty;
-import CoroUtil.difficulty.data.conditions.ConditionInvasionNumber;
-import CoroUtil.difficulty.data.conditions.ConditionRandom;
 import CoroUtil.forge.CULog;
 import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
@@ -34,6 +31,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.Loader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -801,9 +799,11 @@ public class InvasionManager {
             return context.getDifficulty() >= ((ConditionDifficulty)condition).min &&
                     context.getDifficulty() <= ((ConditionDifficulty)condition).max;
         } else if (condition instanceof ConditionInvasionNumber) {
-            //TODO: global or per player tracked?
+            //TODO: global or per player tracked? also i dont think invasion number is even set yet
             return context.getInvasionNumber() >= ((ConditionInvasionNumber)condition).min &&
                     context.getInvasionNumber() <= ((ConditionInvasionNumber)condition).max;
+        } else if (condition instanceof ConditionModLoaded) {
+            return Loader.isModLoaded(((ConditionModLoaded) condition).mod_id);
         }
         return false;
     }
