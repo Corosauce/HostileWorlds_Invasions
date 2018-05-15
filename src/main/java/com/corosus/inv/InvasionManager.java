@@ -18,16 +18,13 @@ import CoroUtil.forge.CULog;
 import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
-import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
-import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.pathfinding.PathPoint;
@@ -139,6 +136,7 @@ public class InvasionManager {
          * apply a +50% difficulty buff * skip count
          * somehow remove after invasion over
          */
+
         World world = player.world;
         boolean skipped = player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping);
         if (!skipped) {
@@ -150,20 +148,20 @@ public class InvasionManager {
                         skipCount++;
                         player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, true);
                         player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCount, skipCount);
-                        player.sendMessage(new TextComponentString(TextFormatting.GREEN + "Skipping tonights invasion, skip count: " + skipCount));
+                        player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_skipping, skipCount)));
                         return true;
                     } else {
-                        player.sendMessage(new TextComponentString(TextFormatting.RED + "You've already skipped invasions " + ConfigInvasion.maxConsecutiveInvasionSkips + " times! You must fight!"));
+                        player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_skippedTooMany, ConfigInvasion.maxConsecutiveInvasionSkips)));
                     }
 
                 } else {
-                    player.sendMessage(new TextComponentString(TextFormatting.RED + "Too late, invasion already started!"));
+                    player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_tooLate));
                 }
             } else {
-                player.sendMessage(new TextComponentString("Not an invasion night, cant skip yet!"));
+                player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_notInvasionNight));
             }
         } else {
-            player.sendMessage(new TextComponentString(TextFormatting.GREEN + "You are already skipping this nights invasion!"));
+            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_alreadySkipping));
         }
         return false;
     }
@@ -222,7 +220,7 @@ public class InvasionManager {
 
             if (invasionOnThisNight && world.isDaytime()) {
                 if (!storage.dataPlayerInvasionWarned) {
-                    player.sendMessage(new TextComponentString(TextFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!"));
+                    player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startsTonight));
                     storage.dataPlayerInvasionWarned = true;
                 }
             }
@@ -248,6 +246,12 @@ public class InvasionManager {
 
                     invasionStopReset(player);
                 }
+            }
+
+            //now that warn flag is serialized, we need to reset it incase time changes during warning stage
+            if (!invasionOnThisNight) {
+                storage.dataPlayerInvasionWarned = false;
+                player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, false);
             }
 
             //int playerRating = UtilPlayer.getPlayerRating(player);
@@ -445,9 +449,9 @@ public class InvasionManager {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion started");
         if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
-            player.sendMessage(new TextComponentString(TextFormatting.GREEN + "An invasion has started! But skipped for you!"));
+            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startedButSkippedForYou));
         } else {
-            player.sendMessage(new TextComponentString(TextFormatting.RED + "An invasion has started! Be prepared!"));
+            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_started));
         }
 
         //initNewInvasion(player, difficultyScale);
@@ -492,7 +496,7 @@ public class InvasionManager {
     public static void invasionStopReset(EntityPlayer player) {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion ended");
-        player.sendMessage(new TextComponentString(TextFormatting.GREEN + "The invasion has ended! Next invasion in " + ConfigInvasion.daysBetweenInvasions + " days!"));
+        player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_ended, ConfigInvasion.daysBetweenInvasions)));
 
         storage.dataPlayerInvasionActive = false;
         storage.dataPlayerInvasionWarned = false;
@@ -657,16 +661,16 @@ public class InvasionManager {
     }*/
 
     public static int getTargettingRangeBuff(float difficultyScale) {
-        int initialRange = ConfigInvasion.invasion_TargettingRange_Min;
-        int max = ConfigInvasion.invasion_TargettingRange_Max;
-        float scaleRate = (float) ConfigInvasion.invasion_TargettingRange_ScaleRate;
+        int initialRange = ConfigInvasion.Invasion_TargettingRange_Min;
+        int max = ConfigInvasion.Invasion_TargettingRange_Max;
+        float scaleRate = (float) ConfigInvasion.Invasion_TargettingRange_ScaleRate;
         return MathHelper.clamp(((int) ((float)(max) * difficultyScale * scaleRate)), initialRange, max);
     }
 
     public static float getDigChanceBuff(float difficultyScale) {
-        float initial = (float) ConfigInvasion.invasion_DiggerConvertChance_Min;
-        float max = (float) ConfigInvasion.invasion_DiggerConvertChance_Max;
-        float scaleRate = (float) ConfigInvasion.invasion_DiggerConvertChance_ScaleRate;
+        float initial = (float) ConfigInvasion.Invasion_DiggerConvertChance_Min;
+        float max = (float) ConfigInvasion.Invasion_DiggerConvertChance_Max;
+        float scaleRate = (float) ConfigInvasion.Invasion_DiggerConvertChance_ScaleRate;
         return MathHelper.clamp((((float)(max) * difficultyScale * scaleRate)), initial, max);
     }
 

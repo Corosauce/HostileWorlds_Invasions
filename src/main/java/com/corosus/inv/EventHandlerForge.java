@@ -71,7 +71,7 @@ public class EventHandlerForge {
 			if (!event.getEntityPlayer().world.isDaytime() && InvasionManager.isInvasionTonight(event.getEntityPlayer().world)) {
 				EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
 				if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
-					player.sendMessage(new TextComponentString("You can't sleep during invasion nights!"));
+					player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_cantSleep));
 					event.setResult(SleepResult.NOT_SAFE);
 				}
 			} else {

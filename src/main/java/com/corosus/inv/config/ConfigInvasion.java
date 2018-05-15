@@ -5,6 +5,7 @@ import java.io.File;
 import modconfig.ConfigComment;
 import modconfig.IConfigCategory;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.TextFormatting;
 
 public class ConfigInvasion implements IConfigCategory {
 
@@ -24,18 +25,38 @@ public class ConfigInvasion implements IConfigCategory {
 	public static double invasion_Spawns_ScaleRate = 1D;*/
 	
 	@ConfigComment("Max allowed target range of mobs at highest difficulty")
-	public static int invasion_TargettingRange_Max = 256;
+	public static int Invasion_TargettingRange_Max = 256;
 	@ConfigComment("Starting target range of mobs at lowest difficulty")
-	public static int invasion_TargettingRange_Min = 30;
+	public static int Invasion_TargettingRange_Min = 30;
 	@ConfigComment("How fast it increases target range as the difficulty increases, 2 = doubled rate, 0.5 = halved rate")
-	public static double invasion_TargettingRange_ScaleRate = 1D;
+	public static double Invasion_TargettingRange_ScaleRate = 1D;
 	
 	@ConfigComment("Max allowed chance to convert mob to digger type at highest difficulty, 1 = 100% chance, 0.5 = 50% chance")
-	public static double invasion_DiggerConvertChance_Max = 1D;
+	public static double Invasion_DiggerConvertChance_Max = 1D;
 	@ConfigComment("Starting allowed chance to convert mob to digger type at lowest difficulty, 1 = 100% chance, 0.5 = 50% chance")
-	public static double invasion_DiggerConvertChance_Min = 0.1D;
+	public static double Invasion_DiggerConvertChance_Min = 0.1D;
 	@ConfigComment("How fast it increases convert chance as the difficulty increases, 2 = doubled rate, 0.5 = halved rate")
-	public static double invasion_DiggerConvertChance_ScaleRate = 1D;
+	public static double Invasion_DiggerConvertChance_ScaleRate = 1D;
+
+	public static String Invasion_Message_startsTonight = TextFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!";
+
+	public static String Invasion_Message_started = TextFormatting.RED + "An invasion has started! Be prepared!";
+
+	public static String Invasion_Message_ended = TextFormatting.GREEN + "The invasion has ended! Next invasion in %d days!";
+
+	public static String Invasion_Message_startedButSkippedForYou = TextFormatting.GREEN + "An invasion has started! But skipped for you!";
+
+	public static String Invasion_Message_tooLate = TextFormatting.RED + "Too late, invasion already started!";
+
+	public static String Invasion_Message_notInvasionNight = "Not an invasion night, cant skip yet!";
+
+	public static String Invasion_Message_alreadySkipping = TextFormatting.GREEN + "You are already skipping this nights invasion!";
+
+	public static String Invasion_Message_skipping = TextFormatting.GREEN + "Skipping tonights invasion, skip count: %d";
+
+	public static String Invasion_Message_skippedTooMany = TextFormatting.RED + "You've already skipped invasions %d times! You must fight!";
+
+	public static String Invasion_Message_cantSleep = "You can't sleep during invasion nights!";
 	
 	@ConfigComment("Prevent players from sleeping through the night during invasion nights")
 	public static boolean preventSleepDuringInvasions = true;
