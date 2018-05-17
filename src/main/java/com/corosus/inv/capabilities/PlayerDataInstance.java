@@ -124,7 +124,7 @@ public class PlayerDataInstance {
         if (listSpawnablesCached.size() == 0) {
             for (InvasionEntitySpawn spawns : listSpawnables) {
                 for (String spawnable : spawns.spawnProfile.entities) {
-                    Class classToSpawn = CoroUtilEntity.getClassFromRegisty(spawnable);
+                    Class classToSpawn = CoroUtilEntity.getClassFromRegistry(spawnable);
                     if (classToSpawn != null) {
                         if (!listSpawnablesCached.contains(classToSpawn)) {
                             listSpawnablesCached.add(classToSpawn);

@@ -29,7 +29,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Loader;
 
@@ -542,8 +541,8 @@ public class InvasionManager {
                     continue;
                 }
 
-                if (!canSpawnMob(player.world, tryX, tryY, tryZ)) {
-                    CULog.dbg("spawnNewMobFromProfile: canSpawnMob fail");
+                if (!CoroUtilEntity.canSpawnMobOnGround(player.world, tryX, tryY, tryZ)) {
+                    CULog.dbg("spawnNewMobFromProfile: canSpawnMobOnGround fail");
                     continue;
                 }
 
@@ -556,7 +555,7 @@ public class InvasionManager {
 
 
                     String spawn = randomEntityList.spawnProfile.entities.get(rand.nextInt(randomEntityList.spawnProfile.entities.size()));
-                    Class classToSpawn = CoroUtilEntity.getClassFromRegisty(spawn);
+                    Class classToSpawn = CoroUtilEntity.getClassFromRegistry(spawn);
                     if (classToSpawn != null) {
                         EntityCreature ent = (EntityCreature) classToSpawn.getConstructor(new Class[]{World.class}).newInstance(new Object[]{player.world});
 
@@ -620,22 +619,6 @@ public class InvasionManager {
 
         return false;
     }
-
-    public static boolean canSpawnMob(World world, int x, int y, int z) {
-        //Block id = world.getBlockState(new BlockCoord(x-1,y,z)).getBlock();//Block.pressurePlatePlanks.blockID;
-        IBlockState state = world.getBlockState(new BlockPos(x,y,z));
-        Block id = state.getBlock();//Block.pressurePlatePlanks.blockID;
-
-        /*if (id == Block.grass.blockID || id == Block.stone.blockID || id == Block.tallGrass.blockID || id == Block.grass.blockID || id == Block.sand.blockID) {
-            return true;
-        }*/
-        if (CoroUtilBlock.isAir(id) || state.getMaterial() == Material.LEAVES) {
-            return false;
-        }
-        return true;
-    }
-
-
 
     public static boolean isInvasionTonight(World world) {
         //add 1 day because calculation is off, eg: if we want 1 warmup day, we dont want first night to be an invasion
