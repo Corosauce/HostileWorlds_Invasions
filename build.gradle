@@ -97,7 +97,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId 'com.corosus'
-            artifactId 'particleman'
+            artifactId 'hostileworlds_invasions'
             artifact jar
             artifact sourceJar
         }
