@@ -9,10 +9,11 @@ import net.minecraft.util.text.TextFormatting;
 
 public class ConfigInvasion implements IConfigCategory {
 
-	@ConfigComment("Days before invasions start, not specific to each player")
-	public static int warmupDaysToFirstInvasion = 3;
-	@ConfigComment("Days between each invasion")
-	public static int daysBetweenInvasions = 3;
+	@ConfigComment("First night number of invasion, not specific to each player")//Days before invasions start,
+	public static int firstInvasionNight = 3;
+	//public static int warmupDaysToFirstInvasion = 3;
+	@ConfigComment("If set to 3, there are 2 days off then 3rd day is invasion, etc")
+	public static int invadeEveryXDays = 3;
 
 	@ConfigComment("Max amount of invasions you can skip in a row before you are forced to deal with one")
 	public static int maxConsecutiveInvasionSkips = 3;
@@ -93,8 +94,8 @@ public class ConfigInvasion implements IConfigCategory {
 	@Override
 	public void hookUpdatedValues() {
 		
-		warmupDaysToFirstInvasion = MathHelper.clamp(warmupDaysToFirstInvasion, 0, 99);
-		daysBetweenInvasions = MathHelper.clamp(daysBetweenInvasions, 0, 99);
+		firstInvasionNight = MathHelper.clamp(firstInvasionNight, 0, 99);
+		invadeEveryXDays = MathHelper.clamp(invadeEveryXDays, 0, 99);
 		
 	}
 

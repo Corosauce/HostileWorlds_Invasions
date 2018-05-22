@@ -16,9 +16,6 @@ import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
@@ -177,6 +174,11 @@ public class InvasionManager {
             BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
 
 
+
+            if (player.world.getTotalWorldTime() % 60 == 0) {
+                int invasionNumber = getInvasionNumber(player.world);
+                System.out.println("inv num: " + invasionNumber);
+            }
 
             float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
 
@@ -493,7 +495,7 @@ public class InvasionManager {
     public static void invasionStopReset(EntityPlayer player) {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion ended");
-        player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_ended, ConfigInvasion.daysBetweenInvasions)));
+        player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_ended, ConfigInvasion.invadeEveryXDays)));
 
         storage.dataPlayerInvasionActive = false;
         storage.dataPlayerInvasionWarned = false;
@@ -621,17 +623,45 @@ public class InvasionManager {
     }
 
     public static boolean isInvasionTonight(World world) {
-        //add 1 day because calculation is off, eg: if we want 1 warmup day, we dont want first night to be an invasion
-        //switching to 0 indexed
 
-        //adding +1 to ConfigInvasion.daysBetweenInvasions for the math because, eg:
-        //- for 2, we want an invasion every 3rd day, so to skip 2 days, not do an invasion every 2 days
+        int dayAdjust = ConfigInvasion.firstInvasionNight;
+        int dayNumber = (int)(world.getWorldTime() / 24000L) + 1;
+        int dayStart = (dayNumber-dayAdjust);
 
-        int dayAdjust = ConfigInvasion.warmupDaysToFirstInvasion;
-        long dayNumber = (world.getWorldTime() / 24000);
-        return dayNumber >= dayAdjust &&
+        if (dayStart < 0) {
+            return false;
+        }
+
+        return (float)dayStart % (float)ConfigInvasion.invadeEveryXDays == 0;
+
+        /*return dayNumber >= dayAdjust &&
                 (dayNumber-dayAdjust == 0 ||
-                        (dayNumber-dayAdjust) % Math.max(1, ConfigInvasion.daysBetweenInvasions + 1) == 0);
+                        (dayNumber-dayAdjust) % Math.max(1, ConfigInvasion.invadeEveryXDays + 1) == 0);*/
+    }
+
+    /**
+     * get staticly calculated wave number, not per player
+     *
+     * @param world
+     * @return
+     */
+    public static int getInvasionNumber(World world) {
+
+        //lets not use 0 indexed
+        int dayAdjust = ConfigInvasion.firstInvasionNight;
+        int dayNumber = (int)(world.getWorldTime() / 24000L) + 1;
+        int dayStart = (dayNumber-dayAdjust);
+
+        if (dayStart < 0) {
+            return 1;
+        }
+
+        //float test = (float)dayStart / (float)ConfigInvasion.invadeEveryXDays;
+        //System.out.println("inv num2: " + test);
+
+        int invasionNumber = dayStart / ConfigInvasion.invadeEveryXDays;
+
+        return invasionNumber + 1;
     }
 
     /*public static int getSpawnCountBuff(float difficultyScale) {
@@ -782,7 +812,11 @@ public class InvasionManager {
             return context.getDifficulty() >= ((ConditionDifficulty)condition).min &&
                     context.getDifficulty() <= ((ConditionDifficulty)condition).max;
         } else if (condition instanceof ConditionInvasionNumber) {
-            //TODO: global or per player tracked? also i dont think invasion number is even set yet
+            /**
+             * TODO: global or per player tracked? also i dont think invasion number is even set yet
+             * also what about skipped invasions?
+             * could just stick with global and do the math to figure out what inv number it is
+             */
             return context.getInvasionNumber() >= ((ConditionInvasionNumber)condition).min &&
                     context.getInvasionNumber() <= ((ConditionInvasionNumber)condition).max;
         } else if (condition instanceof ConditionModLoaded) {
