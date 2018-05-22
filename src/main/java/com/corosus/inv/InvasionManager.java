@@ -173,13 +173,6 @@ public class InvasionManager {
             net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(player.posX, player.posY + (player.getEyeHeight() - player.getDefaultEyeHeight()), player.posZ);//player.getPosition(1F);
             BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
 
-
-
-            if (player.world.getTotalWorldTime() % 60 == 0) {
-                int invasionNumber = getInvasionNumber(player.world);
-                System.out.println("inv num: " + invasionNumber);
-            }
-
             float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
 
             PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
@@ -459,7 +452,7 @@ public class InvasionManager {
         storage.resetInvasion();
         storage.dataPlayerInvasionActive = true;
 
-        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, -1, difficultyScale));
+        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, InvasionManager.getInvasionNumber(player.world), difficultyScale));
         if (profile != null) {
             storage.initNewInvasion(profile);
         } else {
@@ -640,7 +633,7 @@ public class InvasionManager {
     }
 
     /**
-     * get staticly calculated wave number, not per player
+     * get staticly calculated wave number based on time and config, not per player
      *
      * @param world
      * @return
@@ -816,6 +809,7 @@ public class InvasionManager {
              * TODO: global or per player tracked? also i dont think invasion number is even set yet
              * also what about skipped invasions?
              * could just stick with global and do the math to figure out what inv number it is
+             * - doing this for now
              */
             return context.getInvasionNumber() >= ((ConditionInvasionNumber)condition).min &&
                     context.getInvasionNumber() <= ((ConditionInvasionNumber)condition).max;

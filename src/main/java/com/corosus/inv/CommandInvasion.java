@@ -102,9 +102,11 @@ public class CommandInvasion extends CommandBase {
 						BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
 						float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
 						if (var2.length >= 2) difficultyScale = Float.valueOf(var2[1]);
-						DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, -1, difficultyScale));
+						int invasionNumber = InvasionManager.getInvasionNumber(world);
+						if (var2.length >= 3) invasionNumber = Integer.valueOf(var2[2]);
+						DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, invasionNumber, difficultyScale));
 
-						var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale));
+						var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale + ", invasion number: " + invasionNumber));
 						if (profile != null) {
 
 							String data = profile.toString();
