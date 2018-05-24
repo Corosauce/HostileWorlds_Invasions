@@ -451,6 +451,7 @@ public class InvasionManager {
         InvLog.dbg("resetInvasion() for start");
         storage.resetInvasion();
         storage.dataPlayerInvasionActive = true;
+        storage.setDifficultyForInvasion(difficultyScale);
 
         DataMobSpawnsTemplate profile = chooseInvasionProfile(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, InvasionManager.getInvasionNumber(player.world), difficultyScale));
         if (profile != null) {

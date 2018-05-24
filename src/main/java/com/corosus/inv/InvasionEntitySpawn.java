@@ -52,7 +52,9 @@ public class InvasionEntitySpawn {
 
     @Override
     public String toString() {
-        String str = "spawnCountCurrent: " + spawnCountCurrent + " of total " + spawnProfile.count + " choosing from " + spawnProfile.entities.size() + " entities";
+        String str = "spawnCountCurrent: " + spawnCountCurrent + " of total " + spawnProfile.count +
+                " * difficulty * " + spawnProfile.count_difficulty_multiplier + " maxing at " + spawnProfile.count_max +
+                ", choosing from " + spawnProfile.entities.size() + " entities";
         return str;
     }
 }

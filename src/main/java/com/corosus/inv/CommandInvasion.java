@@ -1,6 +1,7 @@
 package com.corosus.inv;
 
 import CoroUtil.difficulty.DifficultyQueryContext;
+import CoroUtil.difficulty.data.DifficultyDataReader;
 import CoroUtil.difficulty.data.conditions.ConditionContext;
 import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
 import net.minecraft.block.Block;
@@ -104,18 +105,25 @@ public class CommandInvasion extends CommandBase {
 						if (var2.length >= 2) difficultyScale = Float.valueOf(var2[1]);
 						int invasionNumber = InvasionManager.getInvasionNumber(world);
 						if (var2.length >= 3) invasionNumber = Integer.valueOf(var2[2]);
-						DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, invasionNumber, difficultyScale));
 
-						var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale + ", invasion number: " + invasionNumber));
-						if (profile != null) {
+						try {
+							DifficultyDataReader.setDebugDifficulty(difficultyScale);
 
-							String data = profile.toString();
-							String[] list = data.split(" \\| ");
-							for (String entry : list) {
-								var1.sendMessage(new TextComponentString(entry));
+							DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, invasionNumber, difficultyScale));
+
+							var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale + ", invasion number: " + invasionNumber));
+							if (profile != null) {
+
+								String data = profile.toString();
+								String[] list = data.split(" \\| ");
+								for (String entry : list) {
+									var1.sendMessage(new TextComponentString(entry));
+								}
+							} else {
+								var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "profile null"));
 							}
-						} else {
-							var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "profile null"));
+						} finally {
+							DifficultyDataReader.setDebugDifficulty(-1);
 						}
 
 					}

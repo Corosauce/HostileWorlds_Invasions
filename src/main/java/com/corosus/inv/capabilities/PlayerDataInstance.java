@@ -22,6 +22,8 @@ public class PlayerDataInstance {
     private List<InvasionEntitySpawn> listSpawnables = new ArrayList<>();
     private EntityPlayer player;
 
+    private float difficultyForInvasion = 0;
+
     public boolean dataPlayerInvasionActive;
     public boolean dataPlayerInvasionWarned;
     public long dataCreatureLastPathWithDelay;
@@ -86,7 +88,7 @@ public class PlayerDataInstance {
 
         //filter out ones that are used up
         for (InvasionEntitySpawn spawns : listSpawnables) {
-            if (spawns.spawnCountCurrent < spawns.spawnProfile.count && spawns.spawnProfile.entities.size() > 0) {
+            if (spawns.spawnCountCurrent < spawns.spawnProfile.getMaxMobCountDynamic(difficultyForInvasion) && spawns.spawnProfile.entities.size() > 0) {
                 listSpawnablesTry.add(spawns);
             }
         }
@@ -170,6 +172,14 @@ public class PlayerDataInstance {
 
         nbtTagCompound.setBoolean("dataPlayerInvasionActive", dataPlayerInvasionActive);
         nbtTagCompound.setBoolean("dataPlayerInvasionWarned", dataPlayerInvasionWarned);
+    }
+
+    public float getDifficultyForInvasion() {
+        return difficultyForInvasion;
+    }
+
+    public void setDifficultyForInvasion(float difficultyForInvasion) {
+        this.difficultyForInvasion = difficultyForInvasion;
     }
 
 }
