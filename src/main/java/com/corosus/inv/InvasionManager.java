@@ -7,16 +7,20 @@ import CoroUtil.difficulty.DifficultyQueryContext;
 import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.difficulty.data.DataCondition;
-import CoroUtil.difficulty.data.conditions.*;
-import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
 import CoroUtil.difficulty.data.DeserializerAllJson;
 import CoroUtil.difficulty.data.DifficultyDataReader;
+import CoroUtil.difficulty.data.conditions.*;
+import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
 import CoroUtil.forge.CULog;
-import CoroUtil.util.*;
+import CoroUtil.util.BlockCoord;
+import CoroUtil.util.CoroUtilEntity;
+import CoroUtil.util.CoroUtilPath;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
-import net.minecraft.entity.*;
+import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.IMob;
@@ -688,6 +692,7 @@ public class InvasionManager {
 	}*/
 
     public static DataMobSpawnsTemplate chooseInvasionProfile(EntityPlayer player, DifficultyQueryContext context) {
+
         List<DataMobSpawnsTemplate> listPhase2 = new ArrayList<>();
 
         InvLog.dbg("choosing invasion profile for player: " + player.getName() + ", difficulty: " + context.getDifficulty());
@@ -814,8 +819,14 @@ public class InvasionManager {
              */
             return context.getInvasionNumber() >= ((ConditionInvasionNumber)condition).min &&
                     context.getInvasionNumber() <= ((ConditionInvasionNumber)condition).max;
+        } else if (condition instanceof ConditionInvasionRate) {
+            return context.getInvasionNumber() % ((ConditionInvasionRate) condition).rate == 0;
         } else if (condition instanceof ConditionModLoaded) {
-            return Loader.isModLoaded(((ConditionModLoaded) condition).mod_id);
+            if (((ConditionModLoaded) condition).isInverted()) {
+                return !Loader.isModLoaded(((ConditionModLoaded) condition).mod_id);
+            } else {
+                return Loader.isModLoaded(((ConditionModLoaded) condition).mod_id);
+            }
         }
         return false;
     }
