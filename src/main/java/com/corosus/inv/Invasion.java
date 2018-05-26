@@ -16,7 +16,6 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 
 import com.corosus.inv.config.ConfigAdvancedOptions;
-import com.corosus.inv.config.ConfigAdvancedSpawning;
 import com.corosus.inv.config.ConfigInvasion;
 
 @Mod(modid = "hw_inv", name="HW_Invasions", version="v0.1", acceptableRemoteVersions="*", dependencies="required-after:coroutil")
@@ -36,7 +35,6 @@ public class Invasion {
     public void preInit(FMLPreInitializationEvent event)
     {
 		ConfigMod.addConfigFile(event, new ConfigInvasion());
-		ConfigMod.addConfigFile(event, new ConfigAdvancedSpawning());
 		ConfigMod.addConfigFile(event, new ConfigAdvancedOptions());
 
         CapabilityManager.INSTANCE.register(PlayerDataInstance.class, new ExtendedPlayerStorage(), PlayerDataInstance.class);

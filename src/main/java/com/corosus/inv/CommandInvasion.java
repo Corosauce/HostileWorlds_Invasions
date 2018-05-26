@@ -4,6 +4,7 @@ import CoroUtil.difficulty.DifficultyQueryContext;
 import CoroUtil.difficulty.data.DifficultyDataReader;
 import CoroUtil.difficulty.data.conditions.ConditionContext;
 import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
+import CoroUtil.util.CoroUtilWorldTime;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -57,7 +58,7 @@ public class CommandInvasion extends CommandBase {
 		try {
 			
 			world = DimensionManager.getWorld(0);
-			long dayNumber = (world.getWorldTime() / 24000) + 1;
+			long dayNumber = (world.getWorldTime() / CoroUtilWorldTime.getDayLength()) + 1;
 			
 			if (var2.length < 1)
 	        {
@@ -66,7 +67,7 @@ public class CommandInvasion extends CommandBase {
 		    		//net.minecraft.util.Vec3 posVec = ent.getPosition(1F);
 		    		/*net.minecraft.util.math.Vec3d */posVec = new net.minecraft.util.math.Vec3d(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
 		    		BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
-		    		//long dayNumber = (ent.worldObj.getWorldTime() / 24000) + 1;
+		    		//long dayNumber = (ent.worldObj.getWorldTime() / CoroUtilWorldTime.getDayLength()) + 1;
 		    		CoroUtilMisc.sendCommandSenderMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + DynamicDifficulty.getDifficultyScaleAverage(ent.world, ent, pos));
 				} else {
 					var1.sendMessage(new TextComponentString("day: " + dayNumber));
@@ -128,7 +129,7 @@ public class CommandInvasion extends CommandBase {
 
 					}
 				} else if (var2[0].equalsIgnoreCase("forceInvasion")) {
-	        		int amount = (24000 * 3) + (6000 * 2) + (600 * 3);
+	        		int amount = (CoroUtilWorldTime.getDayLength() * 3) + (6000 * 2) + (600 * 3);
 	        		world.getWorldInfo().setWorldTime(amount);
 				}
 	        	

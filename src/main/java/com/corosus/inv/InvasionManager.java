@@ -189,7 +189,7 @@ public class InvasionManager {
             //System.out.println("difficultyScale: " + difficultyScale);
 
             //start at "1"
-            long dayNumber = (world.getWorldTime() / 24000) + 1;
+            long dayNumber = (world.getWorldTime() / CoroUtilWorldTime.getDayLength()) + 1;
             //System.out.println("daynumber: " + dayNumber + " - " + world.getWorldTime() + " - " + world.isDaytime());
 
             boolean invasionActive = false;
@@ -213,7 +213,7 @@ public class InvasionManager {
             boolean isDay = !CoroUtilWorldTime.isNightPadded(world);
 
             if (isDay != isDayLast) {
-                InvLog.dbg("world.isDaytime(): " + isDay + ", time: " + world.getWorldTime() + ", timemod: " + world.getWorldTime() % 24000);
+                InvLog.dbg("world.isDaytime(): " + isDay + ", time: " + world.getWorldTime() + ", timemod: " + world.getWorldTime() % CoroUtilWorldTime.getDayLength());
                 isDayLast = isDay;
             }
 
@@ -626,7 +626,7 @@ public class InvasionManager {
     public static boolean isInvasionTonight(World world) {
 
         int dayAdjust = ConfigInvasion.firstInvasionNight;
-        int dayNumber = (int)(world.getWorldTime() / 24000L) + 1;
+        int dayNumber = (int)(world.getWorldTime() / CoroUtilWorldTime.getDayLength()) + 1;
         int dayStart = (dayNumber-dayAdjust);
 
         if (dayStart < 0) {
@@ -650,7 +650,7 @@ public class InvasionManager {
 
         //lets not use 0 indexed
         int dayAdjust = ConfigInvasion.firstInvasionNight;
-        int dayNumber = (int)(world.getWorldTime() / 24000L) + 1;
+        int dayNumber = (int)(world.getWorldTime() / CoroUtilWorldTime.getDayLength()) + 1;
         int dayStart = (dayNumber-dayAdjust);
 
         if (dayStart < 0) {
