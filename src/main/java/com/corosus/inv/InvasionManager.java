@@ -15,6 +15,7 @@ import CoroUtil.forge.CULog;
 import CoroUtil.util.BlockCoord;
 import CoroUtil.util.CoroUtilEntity;
 import CoroUtil.util.CoroUtilPath;
+import CoroUtil.util.CoroUtilWorldTime;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
@@ -140,7 +141,7 @@ public class InvasionManager {
         if (!skipped) {
             if (isInvasionTonight(world)) {
                 //only allow skip during day before its actually active
-                if (world.isDaytime()) {
+                if (!CoroUtilWorldTime.isNightPadded(world)) {
                     int skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCount);
                     if (skipCount < ConfigInvasion.maxConsecutiveInvasionSkips) {
                         skipCount++;
@@ -209,19 +210,21 @@ public class InvasionManager {
                 invasionOnThisNight_Last = invasionOnThisNight;
             }
 
-            if (world.isDaytime() != isDayLast) {
-                InvLog.dbg("world.isDaytime(): " + world.isDaytime());
-                isDayLast = world.isDaytime();
+            boolean isDay = !CoroUtilWorldTime.isNightPadded(world);
+
+            if (isDay != isDayLast) {
+                InvLog.dbg("world.isDaytime(): " + isDay + ", time: " + world.getWorldTime() + ", timemod: " + world.getWorldTime() % 24000);
+                isDayLast = isDay;
             }
 
-            if (invasionOnThisNight && world.isDaytime()) {
+            if (invasionOnThisNight && isDay) {
                 if (!storage.dataPlayerInvasionWarned) {
                     player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startsTonight));
                     storage.dataPlayerInvasionWarned = true;
                 }
             }
 
-            if (invasionOnThisNight && !world.isDaytime()) {
+            if (invasionOnThisNight && !isDay) {
 
                 invasionActive = true;
                 if (!activeBool) {
