@@ -47,26 +47,6 @@ public class InvasionManager {
     public static boolean isDayLast = false;
 
     /**
-     * TODO: features:
-     * x health boosts
-     * - config to make only mobs we spawn potential miners
-     * -- if config is true, detect if player is in cave, if so, try to spawn stuff in cave
-     * --- to solve cliffs bedrock base issue of having little to no invaders
-     * x DPS location specific calculator for better adapting to players / bases capabilities
-     * x- store data per chunk?
-     * - raining triggering invasions accidentally, switch to modulus time range for 'is night'
-     */
-
-    /*public static String dataPlayerInvasionActive = "HW_dataPlayerInvasionActive";
-    public static String dataPlayerInvasionWarned = "HW_dataPlayerInvasionWarned";
-    public static String dataPlayerInvasionWaveCountCur = "HW_dataPlayerInvasionWaveCountCur";
-    public static String dataPlayerInvasionWaveCountMax = "HW_dataPlayerInvasionWaveCountMax";
-    public static String dataCreatureLastPathWithDelay = "CoroAI_HW_CreatureLastPathWithDelay";*/
-    public static String dataPlayerInvasionData = "HW_dataPlayerInvasionData";
-
-    //public static HashMap<String, InvasionEntitySpawn> lookupUUIDToInvasionWave = new HashMap<>();
-
-    /**
      *
      * Invasion reason redesign:
      *
