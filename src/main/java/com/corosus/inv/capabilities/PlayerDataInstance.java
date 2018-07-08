@@ -24,6 +24,8 @@ public class PlayerDataInstance {
 
     private float difficultyForInvasion = 0;
 
+    //used to fix problem of invasion warning triggering again after invasion stops, during that small window where it counts as "daylight" in 2 separate spots on the same time window
+    public boolean dataPlayerInvasionHappenedThisDay;
     public boolean dataPlayerInvasionActive;
     public boolean dataPlayerInvasionWarned;
     public long dataCreatureLastPathWithDelay;

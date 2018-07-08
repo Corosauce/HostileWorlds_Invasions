@@ -198,13 +198,19 @@ public class InvasionManager {
             }
 
             if (invasionOnThisNight && isDay) {
-                if (!storage.dataPlayerInvasionWarned) {
+                if (!storage.dataPlayerInvasionWarned && !storage.dataPlayerInvasionHappenedThisDay) {
                     player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startsTonight));
                     storage.dataPlayerInvasionWarned = true;
                 }
             }
 
+            if (!invasionOnThisNight) {
+                storage.dataPlayerInvasionHappenedThisDay = false;
+            }
+
             if (invasionOnThisNight && !isDay) {
+
+                storage.dataPlayerInvasionHappenedThisDay = true;
 
                 invasionActive = true;
                 if (!activeBool) {
