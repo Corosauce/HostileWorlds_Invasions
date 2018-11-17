@@ -35,7 +35,9 @@ public class Invasion {
     public void preInit(FMLPreInitializationEvent event)
     {
 		ConfigMod.addConfigFile(event, new ConfigInvasion());
-		ConfigMod.addConfigFile(event, new ConfigAdvancedOptions());
+		if (ConfigInvasion.enableAdvancedDeveloperConfigFiles) {
+            ConfigMod.addConfigFile(event, new ConfigAdvancedOptions());
+        }
 
         CapabilityManager.INSTANCE.register(PlayerDataInstance.class, new ExtendedPlayerStorage(), PlayerDataInstance.class);
     }

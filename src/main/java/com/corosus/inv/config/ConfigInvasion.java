@@ -9,10 +9,10 @@ import net.minecraft.util.text.TextFormatting;
 
 public class ConfigInvasion implements IConfigCategory {
 
-	@ConfigComment("First night number of invasion, not specific to each player")//Days before invasions start,
+	@ConfigComment("First night number that an invasion starts, not specific to each player, uses global server world time")//Days before invasions start,
 	public static int firstInvasionNight = 3;
 	//public static int warmupDaysToFirstInvasion = 3;
-	@ConfigComment("If set to 3, there are 2 days off then 3rd day is invasion, etc")
+	@ConfigComment("If set to 3, there are 2 days of no invasions then the 3rd day is an invasion, etc")
 	public static int invadeEveryXDays = 3;
 
 	@ConfigComment("Max amount of invasions you can skip in a row before you are forced to deal with one")
@@ -70,6 +70,9 @@ public class ConfigInvasion implements IConfigCategory {
 
 	@ConfigComment("For logging warnings/errors")
 	public static boolean useLoggingError = true;
+
+	@ConfigComment("Use at own risk, will not support, requires game restart on change")
+	public static boolean enableAdvancedDeveloperConfigFiles = false;
 
 	@Override
 	public String getName() {
