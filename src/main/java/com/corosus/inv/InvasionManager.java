@@ -251,101 +251,42 @@ public class InvasionManager {
 
             if (invasionActive && !skippingBool) {
 
-                /**
-                 * Target and path to player code
-                 */
+                if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
+                    if (ConfigAdvancedOptions.enhanceAllMobsOfSpawnedTypesForOmniscience) {
+                        //old way
+                        //int range = getTargettingRangeBuff(difficultyScale);
+                        int range = ConfigAdvancedOptions.aiOmniscienceRange;
 
-                boolean newTargetting = true;
-
-                if (!newTargetting) {
-                    if (player.onGround && world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRatePath == 0) {
-
-                        int range = getTargettingRangeBuff(difficultyScale);
-                        double moveSpeedAmp = 1D;
-
-                        //TODO: instead of this expensive method and entity iteration, we could make distant targetting a targetTask!
                         List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).grow(range, range, range));
 
-                        //System.out.println("ents: " + listEnts.size());
+                        //enhances only mobs of that _type_ that have been invading
 
+                        List<Class> listClassesSpawned = storage.getSpawnableClasses();
 
                         for (EntityCreature ent : listEnts) {
-                            if (ent instanceof IMob && ent instanceof EntityCreature && !(ent instanceof EntityCreeper) && !(ent instanceof EntityEnderman)) {
 
-                                long lastPathWithDelay = storage.dataCreatureLastPathWithDelay;
-                                if (world.getTotalWorldTime() > lastPathWithDelay) {
+                            boolean shouldEnhanceEntity = listClassesSpawned.contains(ent.getClass());
 
-                                    EntityPlayer targetPlayer = null;
-                                    if (ent.getAttackTarget() == null || !(ent.getAttackTarget() instanceof EntityPlayer)) {
-                                        targetPlayer = player;
-                                    } else {
-                                        targetPlayer = (EntityPlayer) ent.getAttackTarget();
-                                    }
+                            if (shouldEnhanceEntity) {
 
-                                    ent.setAttackTarget(targetPlayer);
-                                    CoroUtilPath.tryMoveToEntityLivingLongDist(ent, targetPlayer, moveSpeedAmp);
+                                //note, these arent being added in a way where its persistant, which is fine since this runs all the time anyways
+                                //still needs a way to stop after invasion done
 
-                                    int pathFindingDelay = ConfigAdvancedOptions.pathDelayBase;
-
-                                    if (ent.getNavigator().getPath() != null) {
-                                        PathPoint finalPathPoint = ent.getNavigator().getPath().getFinalPathPoint();
-                                        //if final path point is near player, thats good!
-                                        if (finalPathPoint != null && player.getDistanceSq(finalPathPoint.x, finalPathPoint.y, finalPathPoint.z) < 1) {
-                                            pathFindingDelay = ConfigAdvancedOptions.pathDelayBase;
-                                        } else {
-                                            pathFindingDelay += ConfigAdvancedOptions.pathFailDelayPenalty;
-                                        }
-                                    } else {
-                                        pathFindingDelay += ConfigAdvancedOptions.pathFailDelayPenalty;
-                                    }
-
-                                    storage.dataCreatureLastPathWithDelay = world.getTotalWorldTime() + pathFindingDelay;
+                                //targetting
+                                if (!UtilEntityBuffs.hasTask(ent, EntityAINearestAttackablePlayerOmniscience.class, true)) {
+                                    InvLog.dbg("trying to enhance with omniscience via pre-existing mob way: " + ent.getName());
+                                    UtilEntityBuffs.addTask(ent, EntityAINearestAttackablePlayerOmniscience.class, 10, true);
                                 }
 
-                            }
-                        }
-                    }
-                } else {
-
-                    if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
-
-                        /**TODO: re-evaluate use of this
-                         * pretty sure i want anything spawned in to always chase at player
-                         * in this case it also does this for same classes already spawned, maybe ok
-                         */
-                        if (ConfigAdvancedOptions.enhanceAllMobsOfSpawnedTypesForOmniscience) {
-                            //old way
-                            //int range = getTargettingRangeBuff(difficultyScale);
-                            int range = ConfigAdvancedOptions.aiOmniscienceRange;
-
-                            List<EntityCreature> listEnts = world.getEntitiesWithinAABB(EntityCreature.class, new AxisAlignedBB(pos.posX, pos.posY, pos.posZ, pos.posX, pos.posY, pos.posZ).grow(range, range, range));
-
-                            List<Class> listClassesSpawned = storage.getSpawnableClasses();
-
-                            for (EntityCreature ent : listEnts) {
-
-                                boolean shouldEnhanceEntity = listClassesSpawned.contains(ent.getClass());
-
-                                if (shouldEnhanceEntity) {
-
-                                    //note, these arent being added in a way where its persistant, which is fine since this runs all the time anyways
-                                    //still needs a way to stop after invasion done
-
-                                    //targetting
-                                    if (!UtilEntityBuffs.hasTask(ent, EntityAINearestAttackablePlayerOmniscience.class, true)) {
-                                        InvLog.dbg("trying to enhance with omniscience via pre-existing mob way: " + ent.getName());
-                                        UtilEntityBuffs.addTask(ent, EntityAINearestAttackablePlayerOmniscience.class, 10, true);
-                                    }
-
-                                    //long distance pathing
-                                    if (!UtilEntityBuffs.hasTask(ent, EntityAIChaseFromFar.class, false)) {
-                                        UtilEntityBuffs.addTask(ent, EntityAIChaseFromFar.class, 4, false);
-                                    }
+                                //long distance pathing
+                                if (!UtilEntityBuffs.hasTask(ent, EntityAIChaseFromFar.class, false)) {
+                                    UtilEntityBuffs.addTask(ent, EntityAIChaseFromFar.class, 4, false);
                                 }
                             }
                         }
                     }
                 }
+
 
                 /**
                  * Buff with digging
@@ -658,19 +599,19 @@ public class InvasionManager {
         return MathHelper.clamp_int(((int) ((float)(maxSpawnsAllowed) * difficultyScale * scaleRate)), initialSpawns, maxSpawnsAllowed);
     }*/
 
-    public static int getTargettingRangeBuff(float difficultyScale) {
-        int initialRange = ConfigInvasion.Invasion_TargettingRange_Min;
-        int max = ConfigInvasion.Invasion_TargettingRange_Max;
-        float scaleRate = (float) ConfigInvasion.Invasion_TargettingRange_ScaleRate;
+    /*public static int getTargettingRangeBuff(float difficultyScale) {
+        int initialRange = ConfigAdvancedOptions.Invasion_TargettingRange_Min;
+        int max = ConfigAdvancedOptions.Invasion_TargettingRange_Max;
+        float scaleRate = (float) ConfigAdvancedOptions.Invasion_TargettingRange_ScaleRate;
         return MathHelper.clamp(((int) ((float)(max) * difficultyScale * scaleRate)), initialRange, max);
     }
 
     public static float getDigChanceBuff(float difficultyScale) {
-        float initial = (float) ConfigInvasion.Invasion_DiggerConvertChance_Min;
-        float max = (float) ConfigInvasion.Invasion_DiggerConvertChance_Max;
-        float scaleRate = (float) ConfigInvasion.Invasion_DiggerConvertChance_ScaleRate;
+        float initial = (float) ConfigAdvancedOptions.Invasion_DiggerConvertChance_Min;
+        float max = (float) ConfigAdvancedOptions.Invasion_DiggerConvertChance_Max;
+        float scaleRate = (float) ConfigAdvancedOptions.Invasion_DiggerConvertChance_ScaleRate;
         return MathHelper.clamp((((float)(max) * difficultyScale * scaleRate)), initial, max);
-    }
+    }*/
 
 	/*public String getInvasionDebug(float difficultyScale) {
 		return "spawncount: " + getSpawnCountBuff(difficultyScale) +
