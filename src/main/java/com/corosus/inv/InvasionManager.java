@@ -274,7 +274,7 @@ public class InvasionManager {
 
                                 //targetting
                                 if (!UtilEntityBuffs.hasTask(ent, EntityAINearestAttackablePlayerOmniscience.class, true)) {
-                                    InvLog.dbg("trying to enhance with omniscience via pre-existing mob way: " + ent.getName());
+                                    //InvLog.dbg("trying to enhance with omniscience via pre-existing mob way: " + ent.getName());
                                     UtilEntityBuffs.addTask(ent, EntityAINearestAttackablePlayerOmniscience.class, 10, true);
                                 }
 
