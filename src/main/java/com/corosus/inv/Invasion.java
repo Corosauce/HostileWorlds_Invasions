@@ -18,7 +18,7 @@ import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
 
-@Mod(modid = "hw_inv", name="HW_Invasions", version="v0.1", acceptableRemoteVersions="*", dependencies="required-after:coroutil")
+@Mod(modid = "hw_inv", name="HW_Invasions", version="v0.1", acceptableRemoteVersions="*", dependencies="required-after:coroutil@[1.12.1-1.2.14,)")
 public class Invasion {
 	
 	@Mod.Instance( value = "hw_inv" )
