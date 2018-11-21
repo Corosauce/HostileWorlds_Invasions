@@ -18,12 +18,13 @@ import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
 
-@Mod(modid = "hw_inv", name="HW_Invasions", version="v0.1", acceptableRemoteVersions="*", dependencies="required-after:coroutil@[1.12.1-1.2.14,)")
+@Mod(modid = "hw_inv", name="HW_Invasions", version=Invasion.VERSION, acceptableRemoteVersions="*", dependencies="required-after:coroutil@[1.12.1-1.2.14,)")
 public class Invasion {
 	
 	@Mod.Instance( value = "hw_inv" )
 	public static Invasion instance;
 	public static final String modID = CoroUtil.forge.CoroUtil.modID_HWInvasions;
+    public static final String VERSION = "${version}";
 
     @SidedProxy(clientSide = "com.corosus.inv.ClientProxy", serverSide = "com.corosus.inv.CommonProxy")
     public static CommonProxy proxy;
