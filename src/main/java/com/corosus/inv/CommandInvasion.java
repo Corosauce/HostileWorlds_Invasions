@@ -110,7 +110,7 @@ public class CommandInvasion extends CommandBase {
 						try {
 							DifficultyDataReader.setDebugDifficulty(difficultyScale);
 
-							DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, invasionNumber, (float)difficultyScale));
+							DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, invasionNumber, (float) difficultyScale));
 
 							var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale + ", invasion number: " + invasionNumber));
 							if (profile != null) {
@@ -123,6 +123,8 @@ public class CommandInvasion extends CommandBase {
 							} else {
 								var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "profile null"));
 							}
+						} catch (Exception ex) {
+							ex.printStackTrace();
 						} finally {
 							DifficultyDataReader.setDebugDifficulty(-1);
 						}
