@@ -495,7 +495,8 @@ public class InvasionManager {
                         ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
                         ent.getEntityData().setBoolean(TaskDigTowardsTarget.dataUseInvasionRules, true);
 
-                        //TODO: here we need to apply the cmods chosen for it
+                        //store players name the mob was spawned for
+                        ent.getEntityData().setString(UtilEntityBuffs.dataEntityBuffed_PlayerSpawnedFor, player.getName());
 
                         //old way
                         //enhanceMobForDifficulty(ent, difficultyScale);
