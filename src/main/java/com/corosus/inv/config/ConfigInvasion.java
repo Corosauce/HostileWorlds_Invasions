@@ -20,6 +20,7 @@ public class ConfigInvasion implements IConfigCategory {
 
 	public static String Invasion_Message_startsTonight = TextFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!";
 
+	@ConfigComment("The default invasion message if a wave doesn't have a custom one")
 	public static String Invasion_Message_started = TextFormatting.RED + "An invasion has started! Be prepared!";
 
 	public static String Invasion_Message_ended = TextFormatting.GREEN + "The invasion has ended! Next invasion in %d days!";

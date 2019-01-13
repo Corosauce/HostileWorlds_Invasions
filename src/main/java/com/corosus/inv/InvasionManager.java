@@ -373,12 +373,6 @@ public class InvasionManager {
 
     public static void invasionStart(EntityPlayer player, float difficultyScale) {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
-        //System.out.println("invasion started");
-        if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
-            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startedButSkippedForYou));
-        } else {
-            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_started));
-        }
 
         //initNewInvasion(player, difficultyScale);
 
@@ -392,6 +386,22 @@ public class InvasionManager {
             storage.initNewInvasion(profile);
         } else {
             //TODO: no invasions for you! also this is bad?, perhaps hardcode a fallback default, what if no invasion is modpack makers intent
+        }
+
+
+        //System.out.println("invasion started");
+        if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
+            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startedButSkippedForYou));
+        } else {
+            if (profile != null && !profile.wave_message.equals("<NULL>")) {
+                //support for no message override for wave, might as well just check if its blank and prevent code from running
+                if (!profile.wave_message.equals("")) {
+                    player.sendMessage(new TextComponentString(profile.wave_message));
+                }
+            } else {
+                player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_started));
+            }
+
         }
 
         //TODO: readd spawn count scaling as an option via json
