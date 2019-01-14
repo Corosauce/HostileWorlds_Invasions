@@ -495,38 +495,48 @@ public class InvasionManager {
 
 
                     String spawn = randomEntityList.spawnProfile.entities.get(rand.nextInt(randomEntityList.spawnProfile.entities.size()));
+
+                    //hardcoded fixes to convert to AI taskable entities
+                    if (spawn.equals("minecraft:bat")) {
+                        spawn = "coroutil:bat_smart";
+                    }
+
                     Class classToSpawn = CoroUtilEntity.getClassFromRegistry(spawn);
                     if (classToSpawn != null) {
-                        EntityCreature ent = (EntityCreature) classToSpawn.getConstructor(new Class[]{World.class}).newInstance(new Object[]{player.world});
+                        if (EntityCreature.class.isAssignableFrom(classToSpawn)) {
+                            EntityCreature ent = (EntityCreature) classToSpawn.getConstructor(new Class[]{World.class}).newInstance(new Object[]{player.world});
 
-                        //set to above the solid block we can spawn on
-                        ent.setPosition(tryX, tryY + 1, tryZ);
-                        ent.onInitialSpawn(ent.world.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData) null);
-                        ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
-                        ent.getEntityData().setBoolean(TaskDigTowardsTarget.dataUseInvasionRules, true);
+                            //set to above the solid block we can spawn on
+                            ent.setPosition(tryX, tryY + 1, tryZ);
+                            ent.onInitialSpawn(ent.world.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData) null);
+                            ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
+                            ent.getEntityData().setBoolean(TaskDigTowardsTarget.dataUseInvasionRules, true);
 
-                        //store players name the mob was spawned for
-                        ent.getEntityData().setString(UtilEntityBuffs.dataEntityBuffed_PlayerSpawnedFor, player.getName());
+                            //store players name the mob was spawned for
+                            ent.getEntityData().setString(UtilEntityBuffs.dataEntityBuffed_PlayerSpawnedFor, player.getName());
 
-                        //old way
-                        //enhanceMobForDifficulty(ent, difficultyScale);
+                            //old way
+                            //enhanceMobForDifficulty(ent, difficultyScale);
 
-                        //set cmod data to entity
-                        //JsonArray array = DeserializerAllJson.serializeCmods(randomEntityList.spawnProfile.cmods);
-                        UtilEntityBuffs.registerAndApplyCmods(ent, randomEntityList.spawnProfile.cmods, difficultyScale);
+                            //set cmod data to entity
+                            //JsonArray array = DeserializerAllJson.serializeCmods(randomEntityList.spawnProfile.cmods);
+                            UtilEntityBuffs.registerAndApplyCmods(ent, randomEntityList.spawnProfile.cmods, difficultyScale);
 
-                        //apply cmods from data
-                        //UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_Inventory, ent, difficultyScale);
+                            //apply cmods from data
+                            //UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_Inventory, ent, difficultyScale);
 
-                        ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, true);
-                        player.world.spawnEntity(ent);
-                        ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, false);
-                        //leave this to omniscience task if config says so
-                        //ent.setAttackTarget(player);
+                            ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, true);
+                            player.world.spawnEntity(ent);
+                            ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, false);
+                            //leave this to omniscience task if config says so
+                            //ent.setAttackTarget(player);
 
-                        randomEntityList.spawnCountCurrent++;
+                            randomEntityList.spawnCountCurrent++;
 
-                        InvLog.dbg("Spawned " + randomEntityList.spawnCountCurrent + " mobs now: " + ent.getName());
+                            InvLog.dbg("Spawned " + randomEntityList.spawnCountCurrent + " mobs now: " + ent.getName());
+                        } else {
+                            InvLog.err("only EntityCreature extended entities are supported, couldnt spawn: " + spawn);
+                        }
                     } else {
                         InvLog.err("could not find registered class for entity name: " + spawn);
                     }
