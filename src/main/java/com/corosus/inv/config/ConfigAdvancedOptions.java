@@ -7,8 +7,11 @@ import modconfig.IConfigCategory;
 
 public class ConfigAdvancedOptions implements IConfigCategory {
 
-	public static int spawnRangeMin = 20;
-	public static int spawnRangeMax = 40;
+	public static int spawnRangeMin = 24;
+	public static int spawnRangeMax = 50;
+
+	public static int attemptsPerSpawn = 100;
+
 	public static int aiTickRateEnhance = 200;
 	public static int aiTickRatePath = 100;
 	public static int aiTickRateSpawning = 10;

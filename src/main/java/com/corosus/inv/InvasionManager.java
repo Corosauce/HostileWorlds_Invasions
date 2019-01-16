@@ -12,14 +12,12 @@ import CoroUtil.difficulty.data.DifficultyDataReader;
 import CoroUtil.difficulty.data.conditions.*;
 import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
 import CoroUtil.forge.CULog;
-import CoroUtil.util.BlockCoord;
-import CoroUtil.util.CoroUtilEntity;
-import CoroUtil.util.CoroUtilPath;
-import CoroUtil.util.CoroUtilWorldTime;
+import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
 import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.monster.EntityCreeper;
@@ -45,6 +43,10 @@ public class InvasionManager {
 
     public static boolean invasionOnThisNight_Last = false;
     public static boolean isDayLast = false;
+
+    //not saved, just some runtime caching
+    public static List<BlockPos> listGoodCavePositions = new ArrayList<>();
+    public static int triesSinceWorkingCaveSpawn = 0;
 
     /**
      *
@@ -457,18 +459,19 @@ public class InvasionManager {
         InvasionEntitySpawn randomEntityList = storage.getRandomEntityClassToSpawn();
 
         if (randomEntityList != null) {
-            for (int tries = 0; tries < 5; tries++) {
+            for (int tries = 0; tries < ConfigAdvancedOptions.attemptsPerSpawn; tries++) {
                 int tryX = MathHelper.floor(player.posX) - (range / 2) + (rand.nextInt(range));
                 int tryZ = MathHelper.floor(player.posZ) - (range / 2) + (rand.nextInt(range));
-                int tryY = player.world.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
+                int tryY = MathHelper.floor(player.posY) - (range / 2) + (rand.nextInt(range));
+                int surfaceY = player.world.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 
                 //set position in the solid ground
                 //previously it was targetting above ground but not excluding things like tallgrass
                 //eg: this fixes mobs not spawning in desert where theres no tallgrass
-                tryY--;
+                surfaceY--;
 
                 //dont factor in y for high elevation change based spawns, otherwise things wont spawn in certain conditions, eg base on high hill
-                double dist = player.getDistance(tryX, player.posY, tryZ);
+                double distXZ = player.getDistance(tryX, player.posY, tryZ);
 
                 //TODO: make spawn check rules use entities own rules
                 /*if (dist < minDist || dist > maxDist ||
@@ -476,23 +479,92 @@ public class InvasionManager {
                     continue;
                 }*/
 
-                if (dist < minDist || dist > maxDist) {
-                    CULog.dbg("spawnNewMobFromProfile: dist fail, minDist: " + minDist + ", maxDist: " + maxDist + ", tryDist: " + dist);
+
+
+                if (distXZ < minDist || distXZ > maxDist) {
+                    //CULog.dbg("spawnNewMobFromProfile: dist fail, minDist: " + minDist + ", maxDist: " + maxDist + ", tryDist: " + distXZ);
                     continue;
                 }
 
-                if (!CoroUtilEntity.canSpawnMobOnGround(player.world, tryX, tryY, tryZ)) {
-                    CULog.dbg("spawnNewMobFromProfile: canSpawnMobOnGround fail");
-                    continue;
+                boolean requireSolidGround = true;
+                if (randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.WATER || randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.AIR) {
+                    requireSolidGround = false;
                 }
 
-                if (player.world.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
-                    CULog.dbg("spawnNewMobFromProfile: getLightFromNeighbors fail");
-                    continue;
+                int yToUse = surfaceY;
+
+                boolean caveSpawn = false;
+
+                if (randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.GROUND) {
+                    //prefer surface, but do cave if required
+                    //more specifically:
+                    //if player say, within 10 blocks of surface, do surface ?
+                    //otherwise do both
+
+                    //OR
+
+                    //get random spot on surface
+                    //if y dist to player > 10, try cave?
+                    //- use the random y instead and cave try
+                    //- repeat loop
+
+                    /*int surfaceYAtPlayer = player.world.getHeight(player.getPosition()).getY();
+                    if (player.posY + 10 >= surfaceYAtPlayer) {
+
+                    }*/
+
+                    //if near surface
+                    if (player.posY + 10 > surfaceY) {
+                        //try surface
+                        yToUse = surfaceY;
+                    } else {
+                        //try cave
+                        yToUse = tryY;
+                        caveSpawn = true;
+                    }
+                } else if (randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.CAVE) {
+                    caveSpawn = true;
+                    yToUse = tryY;
+                } else if (randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.SURFACE) {
+                    //redundant given above defaults, but here for sake of clarity
+                    caveSpawn = false;
+                    yToUse = surfaceY;
                 }
+
+                //CULog.dbg("spawn type chosen: " + (caveSpawn ? "cave" : "surface"));
+
+                //TODO: use listGoodCavePositions somewhere here, always recheck all conditions
+                if (caveSpawn && triesSinceWorkingCaveSpawn > 300 && listGoodCavePositions.size() > 0) {
+                    CULog.dbg("trying cached cave spot to spawn with");
+                    BlockPos pos = listGoodCavePositions.get(rand.nextInt(listGoodCavePositions.size()-1));
+                    tryX = pos.getX();
+                    yToUse = pos.getY();
+                    tryZ = pos.getZ();
+                }
+
+
+                if (requireSolidGround) {
+                    if (!CoroUtilEntity.canSpawnMobOnGround(player.world, tryX, yToUse, tryZ)) {
+                        //CULog.dbg("spawnNewMobFromProfile: canSpawnMobOnGround fail");
+                        continue;
+                    }
+                }
+
+                if (caveSpawn) {
+                    triesSinceWorkingCaveSpawn++;
+                    if (!CoroUtilEntity.isInDarkCave(player.world, tryX, yToUse, tryZ, true)) {
+                        //CULog.dbg("spawnNewMobFromProfile: isInDarkCave fail");
+                        continue;
+                    }
+                } else {
+                    if (player.world.getLightFromNeighbors(new BlockPos(tryX, yToUse, tryZ)) >= 6) {
+                        //CULog.dbg("spawnNewMobFromProfile: getLightFromNeighbors fail");
+                        continue;
+                    }
+                }
+
 
                 try {
-
 
                     String spawn = randomEntityList.spawnProfile.entities.get(rand.nextInt(randomEntityList.spawnProfile.entities.size()));
 
@@ -507,7 +579,7 @@ public class InvasionManager {
                             EntityCreature ent = (EntityCreature) classToSpawn.getConstructor(new Class[]{World.class}).newInstance(new Object[]{player.world});
 
                             //set to above the solid block we can spawn on
-                            ent.setPosition(tryX, tryY + 1, tryZ);
+                            ent.setPosition(tryX, yToUse + 1, tryZ);
                             ent.onInitialSpawn(ent.world.getDifficultyForLocation(new BlockPos(ent)), (IEntityLivingData) null);
                             ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityWaveSpawned, true);
                             ent.getEntityData().setBoolean(TaskDigTowardsTarget.dataUseInvasionRules, true);
@@ -533,7 +605,18 @@ public class InvasionManager {
 
                             randomEntityList.spawnCountCurrent++;
 
-                            InvLog.dbg("Spawned " + randomEntityList.spawnCountCurrent + " mobs now: " + ent.getName());
+                            if (caveSpawn) {
+                                triesSinceWorkingCaveSpawn = 0;
+
+                                BlockPos pos = new BlockPos(tryX, yToUse, tryZ);
+
+                                if (!listGoodCavePositions.contains(pos)) {
+                                    CULog.dbg("found good cave spot, adding: " + pos);
+                                    listGoodCavePositions.add(pos);
+                                }
+                            }
+
+                            InvLog.dbg("Spawned " + randomEntityList.spawnCountCurrent + " mobs now: " + ent.getName() + (caveSpawn ? " cavespawned" : " surfacespawned"));
                         } else {
                             InvLog.err("only EntityCreature extended entities are supported, couldnt spawn: " + spawn);
                         }
