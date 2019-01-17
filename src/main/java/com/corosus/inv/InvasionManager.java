@@ -291,26 +291,6 @@ public class InvasionManager {
                     }
                 }
 
-
-                /**
-                 * Buff with digging
-                 */
-
-                /*boolean enhanceAlreadyAlive = false;
-                if (enhanceAlreadyAlive) {
-                    if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
-
-                        int modifyRange = ConfigAdvancedOptions.aiEnhanceRange;
-                        float chanceToEnhance = getDigChanceBuff(difficultyScale);
-                        *//**
-                         * TODO: consider making the digging tasks disable after invasions "ends"
-                         * so that player wont get surprised later on in day if a zombie survives and takes a while to get to him
-                         *//*
-                        BehaviorModifier.enhanceZombiesToDig(world, new Vec3(player.posX, player.posY, player.posZ),
-                                modifyRange, chanceToEnhance);
-                    }
-                }*/
-
                 /**
                  * Spawn extra with buffs
                  */
@@ -319,51 +299,7 @@ public class InvasionManager {
 
                     spawnNewMobFromProfile(player, difficultyScale);
 
-                    /*int spawnCountCur = player.getEntityData().getInteger(dataPlayerInvasionWaveCountCur);
-                    int spawnCountMax = player.getEntityData().getInteger(dataPlayerInvasionWaveCountMax);
-                    if (spawnCountCur < spawnCountMax) {
-                        boolean spawned = spawnNewMobSurface(player, difficultyScale);
-                        if (spawned) {
-                            spawnCountCur++;
-                            player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, spawnCountCur);
-                            //System.out.println("spawned mob, wave count: " + spawnCountCur + " of " + spawnCountMax);
-                        }
-                    }*/
                 }
-
-                //tickSpawning(player, difficultyScale);
-
-                /**
-                 * new json backed spawn system
-                 *
-                 * - need way to support randomizing between types of invasions
-                 * -- frost invaders
-                 * -- flame invaders
-                 *
-                 * - look through all mob spawn profiles
-                 * - filter by conditions except random one
-                 * - do random one last
-                 * -- random weight based evaluating
-                 *
-                 * - now we have a list of entities with cmods to spawn
-                 * - transfer that list into a new currently unmade wave data class
-                 * -- set invasion state to use decided entity list
-                 *
-                 * - class needs:
-                 * -- per entity list
-                 * --- entity to spawn
-                 * --- amount spawned already
-                 * --- amount to spawn (max)
-                 * --- the cmods?
-                 *
-                 * - same experience for each player?
-                 * -- simple option i guess
-                 *
-                 * - invasion instance per player either way
-                 * -- player nbt json structure <-> invasion instance?
-                 */
-
-
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -711,35 +647,6 @@ public class InvasionManager {
         return invasionNumber + 1;
     }
 
-    /*public static int getSpawnCountBuff(float difficultyScale) {
-        int initialSpawns = ConfigInvasion.invasion_Spawns_Min;
-        int maxSpawnsAllowed = ConfigInvasion.invasion_Spawns_Max;
-        float scaleRate = (float) ConfigInvasion.invasion_Spawns_ScaleRate;
-        return MathHelper.clamp_int(((int) ((float)(maxSpawnsAllowed) * difficultyScale * scaleRate)), initialSpawns, maxSpawnsAllowed);
-    }*/
-
-    /*public static int getTargettingRangeBuff(float difficultyScale) {
-        int initialRange = ConfigAdvancedOptions.Invasion_TargettingRange_Min;
-        int max = ConfigAdvancedOptions.Invasion_TargettingRange_Max;
-        float scaleRate = (float) ConfigAdvancedOptions.Invasion_TargettingRange_ScaleRate;
-        return MathHelper.clamp(((int) ((float)(max) * difficultyScale * scaleRate)), initialRange, max);
-    }
-
-    public static float getDigChanceBuff(float difficultyScale) {
-        float initial = (float) ConfigAdvancedOptions.Invasion_DiggerConvertChance_Min;
-        float max = (float) ConfigAdvancedOptions.Invasion_DiggerConvertChance_Max;
-        float scaleRate = (float) ConfigAdvancedOptions.Invasion_DiggerConvertChance_ScaleRate;
-        return MathHelper.clamp((((float)(max) * difficultyScale * scaleRate)), initial, max);
-    }*/
-
-	/*public String getInvasionDebug(float difficultyScale) {
-		return "spawncount: " + getSpawnCountBuff(difficultyScale) +
-				" | targetrange: " + getTargettingRangeBuff(difficultyScale) +
-				" | dig chance: " + getDigChanceBuff(difficultyScale) +
-				" | inventory stage: " + getInventoryStageBuff(difficultyScale) +
-				" | scale: " + difficultyScale;
-	}*/
-
     public static DataMobSpawnsTemplate chooseInvasionProfile(EntityPlayer player, DifficultyQueryContext context) {
 
         List<DataMobSpawnsTemplate> listPhase2 = new ArrayList<>();
@@ -827,32 +734,6 @@ public class InvasionManager {
         return null;
     }
 
-    //test method?
-    public static void tickInvasionData(EntityPlayer player, float difficulty) {
-
-
-
-
-
-        //TODO: uhh
-        //DataMobSpawnsTemplate <-> storage.List<InvasionEntitySpawn>
-        //dont need conditions
-        //need instance info about actively spawned amount, go
-
-        //storage.invasionEntitySpawn.
-
-		/*String uuid = player.getPersistentID().toString();
-		if (!lookupUUIDToInvasionWave.containsKey(uuid)) {
-			lookupUUIDToInvasionWave.put(uuid, new InvasionEntitySpawn());
-		}
-
-		InvasionEntitySpawn data = lookupUUIDToInvasionWave.get(uuid);
-
-		writeInvasionNBT(player);*/
-    }
-
-
-
     public static boolean evaluateCondition(EntityPlayer player, DataCondition condition, DifficultyQueryContext context) {
         if (condition instanceof ConditionContext) {
             return context.getContext().equals(((ConditionContext) condition).type);
@@ -879,14 +760,4 @@ public class InvasionManager {
         }
         return false;
     }
-
-	/*public static void writeInvasionNBT(EntityPlayer player) {
-		String uuid = player.getPersistentID().toString();
-		InvasionEntitySpawn data = lookupUUIDToInvasionWave.get(uuid);
-
-		Gson json = new Gson();
-		String dataJson = json.toJson(data);
-
-		NBTTagCompound nbt = player.getEntityData().getCompoundTag(dataPlayerInvasionData);
-	}*/
 }

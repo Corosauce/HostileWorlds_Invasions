@@ -55,8 +55,6 @@ public class CommonProxy implements IGuiHandler
 	public void postInit() {
 		ResourceLocation group = new ResourceLocation(Invasion.modID, "hw_invasion");
 
-		//TODO: RECIPES!!!
-
 		GameRegistry.addShapedRecipe(new ResourceLocation(Invasion.modID, block_sacrifice_name), group,
 				new ItemStack(blockSacrifice, 1), new Object[] {"X X", "   ", "X X", 'X', Items.GOLD_INGOT});
 	}
