@@ -8,7 +8,7 @@ import modconfig.IConfigCategory;
 public class ConfigAdvancedOptions implements IConfigCategory {
 
 	public static int spawnRangeMin = 24;
-	public static int spawnRangeMax = 50;
+	public static int spawnRangeMax = 100;
 
 	public static int attemptsPerSpawn = 100;
 

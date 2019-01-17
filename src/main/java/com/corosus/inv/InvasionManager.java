@@ -16,6 +16,8 @@ import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -529,11 +531,24 @@ public class InvasionManager {
                     //redundant given above defaults, but here for sake of clarity
                     caveSpawn = false;
                     yToUse = surfaceY;
+                } else if (randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.WATER) {
+                    yToUse = tryY;
+                    BlockPos pos = new BlockPos(tryX, yToUse, tryZ);
+                    IBlockState state = player.world.getBlockState(pos);
+                    if (state.getMaterial() != Material.WATER || player.world.getBlockState(pos.down()).getMaterial() != Material.WATER || player.world.getBlockState(pos.up()).isNormalCube()) {
+                        continue;
+                    }
+                } else if (randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.AIR) {
+                    yToUse = tryY;
+                    BlockPos pos = new BlockPos(tryX, yToUse, tryZ);
+                    //IBlockState state = player.world.getBlockState(pos);
+                    if (!player.world.isAirBlock(pos) || !player.world.isAirBlock(pos.up())) {
+                        continue;
+                    }
                 }
 
                 //CULog.dbg("spawn type chosen: " + (caveSpawn ? "cave" : "surface"));
 
-                //TODO: use listGoodCavePositions somewhere here, always recheck all conditions
                 if (caveSpawn && triesSinceWorkingCaveSpawn > 300 && listGoodCavePositions.size() > 0) {
                     CULog.dbg("trying cached cave spot to spawn with");
                     BlockPos pos = listGoodCavePositions.get(rand.nextInt(listGoodCavePositions.size()-1));
@@ -616,7 +631,7 @@ public class InvasionManager {
                                 }
                             }
 
-                            InvLog.dbg("Spawned " + randomEntityList.spawnCountCurrent + " mobs now: " + ent.getName() + (caveSpawn ? " cavespawned" : " surfacespawned"));
+                            InvLog.dbg("Spawned " + randomEntityList.spawnCountCurrent + " at " + new BlockPos(tryX, yToUse, tryZ) + " mobs now: " + ent.getName() + (randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.GROUND ? (caveSpawn ? " cavespawned" : " surfacespawned") : "") + " " + randomEntityList.spawnProfile.spawnType);
                         } else {
                             InvLog.err("only EntityCreature extended entities are supported, couldnt spawn: " + spawn);
                         }
