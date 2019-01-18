@@ -60,7 +60,7 @@ public class CommandInvasion extends CommandBase {
 			world = DimensionManager.getWorld(0);
 			long dayNumber = (world.getWorldTime() / CoroUtilWorldTime.getDayLength()) + 1;
 			
-			if (var2.length < 1)
+			if (var2.length < 1 || var2[0].equalsIgnoreCase("difficulty"))
 	        {
 				if ((var1 instanceof EntityPlayerMP)) {
 					EntityPlayerMP ent = (EntityPlayerMP) var1;
@@ -68,7 +68,8 @@ public class CommandInvasion extends CommandBase {
 		    		/*net.minecraft.util.math.Vec3d */posVec = new net.minecraft.util.math.Vec3d(ent.posX, ent.posY + (ent.getEyeHeight() - ent.getDefaultEyeHeight()), ent.posZ);//player.getPosition(1F);
 		    		BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
 		    		//long dayNumber = (ent.worldObj.getWorldTime() / CoroUtilWorldTime.getDayLength()) + 1;
-		    		CoroUtilMisc.sendCommandSenderMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + DynamicDifficulty.getDifficultyScaleAverage(ent.world, ent, pos));
+		    		CoroUtilMisc.sendCommandSenderMsg(ent, "day: " + dayNumber + ", average difficulty for this area: " + TextFormatting.GREEN + DynamicDifficulty.getDifficultyScaleAverage(ent.world, ent, pos));
+					//DynamicDifficulty.msgDifficultyData((EntityPlayer) var1, pos);
 				} else {
 					var1.sendMessage(new TextComponentString("day: " + dayNumber));
 		    		//CoroUtil.sendPlayerMsg(ent, "day: " + dayNumber + ", difficulty for this area: " + EventHandlerForge.getDifficultyScaleAverage(ent.worldObj, ent, pos));

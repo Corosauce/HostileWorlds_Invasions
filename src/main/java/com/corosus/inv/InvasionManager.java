@@ -661,9 +661,6 @@ public class InvasionManager {
             for (DataCondition condition : DeserializerAllJson.getConditionsFlattened(spawns.conditions)) {
 
                 if (!(condition instanceof ConditionRandom)) {
-
-                    //TODO: toString() for conditions to output min/max difficulty etc
-
                     if (!evaluateCondition(player, condition, context)) {
                         InvLog.dbg("evaluating failed for condition: " + condition + ", dbg: " + condition.toString());
                         fail = true;
