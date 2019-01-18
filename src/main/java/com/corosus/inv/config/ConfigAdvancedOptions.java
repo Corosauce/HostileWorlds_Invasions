@@ -10,6 +10,7 @@ public class ConfigAdvancedOptions implements IConfigCategory {
 	public static int spawnRangeMin = 24;
 	public static int spawnRangeMax = 100;
 
+	@ConfigComment("amount of times it loops per aiTickRateSpawning trigger")
 	public static int attemptsPerSpawn = 100;
 
 	public static int aiTickRateEnhance = 200;
@@ -25,6 +26,11 @@ public class ConfigAdvancedOptions implements IConfigCategory {
 	public static boolean useBlacklistAsWhitelist = false;
 	@ConfigComment("Eg: If the invasion spawns in creepers, all creepers that already existed before the invasion also get omniscience, etc")
 	public static boolean enhanceAllMobsOfSpawnedTypesForOmniscience = true;
+
+	@ConfigComment("will be overridden by failedTriesBeforeAllowingSpawnInLitAreas if it triggers")
+	public static boolean mobsMustSpawnInDarkness = true;
+
+	public static int failedTriesBeforeAllowingSpawnInLitAreas = 1000;
 
 	/*@ConfigComment("Max allowed extra spawns at highest difficulty")
 	public static int invasion_Spawns_Max = 50;

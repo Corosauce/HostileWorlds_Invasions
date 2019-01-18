@@ -28,7 +28,8 @@ public class PlayerDataInstance {
     public boolean dataPlayerInvasionHappenedThisDay;
     public boolean dataPlayerInvasionActive;
     public boolean dataPlayerInvasionWarned;
-    public long dataCreatureLastPathWithDelay;
+    //when trying dark areas for a long time fails, fallsback to spawning in light
+    public boolean allowSpawnInLitAreas = false;
 
     private List<Class> listSpawnablesCached = new ArrayList<>();
 
@@ -83,6 +84,7 @@ public class PlayerDataInstance {
         }
         listSpawnables.clear();
         listSpawnablesCached.clear();
+        allowSpawnInLitAreas = false;
     }
 
     public InvasionEntitySpawn getRandomEntityClassToSpawn() {
@@ -157,6 +159,7 @@ public class PlayerDataInstance {
 
         dataPlayerInvasionActive = nbtTagCompound.getBoolean("dataPlayerInvasionActive");
         dataPlayerInvasionWarned = nbtTagCompound.getBoolean("dataPlayerInvasionWarned");
+        allowSpawnInLitAreas = nbtTagCompound.getBoolean("allowSpawnInLitAreas");
 
         CULog.dbg("read done");
     }
@@ -174,6 +177,7 @@ public class PlayerDataInstance {
 
         nbtTagCompound.setBoolean("dataPlayerInvasionActive", dataPlayerInvasionActive);
         nbtTagCompound.setBoolean("dataPlayerInvasionWarned", dataPlayerInvasionWarned);
+        nbtTagCompound.setBoolean("allowSpawnInLitAreas", allowSpawnInLitAreas);
     }
 
     public float getDifficultyForInvasion() {

@@ -49,6 +49,7 @@ public class InvasionManager {
     //not saved, just some runtime caching
     public static List<BlockPos> listGoodCavePositions = new ArrayList<>();
     public static int triesSinceWorkingCaveSpawn = 0;
+    public static int triesSinceWorkingAnySpawn = 0;
 
     /**
      *
@@ -398,6 +399,7 @@ public class InvasionManager {
 
         if (randomEntityList != null) {
             for (int tries = 0; tries < ConfigAdvancedOptions.attemptsPerSpawn; tries++) {
+                triesSinceWorkingAnySpawn++;
                 int tryX = MathHelper.floor(player.posX) - (range / 2) + (rand.nextInt(range));
                 int tryZ = MathHelper.floor(player.posZ) - (range / 2) + (rand.nextInt(range));
                 int tryY = MathHelper.floor(player.posY) - (range / 2) + (rand.nextInt(range));
@@ -434,23 +436,6 @@ public class InvasionManager {
                 boolean caveSpawn = false;
 
                 if (randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.GROUND) {
-                    //prefer surface, but do cave if required
-                    //more specifically:
-                    //if player say, within 10 blocks of surface, do surface ?
-                    //otherwise do both
-
-                    //OR
-
-                    //get random spot on surface
-                    //if y dist to player > 10, try cave?
-                    //- use the random y instead and cave try
-                    //- repeat loop
-
-                    /*int surfaceYAtPlayer = player.world.getHeight(player.getPosition()).getY();
-                    if (player.posY + 10 >= surfaceYAtPlayer) {
-
-                    }*/
-
                     //if near surface
                     if (player.posY + 10 > surfaceY) {
                         //try surface
@@ -501,14 +486,22 @@ public class InvasionManager {
                     }
                 }
 
+                if (!storage.allowSpawnInLitAreas && triesSinceWorkingAnySpawn > ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas) {
+                    //give up on finding a dark spot and allow lit areas
+                    CULog.dbg("couldnt find a dark area to spawn for " + ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas + " tries, allowing spawning in lit areas now");
+                    storage.allowSpawnInLitAreas = true;
+                }
+
+                boolean skipDarknessCheck = storage.allowSpawnInLitAreas || !ConfigAdvancedOptions.mobsMustSpawnInDarkness;
+
                 if (caveSpawn) {
                     triesSinceWorkingCaveSpawn++;
-                    if (!CoroUtilEntity.isInDarkCave(player.world, tryX, yToUse, tryZ, true)) {
+                    if (!CoroUtilEntity.isInDarkCave(player.world, tryX, yToUse, tryZ, true, skipDarknessCheck)) {
                         //CULog.dbg("spawnNewMobFromProfile: isInDarkCave fail");
                         continue;
                     }
                 } else {
-                    if (player.world.getLightFromNeighbors(new BlockPos(tryX, yToUse, tryZ)) >= 6) {
+                    if (!skipDarknessCheck && player.world.getLightFromNeighbors(new BlockPos(tryX, yToUse + 1, tryZ)) >= 6) {
                         //CULog.dbg("spawnNewMobFromProfile: getLightFromNeighbors fail");
                         continue;
                     }
@@ -538,15 +531,8 @@ public class InvasionManager {
                             //store players name the mob was spawned for
                             ent.getEntityData().setString(UtilEntityBuffs.dataEntityBuffed_PlayerSpawnedFor, player.getName());
 
-                            //old way
-                            //enhanceMobForDifficulty(ent, difficultyScale);
-
                             //set cmod data to entity
-                            //JsonArray array = DeserializerAllJson.serializeCmods(randomEntityList.spawnProfile.cmods);
                             UtilEntityBuffs.registerAndApplyCmods(ent, randomEntityList.spawnProfile.cmods, difficultyScale);
-
-                            //apply cmods from data
-                            //UtilEntityBuffs.applyBuffSingularTry(UtilEntityBuffs.dataEntityBuffed_Inventory, ent, difficultyScale);
 
                             ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, true);
                             player.world.spawnEntity(ent);
@@ -555,6 +541,8 @@ public class InvasionManager {
                             //ent.setAttackTarget(player);
 
                             randomEntityList.spawnCountCurrent++;
+
+                            triesSinceWorkingAnySpawn = 0;
 
                             if (caveSpawn) {
                                 triesSinceWorkingCaveSpawn = 0;
@@ -566,6 +554,8 @@ public class InvasionManager {
                                     listGoodCavePositions.add(pos);
                                 }
                             }
+
+                            //InvLog.dbg("skipDarknessCheck: " + skipDarknessCheck);
 
                             InvLog.dbg("Spawned " + randomEntityList.spawnCountCurrent + " at " + new BlockPos(tryX, yToUse, tryZ) + " mobs now: " + ent.getName() + (randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.GROUND ? (caveSpawn ? " cavespawned" : " surfacespawned") : "") + " " + randomEntityList.spawnProfile.spawnType);
                         } else {
