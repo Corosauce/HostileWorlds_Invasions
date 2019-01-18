@@ -744,8 +744,9 @@ public class InvasionManager {
              * could just stick with global and do the math to figure out what inv number it is
              * - doing this for now
              */
-            return context.getInvasionNumber() >= ((ConditionInvasionNumber)condition).min &&
-                    context.getInvasionNumber() <= ((ConditionInvasionNumber)condition).max;
+            ConditionInvasionNumber condInv = (ConditionInvasionNumber)condition;
+            return (condInv.min == -1 || context.getInvasionNumber() >= condInv.min) &&
+                    (condInv.max == -1 || context.getInvasionNumber() <= condInv.max);
         } else if (condition instanceof ConditionInvasionRate) {
             return context.getInvasionNumber() % ((ConditionInvasionRate) condition).rate == 0;
         } else if (condition instanceof ConditionModLoaded) {
