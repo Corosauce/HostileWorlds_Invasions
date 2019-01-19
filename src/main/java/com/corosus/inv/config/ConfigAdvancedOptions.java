@@ -30,6 +30,7 @@ public class ConfigAdvancedOptions implements IConfigCategory {
 	@ConfigComment("will be overridden by failedTriesBeforeAllowingSpawnInLitAreas if it triggers")
 	public static boolean mobsMustSpawnInDarkness = true;
 
+	@ConfigComment("-1 to disable")
 	public static int failedTriesBeforeAllowingSpawnInLitAreas = 1000;
 
 	/*@ConfigComment("Max allowed extra spawns at highest difficulty")

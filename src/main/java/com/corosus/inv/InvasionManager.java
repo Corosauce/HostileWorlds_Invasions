@@ -3,6 +3,7 @@ package com.corosus.inv;
 import CoroUtil.ai.tasks.EntityAIChaseFromFar;
 import CoroUtil.ai.tasks.EntityAINearestAttackablePlayerOmniscience;
 import CoroUtil.ai.tasks.TaskDigTowardsTarget;
+import CoroUtil.config.ConfigCoroUtilAdvanced;
 import CoroUtil.difficulty.DifficultyQueryContext;
 import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
@@ -486,10 +487,12 @@ public class InvasionManager {
                     }
                 }
 
-                if (!storage.allowSpawnInLitAreas && triesSinceWorkingAnySpawn > ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas) {
-                    //give up on finding a dark spot and allow lit areas
-                    CULog.dbg("couldnt find a dark area to spawn for " + ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas + " tries, allowing spawning in lit areas now");
-                    storage.allowSpawnInLitAreas = true;
+                if (ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas != -1) {
+                    if (!storage.allowSpawnInLitAreas && triesSinceWorkingAnySpawn > ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas) {
+                        //give up on finding a dark spot and allow lit areas
+                        CULog.dbg("couldnt find a dark area to spawn for " + ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas + " tries, allowing spawning in lit areas now");
+                        storage.allowSpawnInLitAreas = true;
+                    }
                 }
 
                 boolean skipDarknessCheck = storage.allowSpawnInLitAreas || !ConfigAdvancedOptions.mobsMustSpawnInDarkness;
@@ -642,6 +645,15 @@ public class InvasionManager {
         List<DataMobSpawnsTemplate> listPhase2 = new ArrayList<>();
 
         InvLog.dbg("choosing invasion profile for player: " + player.getName() + ", difficulty: " + context.getDifficulty());
+
+        if (!ConfigCoroUtilAdvanced.mobSpawnsWaveToForceUse.equals("")) {
+            for (DataMobSpawnsTemplate spawns : DifficultyDataReader.getData().listMobSpawnTemplates) {
+                if (spawns.name.equals(ConfigCoroUtilAdvanced.mobSpawnsWaveToForceUse)) {
+                    return spawns;
+                }
+            }
+            InvLog.err("Couldnt find mob spawn profile: " + ConfigCoroUtilAdvanced.mobSpawnsWaveToForceUse);
+        }
 
         //System.out.println("phase 1 choice count: " + DifficultyDataReader.getData().listMobSpawnTemplates.size());
         for (DataMobSpawnsTemplate spawns : DifficultyDataReader.getData().listMobSpawnTemplates) {
