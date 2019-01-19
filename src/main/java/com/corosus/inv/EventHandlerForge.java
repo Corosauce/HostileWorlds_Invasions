@@ -17,6 +17,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -111,5 +112,20 @@ public class EventHandlerForge {
 				}
 			}
 		}
+	}
+
+	@SubscribeEvent
+	public void playerCloneEvent(PlayerEvent.Clone event) {
+
+		/*System.out.println("old: " + event.getOriginal().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).getDifficultyForInvasion());
+		System.out.println("new: " + event.getEntityPlayer().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).getDifficultyForInvasion());*/
+
+		//migrate cap data to new player
+		NBTTagCompound nbtOld = new NBTTagCompound();
+		event.getOriginal().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).writeNBT(nbtOld);
+		event.getEntityPlayer().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).readNBT(nbtOld);
+
+		/*System.out.println("old: " + event.getOriginal().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).getDifficultyForInvasion());
+		System.out.println("new: " + event.getEntityPlayer().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).getDifficultyForInvasion());*/
 	}
 }

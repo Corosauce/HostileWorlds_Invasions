@@ -157,9 +157,12 @@ public class PlayerDataInstance {
             listSpawnables.add(spawn);
         }
 
+        dataPlayerInvasionHappenedThisDay = nbtTagCompound.getBoolean("dataPlayerInvasionHappenedThisDay");
         dataPlayerInvasionActive = nbtTagCompound.getBoolean("dataPlayerInvasionActive");
         dataPlayerInvasionWarned = nbtTagCompound.getBoolean("dataPlayerInvasionWarned");
         allowSpawnInLitAreas = nbtTagCompound.getBoolean("allowSpawnInLitAreas");
+
+        difficultyForInvasion = nbtTagCompound.getFloat("difficultyForInvasion");
 
         CULog.dbg("read done");
     }
@@ -175,9 +178,12 @@ public class PlayerDataInstance {
         }
         nbtTagCompound.setTag("spawns", nbt);
 
+        nbtTagCompound.setBoolean("dataPlayerInvasionHappenedThisDay", dataPlayerInvasionHappenedThisDay);
         nbtTagCompound.setBoolean("dataPlayerInvasionActive", dataPlayerInvasionActive);
         nbtTagCompound.setBoolean("dataPlayerInvasionWarned", dataPlayerInvasionWarned);
         nbtTagCompound.setBoolean("allowSpawnInLitAreas", allowSpawnInLitAreas);
+
+        nbtTagCompound.setFloat("difficultyForInvasion", difficultyForInvasion);
     }
 
     public float getDifficultyForInvasion() {
