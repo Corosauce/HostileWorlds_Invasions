@@ -25,6 +25,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
+import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.pathfinding.PathPoint;
@@ -273,10 +274,17 @@ public class InvasionManager {
 
                             boolean shouldEnhanceEntity = listClassesSpawned.contains(ent.getClass());
 
-                            if (shouldEnhanceEntity) {
+                            //no point in giving a cow only omniscience
+                            boolean hostileMobsOnly = true;
+
+                            if (shouldEnhanceEntity && (!hostileMobsOnly || ent instanceof EntityMob)) {
 
                                 //note, these arent being added in a way where its persistant, which is fine since this runs all the time anyways
                                 //still needs a way to stop after invasion done
+
+                                //this should flag the entity so tasks will get removed later
+                                ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityBuffed, true);
+                                ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityBuffed_AI_Omniscience, true);
 
                                 //targetting
                                 if (!UtilEntityBuffs.hasTask(ent, EntityAINearestAttackablePlayerOmniscience.class, true)) {
