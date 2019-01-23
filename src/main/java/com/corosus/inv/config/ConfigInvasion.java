@@ -38,9 +38,14 @@ public class ConfigInvasion implements IConfigCategory {
 	public static String Invasion_Message_skippedTooMany = TextFormatting.RED + "You've already skipped invasions %d times! You must fight!";
 
 	public static String Invasion_Message_cantSleep = "You can't sleep during invasion nights!";
+
+	public static String Invasion_Message_cantTeleport = "You can't leave the overworld during invasion nights!";
 	
 	@ConfigComment("Prevent players from sleeping through the night during invasion nights")
 	public static boolean preventSleepDuringInvasions = true;
+
+	@ConfigComment("Prevent players from teleporting away from the overworld during invasion nights")
+	public static boolean preventDimensionTeleportingDuringInvasions = true;
 
 	@ConfigComment("For seldom used but important things to print out in production")
 	public static boolean useLoggingLog = true;

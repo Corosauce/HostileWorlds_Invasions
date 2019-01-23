@@ -354,10 +354,6 @@ public class InvasionManager {
 
         }
 
-        //TODO: readd spawn count scaling as an option via json
-        //player.getEntityData().setInteger(dataPlayerInvasionWaveCountMax, getSpawnCountBuff(difficultyScale));
-        //player.getEntityData().setInteger(dataPlayerInvasionWaveCountCur, 0);
-
         //add buff for player based on how many invasions they skipped (and only if this isnt a skipped invasion)
         if (!player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
             float buffBase = 0.5F;
