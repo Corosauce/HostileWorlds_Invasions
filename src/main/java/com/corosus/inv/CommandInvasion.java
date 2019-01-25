@@ -147,7 +147,7 @@ public class CommandInvasion extends CommandBase {
 						player.getEntityData().setLong(DynamicDifficulty.dataPlayerServerTicks, 0);
 						PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
 						storage.resetPersistentData();
-						CoroUtilMisc.sendCommandSenderMsg(player, "reset persistent player invasion data for: " + player.getDisplayNameString());
+						CoroUtilMisc.sendCommandSenderMsg(var1, "reset persistent player invasion data for: " + player.getDisplayNameString());
 					}
 				} else if (var2[0].equalsIgnoreCase("setPlayerTime")) {
 					int time = 0;
@@ -160,7 +160,7 @@ public class CommandInvasion extends CommandBase {
 					}
 					if (player != null) {
 						player.getEntityData().setLong(DynamicDifficulty.dataPlayerServerTicks, time);
-						CoroUtilMisc.sendCommandSenderMsg(player, "set player time for: " + player.getDisplayNameString() + " to " + time);
+						CoroUtilMisc.sendCommandSenderMsg(var1, "set player time for: " + player.getDisplayNameString() + " to " + time);
 					}
 				} else if (var2[0].equalsIgnoreCase("setPlayerWave")) {
 					int wave = 0;
@@ -174,7 +174,7 @@ public class CommandInvasion extends CommandBase {
 					if (player != null) {
 						PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
 						storage.lastWaveNumber = wave;
-						CoroUtilMisc.sendCommandSenderMsg(player, "set player last wave # for: " + player.getDisplayNameString() + " to " + wave);
+						CoroUtilMisc.sendCommandSenderMsg(var1, "set player last wave # for: " + player.getDisplayNameString() + " to " + wave);
 					}
 				} else if (var2[0].equalsIgnoreCase("playerTime")) {
 
@@ -188,10 +188,10 @@ public class CommandInvasion extends CommandBase {
 					if (player != null) {
 						long time = player.getEntityData().getLong(DynamicDifficulty.dataPlayerServerTicks);
 						PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
-						CoroUtilMisc.sendCommandSenderMsg(player, "Active tracked player time for: " + player.getDisplayNameString());
-						CoroUtilMisc.sendCommandSenderMsg(player, "Ticks: " + time);
-						CoroUtilMisc.sendCommandSenderMsg(player, "Days: " + (time / CoroUtilWorldTime.getDayLength()));
-						CoroUtilMisc.sendCommandSenderMsg(player, "Last Wave #: " + storage.lastWaveNumber);
+						CoroUtilMisc.sendCommandSenderMsg(var1, "Active tracked player time for: " + player.getDisplayNameString());
+						CoroUtilMisc.sendCommandSenderMsg(var1, "Ticks: " + time);
+						CoroUtilMisc.sendCommandSenderMsg(var1, "Days: " + (time / CoroUtilWorldTime.getDayLength()));
+						CoroUtilMisc.sendCommandSenderMsg(var1, "Last Wave #: " + storage.lastWaveNumber);
 					}
 				}
 	        	
