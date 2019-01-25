@@ -9,16 +9,22 @@ import net.minecraft.util.text.TextFormatting;
 
 public class ConfigInvasion implements IConfigCategory {
 
-	@ConfigComment("First night number that an invasion starts, not specific to each player, uses global server world time")//Days before invasions start,
+	@ConfigComment("First night number that an invasion starts, not specific to each player, uses global server world time")
 	public static int firstInvasionNight = 3;
-	//public static int warmupDaysToFirstInvasion = 3;
+
 	@ConfigComment("If set to 3, there are 2 days of no invasions then the 3rd day is an invasion, etc")
 	public static int invadeEveryXDays = 3;
+
+	@ConfigComment("use a per player active tracked playtime instead of global server time, used with firstInvasionNight and wave # in invasion configuration. Everyone will still get invasions on the same night but only if they qualify for one")
+	public static boolean invasionCountingPerPlayer = true;
 
 	@ConfigComment("Max amount of invasions you can skip in a row before you are forced to deal with one")
 	public static int maxConsecutiveInvasionSkips = 3;
 
 	public static String Invasion_Message_startsTonight = TextFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!";
+
+	@ConfigComment("Used if invasionCountingPerPlayer is on")
+	public static String Invasion_Message_startsTonightButNotYou = TextFormatting.GREEN + "An invasion might start tonight for others but not for you, you need about %d days played";
 
 	@ConfigComment("The default invasion message if a wave doesn't have a custom one")
 	public static String Invasion_Message_started = TextFormatting.RED + "An invasion has started! Be prepared!";
@@ -26,6 +32,9 @@ public class ConfigInvasion implements IConfigCategory {
 	public static String Invasion_Message_ended = TextFormatting.GREEN + "The invasion has ended! Next invasion in %d days!";
 
 	public static String Invasion_Message_startedButSkippedForYou = TextFormatting.GREEN + "An invasion has started! But skipped for you!";
+
+	@ConfigComment("Used if invasionCountingPerPlayer is on")
+	public static String Invasion_Message_startedButSkippedForYouTooSoon = TextFormatting.GREEN + "An invasion has started! But skipped for you because you havent been playing long enough, you need about %d days played";
 
 	public static String Invasion_Message_tooLate = TextFormatting.RED + "Too late, invasion already started!";
 
@@ -82,8 +91,8 @@ public class ConfigInvasion implements IConfigCategory {
 	@Override
 	public void hookUpdatedValues() {
 		
-		firstInvasionNight = MathHelper.clamp(firstInvasionNight, 0, 99);
-		invadeEveryXDays = MathHelper.clamp(invadeEveryXDays, 0, 99);
+		firstInvasionNight = MathHelper.clamp(firstInvasionNight, 0, 9999);
+		invadeEveryXDays = MathHelper.clamp(invadeEveryXDays, 0, 9999);
 		
 	}
 

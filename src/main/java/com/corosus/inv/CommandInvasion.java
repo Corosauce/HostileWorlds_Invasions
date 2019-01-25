@@ -5,6 +5,7 @@ import CoroUtil.difficulty.data.DifficultyDataReader;
 import CoroUtil.difficulty.data.conditions.ConditionContext;
 import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
 import CoroUtil.util.CoroUtilWorldTime;
+import com.corosus.inv.capabilities.PlayerDataInstance;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -113,7 +114,7 @@ public class CommandInvasion extends CommandBase {
 
 							DataMobSpawnsTemplate profile = InvasionManager.getInvasionTestData(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, invasionNumber, (float) difficultyScale));
 
-							var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "Invasion profile for difficulty: " + difficultyScale + ", invasion number: " + invasionNumber));
+							var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "Invasion template for difficulty: " + difficultyScale + ", invasion number: " + invasionNumber));
 							if (profile != null) {
 
 								String data = profile.toString();
@@ -122,7 +123,7 @@ public class CommandInvasion extends CommandBase {
 									var1.sendMessage(new TextComponentString(entry));
 								}
 							} else {
-								var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "profile null"));
+								var1.sendMessage(new TextComponentString(TextFormatting.GREEN + "Could not find template for that scenario"));
 							}
 						} catch (Exception ex) {
 							ex.printStackTrace();
@@ -134,6 +135,64 @@ public class CommandInvasion extends CommandBase {
 				} else if (var2[0].equalsIgnoreCase("forceInvasion")) {
 	        		int amount = (CoroUtilWorldTime.getDayLength() * 3) + (6000 * 2) + (600 * 3);
 	        		world.getWorldInfo().setWorldTime(amount);
+
+				} else if (var2[0].equalsIgnoreCase("resetPlayer")) {
+					if (var2.length >= 3) {
+						player = world.getPlayerEntityByName(var2[2]);
+						if (player == null) {
+							CoroUtilMisc.sendCommandSenderMsg(var1, "Couldnt find player by name: " + var2[1]);
+						}
+					}
+					if (player != null) {
+						player.getEntityData().setLong(DynamicDifficulty.dataPlayerServerTicks, 0);
+						PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+						storage.resetPersistentData();
+						CoroUtilMisc.sendCommandSenderMsg(player, "reset persistent player invasion data for: " + player.getDisplayNameString());
+					}
+				} else if (var2[0].equalsIgnoreCase("setPlayerTime")) {
+					int time = 0;
+					if (var2.length >= 2) time = Integer.valueOf(var2[1]);
+					if (var2.length >= 3) {
+						player = world.getPlayerEntityByName(var2[2]);
+						if (player == null) {
+							CoroUtilMisc.sendCommandSenderMsg(var1, "Couldnt find player by name: " + var2[1]);
+						}
+					}
+					if (player != null) {
+						player.getEntityData().setLong(DynamicDifficulty.dataPlayerServerTicks, time);
+						CoroUtilMisc.sendCommandSenderMsg(player, "set player time for: " + player.getDisplayNameString() + " to " + time);
+					}
+				} else if (var2[0].equalsIgnoreCase("setPlayerWave")) {
+					int wave = 0;
+					if (var2.length >= 2) wave = Integer.valueOf(var2[1]);
+					if (var2.length >= 3) {
+						player = world.getPlayerEntityByName(var2[2]);
+						if (player == null) {
+							CoroUtilMisc.sendCommandSenderMsg(var1, "Couldnt find player by name: " + var2[1]);
+						}
+					}
+					if (player != null) {
+						PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+						storage.lastWaveNumber = wave;
+						CoroUtilMisc.sendCommandSenderMsg(player, "set player last wave # for: " + player.getDisplayNameString() + " to " + wave);
+					}
+				} else if (var2[0].equalsIgnoreCase("playerTime")) {
+
+					if (var2.length >= 2) {
+						player = world.getPlayerEntityByName(var2[1]);
+						if (player == null) {
+							CoroUtilMisc.sendCommandSenderMsg(var1, "Couldnt find player by name: " + var2[1]);
+						}
+					}
+
+					if (player != null) {
+						long time = player.getEntityData().getLong(DynamicDifficulty.dataPlayerServerTicks);
+						PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+						CoroUtilMisc.sendCommandSenderMsg(player, "Active tracked player time for: " + player.getDisplayNameString());
+						CoroUtilMisc.sendCommandSenderMsg(player, "Ticks: " + time);
+						CoroUtilMisc.sendCommandSenderMsg(player, "Days: " + (time / CoroUtilWorldTime.getDayLength()));
+						CoroUtilMisc.sendCommandSenderMsg(player, "Last Wave #: " + storage.lastWaveNumber);
+					}
 				}
 	        	
 	        	
@@ -153,7 +212,7 @@ public class CommandInvasion extends CommandBase {
         return true;//par1ICommandSender.canCommandSenderUseCommand(this.getRequiredPermissionLevel(), this.getCommandName());
     }*/
 	
-	@Override
+	/*@Override
 	public boolean checkPermission(MinecraftServer server, ICommandSender par1ICommandSender)
     {
 		return true;
@@ -162,6 +221,19 @@ public class CommandInvasion extends CommandBase {
 	@Override
 	public int getRequiredPermissionLevel() {
 		return 0;
+	}*/
+
+	//require OP again
+
+	@Override
+	public int getRequiredPermissionLevel() {
+		return 2;
+	}
+
+	@Override
+	public boolean checkPermission(MinecraftServer server, ICommandSender par1ICommandSender)
+	{
+		return par1ICommandSender.canUseCommand(this.getRequiredPermissionLevel(), this.getName());
 	}
 
 }

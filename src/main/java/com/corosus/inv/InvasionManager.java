@@ -3,7 +3,8 @@ package com.corosus.inv;
 import CoroUtil.ai.tasks.EntityAIChaseFromFar;
 import CoroUtil.ai.tasks.EntityAINearestAttackablePlayerOmniscience;
 import CoroUtil.ai.tasks.TaskDigTowardsTarget;
-import CoroUtil.config.ConfigCoroUtilAdvanced;
+import CoroUtil.config.ConfigCoroUtil;
+import CoroUtil.config.ConfigDynamicDifficulty;
 import CoroUtil.difficulty.DifficultyQueryContext;
 import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
@@ -20,15 +21,10 @@ import com.corosus.inv.config.ConfigInvasion;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
-import net.minecraft.entity.monster.EntityCreeper;
-import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntityMob;
-import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -184,8 +180,21 @@ public class InvasionManager {
             //debug
             //difficultyScale = 1F;
 
+            if (ConfigInvasion.invasionCountingPerPlayer) {
+                long ticksPlayed = player.getEntityData().getLong(DynamicDifficulty.dataPlayerServerTicks);
+                //doing +1 for case of player time = server time, since first invasion technically happens before 3 day count (72000 ticks)
+                //isInvasionTonight does same thing of +1
+                int dayNum = (int) (ticksPlayed / CoroUtilWorldTime.getDayLength()) + 1;
+                CULog.dbg("per player day num: " + dayNum);
+                if (dayNum < ConfigInvasion.firstInvasionNight) {
+                    CULog.dbg("too soon for specific player: " + player.getDisplayNameString() + ", skipping invasion");
+                    player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon, true);
+                }
+            }
+
             boolean activeBool = storage.dataPlayerInvasionActive;
-            boolean skippingBool = player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping);
+            boolean skippingBool = player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping) ||
+                    player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon);
 
             //track state of invasion for proper init and reset for wave counts, etc
             //new day starts just as sun is rising, so invasion stops just at the right time when sun is imminent, they burn 300 ticks before invasion ends, thats ok
@@ -206,7 +215,14 @@ public class InvasionManager {
 
             if (invasionOnThisNight && isDay) {
                 if (!storage.dataPlayerInvasionWarned && !storage.dataPlayerInvasionHappenedThisDay) {
-                    player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startsTonight));
+                    if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
+                        if (world.playerEntities.size() > 1) {
+                            //if others on server
+                            player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startsTonightButNotYou, ConfigInvasion.firstInvasionNight)));
+                        }
+                    } else {
+                        player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startsTonight));
+                    }
                     storage.dataPlayerInvasionWarned = true;
                 }
             }
@@ -214,6 +230,8 @@ public class InvasionManager {
             if (!invasionOnThisNight) {
                 storage.dataPlayerInvasionHappenedThisDay = false;
             }
+
+
 
             if (invasionOnThisNight && !isDay) {
 
@@ -244,6 +262,7 @@ public class InvasionManager {
             if (!invasionOnThisNight) {
                 storage.dataPlayerInvasionWarned = false;
                 player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, false);
+                player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon, false);
             }
 
             //int playerRating = UtilPlayer.getPlayerRating(player);
@@ -330,8 +349,16 @@ public class InvasionManager {
         storage.resetInvasion();
         storage.dataPlayerInvasionActive = true;
         storage.setDifficultyForInvasion(difficultyScale);
+        storage.lastWaveNumber++;
 
-        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, InvasionManager.getInvasionNumber(player.world), difficultyScale));
+        int waveNumberToUse;
+        if (ConfigInvasion.invasionCountingPerPlayer) {
+            waveNumberToUse = storage.lastWaveNumber;
+        } else {
+            waveNumberToUse = InvasionManager.getInvasionNumber(player.world);
+        }
+
+        DataMobSpawnsTemplate profile = chooseInvasionProfile(player, new DifficultyQueryContext(ConditionContext.TYPE_INVASION, waveNumberToUse, difficultyScale));
         if (profile != null) {
             storage.initNewInvasion(profile);
         } else {
@@ -342,6 +369,10 @@ public class InvasionManager {
         //System.out.println("invasion started");
         if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
             player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startedButSkippedForYou));
+        } else if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
+            if (player.world.playerEntities.size() > 1) {
+                player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startedButSkippedForYouTooSoon, ConfigInvasion.firstInvasionNight)));
+            }
         } else {
             if (profile != null && !profile.wave_message.equals("<NULL>")) {
                 //support for no message override for wave, might as well just check if its blank and prevent code from running
@@ -379,7 +410,10 @@ public class InvasionManager {
     public static void invasionStopReset(EntityPlayer player) {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion ended");
-        player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_ended, ConfigInvasion.invadeEveryXDays)));
+        if (!player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping) &&
+                !player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
+            player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_ended, ConfigInvasion.invadeEveryXDays)));
+        }
 
         storage.dataPlayerInvasionActive = false;
         storage.dataPlayerInvasionWarned = false;
@@ -387,6 +421,7 @@ public class InvasionManager {
         storage.resetInvasion();
 
         player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, false);
+        player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon, false);
 
         //remove invasion specific buff since invasion stopped
         DynamicDifficulty.setInvasionSkipBuff(player, 0);
@@ -650,13 +685,13 @@ public class InvasionManager {
 
         InvLog.dbg("choosing invasion profile for player: " + player.getName() + ", difficulty: " + context.getDifficulty());
 
-        if (!ConfigCoroUtilAdvanced.mobSpawnsWaveToForceUse.equals("")) {
+        if (!ConfigCoroUtil.mobSpawnsWaveToForceUse.equals("")) {
             for (DataMobSpawnsTemplate spawns : DifficultyDataReader.getData().listMobSpawnTemplates) {
-                if (spawns.name.equals(ConfigCoroUtilAdvanced.mobSpawnsWaveToForceUse)) {
+                if (spawns.name.equals(ConfigCoroUtil.mobSpawnsWaveToForceUse)) {
                     return spawns;
                 }
             }
-            InvLog.err("Couldnt find mob spawn profile: " + ConfigCoroUtilAdvanced.mobSpawnsWaveToForceUse);
+            InvLog.err("Couldnt find mob spawn profile: " + ConfigCoroUtil.mobSpawnsWaveToForceUse);
         }
 
         //System.out.println("phase 1 choice count: " + DifficultyDataReader.getData().listMobSpawnTemplates.size());

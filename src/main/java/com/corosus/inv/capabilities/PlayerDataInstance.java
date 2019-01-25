@@ -14,9 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Created by Corosus on 3/4/2017.
- */
 public class PlayerDataInstance {
 
     private List<InvasionEntitySpawn> listSpawnables = new ArrayList<>();
@@ -32,6 +29,9 @@ public class PlayerDataInstance {
     public boolean allowSpawnInLitAreas = false;
 
     private List<Class> listSpawnablesCached = new ArrayList<>();
+
+    //persistent data that should never be cleared without specific commands run
+    public int lastWaveNumber = 0;
 
     public PlayerDataInstance() {
 
@@ -87,6 +87,10 @@ public class PlayerDataInstance {
         allowSpawnInLitAreas = false;
     }
 
+    public void resetPersistentData() {
+        lastWaveNumber = 0;
+    }
+
     public InvasionEntitySpawn getRandomEntityClassToSpawn() {
         List<InvasionEntitySpawn> listSpawnablesTry = new ArrayList<>();
 
@@ -98,13 +102,6 @@ public class PlayerDataInstance {
         }
 
         Random random = new Random();
-        //chose random spawn profile and increment
-        //InvasionEntitySpawn spawns = listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
-
-        //TODO: reorder code logic, outside this, spawn could fail so we wouldnt want to increment this!
-        //spawns.spawnCountCurrent++; FIX ^
-
-        //return spawns.spawnProfile.entities.get(random.nextInt(spawns.spawnProfile.entities.size()));
 
         if (listSpawnablesTry.size() > 0) {
             InvasionEntitySpawn spawn = listSpawnablesTry.get(random.nextInt(listSpawnablesTry.size()));
@@ -164,6 +161,8 @@ public class PlayerDataInstance {
 
         difficultyForInvasion = nbtTagCompound.getFloat("difficultyForInvasion");
 
+        lastWaveNumber = nbtTagCompound.getInteger("lastWaveNumber");
+
         CULog.dbg("read done");
     }
 
@@ -184,6 +183,8 @@ public class PlayerDataInstance {
         nbtTagCompound.setBoolean("allowSpawnInLitAreas", allowSpawnInLitAreas);
 
         nbtTagCompound.setFloat("difficultyForInvasion", difficultyForInvasion);
+
+        nbtTagCompound.setInteger("lastWaveNumber", lastWaveNumber);
     }
 
     public float getDifficultyForInvasion() {
