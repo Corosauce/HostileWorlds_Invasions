@@ -16,6 +16,8 @@ public class BlockSacrifice extends BlockContainer
     public BlockSacrifice()
     {
         super(Material.CLAY);
+        setHardness(0.6F);
+        setResistance(10.0F);
     }
 
     @Override

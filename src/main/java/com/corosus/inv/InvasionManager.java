@@ -185,9 +185,9 @@ public class InvasionManager {
                 //doing +1 for case of player time = server time, since first invasion technically happens before 3 day count (72000 ticks)
                 //isInvasionTonight does same thing of +1
                 int dayNum = (int) (ticksPlayed / CoroUtilWorldTime.getDayLength()) + 1;
-                CULog.dbg("per player day num: " + dayNum);
+                //CULog.dbg("per player day num: " + dayNum);
                 if (dayNum < ConfigInvasion.firstInvasionNight) {
-                    CULog.dbg("too soon for specific player: " + player.getDisplayNameString() + ", skipping invasion");
+                    //CULog.dbg("too soon for specific player: " + player.getDisplayNameString() + ", skipping invasion");
                     player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon, true);
                 }
             }
