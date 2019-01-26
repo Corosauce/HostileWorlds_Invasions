@@ -155,8 +155,9 @@ public class EventHandlerForge {
 		System.out.println("new: " + event.getEntityPlayer().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).getDifficultyForInvasion());*/
 	}
 
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public void explosionEvent(ExplosionEvent event) {
+	//use lowest to make sure FTBU claimed chunks take priority and do their work first
+	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public void explosionEvent(ExplosionEvent.Detonate event) {
 
 		if (event.getWorld().isRemote) return;
 
