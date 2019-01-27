@@ -6,6 +6,7 @@ import CoroUtil.difficulty.data.conditions.ConditionContext;
 import CoroUtil.difficulty.data.spawns.DataMobSpawnsTemplate;
 import CoroUtil.util.CoroUtilWorldTime;
 import com.corosus.inv.capabilities.PlayerDataInstance;
+import com.corosus.inv.config.ConfigInvasion;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -147,7 +148,7 @@ public class CommandInvasion extends CommandBase {
 						player.getEntityData().setLong(DynamicDifficulty.dataPlayerServerTicks, 0);
 						PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
 						storage.resetPersistentData();
-						CoroUtilMisc.sendCommandSenderMsg(var1, "reset persistent player invasion data for: " + player.getDisplayNameString());
+						CoroUtilMisc.sendCommandSenderMsg(var1, "Reset persistent player invasion data for: " + player.getDisplayNameString());
 					}
 				} else if (var2[0].equalsIgnoreCase("setPlayerTime")) {
 					int time = 0;
@@ -160,7 +161,7 @@ public class CommandInvasion extends CommandBase {
 					}
 					if (player != null) {
 						player.getEntityData().setLong(DynamicDifficulty.dataPlayerServerTicks, time);
-						CoroUtilMisc.sendCommandSenderMsg(var1, "set player time for: " + player.getDisplayNameString() + " to " + time);
+						CoroUtilMisc.sendCommandSenderMsg(var1, "Set player time for: " + player.getDisplayNameString() + " to " + time);
 					}
 				} else if (var2[0].equalsIgnoreCase("setPlayerWave")) {
 					int wave = 0;
@@ -174,7 +175,7 @@ public class CommandInvasion extends CommandBase {
 					if (player != null) {
 						PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
 						storage.lastWaveNumber = wave;
-						CoroUtilMisc.sendCommandSenderMsg(var1, "set player last wave # for: " + player.getDisplayNameString() + " to " + wave);
+						CoroUtilMisc.sendCommandSenderMsg(var1, "Set player last wave # for: " + player.getDisplayNameString() + " to " + wave);
 					}
 				} else if (var2[0].equalsIgnoreCase("playerTime")) {
 
@@ -190,7 +191,8 @@ public class CommandInvasion extends CommandBase {
 						PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
 						CoroUtilMisc.sendCommandSenderMsg(var1, "Active tracked player time for: " + player.getDisplayNameString());
 						CoroUtilMisc.sendCommandSenderMsg(var1, "Ticks: " + time);
-						CoroUtilMisc.sendCommandSenderMsg(var1, "Days: " + (time / CoroUtilWorldTime.getDayLength()));
+						CoroUtilMisc.sendCommandSenderMsg(var1, "Days Played: " + (time / CoroUtilWorldTime.getDayLength()));
+						CoroUtilMisc.sendCommandSenderMsg(var1, "Days Needed: " + (ConfigInvasion.firstInvasionNight - 1) + " to " + ConfigInvasion.firstInvasionNight);
 						CoroUtilMisc.sendCommandSenderMsg(var1, "Last Wave #: " + storage.lastWaveNumber);
 					}
 				}

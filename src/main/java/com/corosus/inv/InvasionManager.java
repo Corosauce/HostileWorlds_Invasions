@@ -237,11 +237,13 @@ public class InvasionManager {
 
                 storage.dataPlayerInvasionHappenedThisDay = true;
 
-                invasionActive = true;
-                if (!activeBool) {
-                    //System.out.println("triggering invasion start");
-                    InvLog.dbg("attempting to start invasion for player: " + player.getName());
-                    invasionStart(player, difficultyScale);
+                if (!skippingBool) {
+                    invasionActive = true;
+                    if (!activeBool) {
+                        //System.out.println("triggering invasion start");
+                        InvLog.dbg("attempting to start invasion for player: " + player.getName());
+                        invasionStart(player, difficultyScale);
+                    }
                 }
             } else {
                 invasionActive = false;
@@ -261,6 +263,8 @@ public class InvasionManager {
             //now that warn flag is serialized, we need to reset it incase time changes during warning stage
             if (!invasionOnThisNight) {
                 storage.dataPlayerInvasionWarned = false;
+
+                //also done in invasionStopReset, might be redundant but cant be sure for all cases, logic is fickle
                 player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, false);
                 player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon, false);
             }
@@ -279,6 +283,13 @@ public class InvasionManager {
 
                 if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
                     if (ConfigAdvancedOptions.enhanceAllMobsOfSpawnedTypesForOmniscience) {
+
+                        boolean debugTPSSpike = false;
+                        if (debugTPSSpike) {
+                            player.sendMessage(new TextComponentString("enhancing extra mobs with omniscience"));
+                            CULog.dbg("enhancing extra mobs with omniscience");
+                        }
+
                         //old way
                         //int range = getTargettingRangeBuff(difficultyScale);
                         int range = ConfigAdvancedOptions.aiOmniscienceRange;
@@ -304,6 +315,9 @@ public class InvasionManager {
                                 //this should flag the entity so tasks will get removed later
                                 ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityBuffed, true);
                                 ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityBuffed_AI_Omniscience, true);
+
+                                //stagger the first pathfind delay
+                                ent.getEntityData().setLong(UtilEntityBuffs.dataEntityBuffed_LastTimePathfindLongDist, ent.world.getTotalWorldTime() + (ent.getEntityId() % 20));
 
                                 //targetting
                                 if (!UtilEntityBuffs.hasTask(ent, EntityAINearestAttackablePlayerOmniscience.class, true)) {

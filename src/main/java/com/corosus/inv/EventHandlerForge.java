@@ -77,6 +77,10 @@ public class EventHandlerForge {
 	@SubscribeEvent
 	public void canSleep(PlayerSleepInBedEvent event) {
 		if (event.getEntityPlayer().world.isRemote) return;
+
+		//TODO: need to iterate every active player and find out if anyone has an actual invasion happening, if they do, deny, otherwise allow sleep
+		//this logic should be applied to the messages too that say "invasion might have happened for others"
+
 		if (ConfigInvasion.preventSleepDuringInvasions) {
 			if (CoroUtilWorldTime.isNightPadded(event.getEntityPlayer().world) && InvasionManager.isInvasionTonight(event.getEntityPlayer().world)) {
 				EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
