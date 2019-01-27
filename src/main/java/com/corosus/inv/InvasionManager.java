@@ -240,7 +240,8 @@ public class InvasionManager {
             if (invasionOnThisNight && isDay) {
                 if (!storage.dataPlayerInvasionWarned && !storage.dataPlayerInvasionHappenedThisDay) {
                     if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
-                        if (world.playerEntities.size() > 1) {
+                        //if (world.playerEntities.size() > 1) {
+                        if (isAnyoneBeingInvadedTonight(player.world)) {
                             //if others on server
                             player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startsTonightButNotYou, ConfigInvasion.firstInvasionNight)));
                         }
@@ -408,7 +409,8 @@ public class InvasionManager {
         if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
             player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startedButSkippedForYou));
         } else if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
-            if (player.world.playerEntities.size() > 1) {
+            //TODO: USE isAnyoneBeingInvadedTonight
+            if (isAnyoneBeingInvadedTonight(player.world)) {
                 player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startedButSkippedForYouTooSoon, ConfigInvasion.firstInvasionNight)));
             }
         } else {
