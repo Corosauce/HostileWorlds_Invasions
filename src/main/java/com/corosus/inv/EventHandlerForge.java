@@ -83,10 +83,13 @@ public class EventHandlerForge {
 		if (ConfigInvasion.preventSleepDuringInvasions) {
 			if (CoroUtilWorldTime.isNightPadded(event.getEntityPlayer().world) && InvasionManager.isInvasionTonight(event.getEntityPlayer().world)) {
 				EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
-				if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
+				//commented out, dont let whitelisted people sleep no matter what
+				//if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
+				if (InvasionManager.isAnyoneBeingInvadedTonight(player.world)) {
 					player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_cantSleep));
 					event.setResult(EntityPlayer.SleepResult.NOT_SAFE);
 				}
+				//}
 			} else {
 				
 			}

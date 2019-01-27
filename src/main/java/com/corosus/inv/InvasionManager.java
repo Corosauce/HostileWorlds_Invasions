@@ -160,12 +160,16 @@ public class InvasionManager {
         //morpheus workaround
         if (ConfigInvasion.preventSleepDuringInvasions) {
             if (CoroUtilWorldTime.isNightPadded(world) && InvasionManager.isInvasionTonight(world)) {
-                if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
+                if (isAnyoneBeingInvadedTonight(world)) {
+                    //commented out, dont let whitelisted people sleep no matter what
+                    //if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
                     if (player.isPlayerSleeping()) {
                         player.wakeUpPlayer(true, true, false);
                         player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_cantSleep));
                     }
+                    //}
                 }
+
             }
         }
     }
@@ -832,5 +836,26 @@ public class InvasionManager {
             }
         }
         return false;
+    }
+
+    /**
+     * Expected to only be run during actual invasion nights
+     *
+     * DOES NOT account for min nights required etc
+     *
+     * @param world
+     * @return
+     */
+    public static boolean isAnyoneBeingInvadedTonight(World world) {
+        boolean foundNotSkipping = false;
+        for (EntityPlayer player : world.playerEntities) {
+            if (!player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping) &&
+                    !player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
+                foundNotSkipping = true;
+                break;
+            }
+        }
+
+        return foundNotSkipping;
     }
 }
