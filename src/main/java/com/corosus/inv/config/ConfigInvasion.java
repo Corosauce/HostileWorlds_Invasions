@@ -9,7 +9,7 @@ import net.minecraft.util.text.TextFormatting;
 
 public class ConfigInvasion implements IConfigCategory {
 
-	@ConfigComment("First night number that an invasion starts, not specific to each player, uses global server world time")
+	@ConfigComment("Once a player has been playing for this many days, an invasion will start that night. If invasionCountingPerPlayer is false, it uses global world time instead")
 	public static int firstInvasionNight = 3;
 
 	@ConfigComment("If set to 3, there are 2 days of no invasions then the 3rd day is an invasion, etc")
