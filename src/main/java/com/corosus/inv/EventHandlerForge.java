@@ -2,14 +2,12 @@ package com.corosus.inv;
 
 import CoroUtil.block.TileEntityRepairingBlock;
 import CoroUtil.config.ConfigDynamicDifficulty;
-import CoroUtil.config.ConfigHWMonsters;
 import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayer.SleepResult;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -81,12 +79,13 @@ public class EventHandlerForge {
 		//TODO: need to iterate every active player and find out if anyone has an actual invasion happening, if they do, deny, otherwise allow sleep
 		//this logic should be applied to the messages too that say "invasion might have happened for others"
 
+		//this doesnt work for mods like morpheus, added an extra denial in player tick to force wake them
 		if (ConfigInvasion.preventSleepDuringInvasions) {
 			if (CoroUtilWorldTime.isNightPadded(event.getEntityPlayer().world) && InvasionManager.isInvasionTonight(event.getEntityPlayer().world)) {
 				EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
 				if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
 					player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_cantSleep));
-					event.setResult(SleepResult.NOT_SAFE);
+					event.setResult(EntityPlayer.SleepResult.NOT_SAFE);
 				}
 			} else {
 				
@@ -136,8 +135,13 @@ public class EventHandlerForge {
 				if (world.getTotalWorldTime() % 20 == 0) {
 					for (EntityPlayer player : world.playerEntities) {
 						if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
-							InvasionManager.tickPlayer(player);
+							InvasionManager.tickPlayerSlow(player);
 						}
+					}
+				}
+				for (EntityPlayer player : world.playerEntities) {
+					if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
+						InvasionManager.tickPlayer(player);
 					}
 				}
 			}

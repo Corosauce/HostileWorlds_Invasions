@@ -25,6 +25,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -148,14 +149,33 @@ public class InvasionManager {
         return false;
     }
 
+    /**
+     * Ticked every tick
+     *
+     * @param player
+     */
+    public static void tickPlayer(EntityPlayer player) {
+        World world = player.world;
 
+        //morpheus workaround
+        if (ConfigInvasion.preventSleepDuringInvasions) {
+            if (CoroUtilWorldTime.isNightPadded(world) && InvasionManager.isInvasionTonight(world)) {
+                if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
+                    if (player.isPlayerSleeping()) {
+                        player.wakeUpPlayer(true, true, false);
+                        player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_cantSleep));
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Ticked every 20 ticks
      *
      * @param player
      */
-    public static void tickPlayer(EntityPlayer player) {
+    public static void tickPlayerSlow(EntityPlayer player) {
         try {
             World world = player.world;
             net.minecraft.util.math.Vec3d posVec = new net.minecraft.util.math.Vec3d(player.posX, player.posY + (player.getEyeHeight() - player.getDefaultEyeHeight()), player.posZ);//player.getPosition(1F);
