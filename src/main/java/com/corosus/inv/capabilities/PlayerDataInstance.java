@@ -23,6 +23,7 @@ public class PlayerDataInstance {
 
     //used to fix problem of invasion warning triggering again after invasion stops, during that small window where it counts as "daylight" in 2 separate spots on the same time window
     public boolean dataPlayerInvasionHappenedThisDay;
+    //this will still be true for skipping players, due to feature creep and needing to track other states
     public boolean dataPlayerInvasionActive;
     public boolean dataPlayerInvasionWarned;
     //when trying dark areas for a long time fails, fallsback to spawning in light

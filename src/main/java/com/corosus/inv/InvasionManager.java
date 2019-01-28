@@ -217,8 +217,7 @@ public class InvasionManager {
             }
 
             boolean activeBool = storage.dataPlayerInvasionActive;
-            boolean skippingBool = player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping) ||
-                    player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon);
+            boolean skippingBool = isPlayerSkippingInvasion(player);
 
             //track state of invasion for proper init and reset for wave counts, etc
             //new day starts just as sun is rising, so invasion stops just at the right time when sun is imminent, they burn 300 ticks before invasion ends, thats ok
@@ -242,8 +241,11 @@ public class InvasionManager {
                     if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
                         //if (world.playerEntities.size() > 1) {
                         if (isAnyoneBeingInvadedTonight(player.world)) {
+                            //CULog.dbg("someone being invaded");
                             //if others on server
                             player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startsTonightButNotYou, ConfigInvasion.firstInvasionNight)));
+                        } else {
+                            //CULog.dbg("noone being invaded");
                         }
                     } else {
                         player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startsTonight));
@@ -256,18 +258,30 @@ public class InvasionManager {
                 storage.dataPlayerInvasionHappenedThisDay = false;
             }
 
-
-
             if (invasionOnThisNight && !isDay) {
 
                 storage.dataPlayerInvasionHappenedThisDay = true;
 
-                if (!skippingBool) {
-                    invasionActive = true;
-                    if (!activeBool) {
+                invasionActive = true;
+                if (!activeBool) {
+                    if (!skippingBool) {
                         //System.out.println("triggering invasion start");
                         InvLog.dbg("attempting to start invasion for player: " + player.getName());
                         invasionStart(player, difficultyScale);
+                    } else {
+                        //from invasionStart() to keep state correct for other things since initial design didnt account for skipping players too well
+                        storage.dataPlayerInvasionActive = true;
+
+                        if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
+                            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startedButSkippedForYou));
+                        } else if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
+                            if (isAnyoneBeingInvadedTonight(player.world)) {
+                                //CULog.dbg("someone being invaded");
+                                player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startedButSkippedForYouTooSoon, ConfigInvasion.firstInvasionNight)));
+                            } else {
+                                //CULog.dbg("noone being invaded");
+                            }
+                        }
                     }
                 }
             } else {
@@ -406,33 +420,25 @@ public class InvasionManager {
 
 
         //System.out.println("invasion started");
-        if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
-            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startedButSkippedForYou));
-        } else if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
-            //TODO: USE isAnyoneBeingInvadedTonight
-            if (isAnyoneBeingInvadedTonight(player.world)) {
-                player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startedButSkippedForYouTooSoon, ConfigInvasion.firstInvasionNight)));
+
+
+        if (profile != null && !profile.wave_message.equals("<NULL>")) {
+            //support for no message override for wave, might as well just check if its blank and prevent code from running
+            if (!profile.wave_message.equals("")) {
+                player.sendMessage(new TextComponentString(profile.wave_message));
             }
         } else {
-            if (profile != null && !profile.wave_message.equals("<NULL>")) {
-                //support for no message override for wave, might as well just check if its blank and prevent code from running
-                if (!profile.wave_message.equals("")) {
-                    player.sendMessage(new TextComponentString(profile.wave_message));
-                }
-            } else {
-                player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_started));
-            }
-
+            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_started));
         }
 
         //add buff for player based on how many invasions they skipped (and only if this isnt a skipped invasion)
-        if (!player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
+        //if (!player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
             float buffBase = 0.5F;
             float skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCount);
             float finalCalc = buffBase * skipCount;
             InvLog.dbg("buffing invasion, inv count: " + skipCount + ", actual buff: " + finalCalc);
             DynamicDifficulty.setInvasionSkipBuff(player, finalCalc);
-        }
+        //}
     }
 
     public static DataMobSpawnsTemplate getInvasionTestData(EntityPlayer player, DifficultyQueryContext context) {
@@ -450,8 +456,7 @@ public class InvasionManager {
     public static void invasionStopReset(EntityPlayer player) {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion ended");
-        if (!player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping) &&
-                !player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
+        if (!isPlayerSkippingInvasion(player)) {
             player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_ended, ConfigInvasion.invadeEveryXDays)));
         }
 
@@ -851,13 +856,18 @@ public class InvasionManager {
     public static boolean isAnyoneBeingInvadedTonight(World world) {
         boolean foundNotSkipping = false;
         for (EntityPlayer player : world.playerEntities) {
-            if (!player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping) &&
-                    !player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
+            //System.out.println(player.getDisplayNameString() + ": " + player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping) + ", " + player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping));
+            if (!isPlayerSkippingInvasion(player)) {
                 foundNotSkipping = true;
                 break;
             }
         }
 
         return foundNotSkipping;
+    }
+
+    public static boolean isPlayerSkippingInvasion(EntityPlayer player) {
+        return player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping) ||
+                player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon);
     }
 }

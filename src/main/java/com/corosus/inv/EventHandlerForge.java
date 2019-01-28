@@ -103,7 +103,8 @@ public class EventHandlerForge {
 			if (event.getEntity() instanceof EntityPlayer) {
 				if (CoroUtilWorldTime.isNightPadded(event.getEntity().world) && InvasionManager.isInvasionTonight(event.getEntity().world)) {
 					//if teleporting AWAY from overworld, stop them, but we want to allow them to come to it for invasion
-					if (event.getDimension() != 0) {
+					//also allow skipping players to teleport, should be fine?
+					if (!InvasionManager.isPlayerSkippingInvasion((EntityPlayer)event.getEntity()) && event.getDimension() != 0) {
 						event.getEntity().sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_cantTeleport));
 						event.setCanceled(true);
 					}
