@@ -3,13 +3,19 @@ package com.corosus.inv.block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
+import java.util.List;
 
 public class BlockSacrifice extends BlockContainer
 {
@@ -53,5 +59,13 @@ public class BlockSacrifice extends BlockContainer
         }
 
         return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
+    }
+
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced) {
+        super.addInformation(stack, player, tooltip, advanced);
+        tooltip.add(TextFormatting.YELLOW + "Right click on day of invasion to trade blood to skip invasion.");
+        tooltip.add(TextFormatting.YELLOW + "Will make next one harder, can skip up to 3 invasions.");
+        tooltip.add(TextFormatting.YELLOW + "Then you must fight the invasion, and can use the block again.");
     }
 }

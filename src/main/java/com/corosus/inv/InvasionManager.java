@@ -175,6 +175,25 @@ public class InvasionManager {
     }
 
     /**
+     * Need to do some stuff before main player loop runs
+     *
+     * @param player
+     */
+    public static void tickPlayerSlowPre(EntityPlayer player) {
+        if (ConfigInvasion.invasionCountingPerPlayer) {
+            long ticksPlayed = player.getEntityData().getLong(DynamicDifficulty.dataPlayerServerTicks);
+            //doing +1 for case of player time = server time, since first invasion technically happens before 3 day count (72000 ticks)
+            //isInvasionTonight does same thing of +1
+            int dayNum = (int) (ticksPlayed / CoroUtilWorldTime.getDayLength()) + 1;
+            //CULog.dbg("per player day num: " + dayNum);
+            if (dayNum < ConfigInvasion.firstInvasionNight) {
+                //CULog.dbg("too soon for specific player: " + player.getDisplayNameString() + ", skipping invasion");
+                player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon, true);
+            }
+        }
+    }
+
+    /**
      * Ticked every 20 ticks
      *
      * @param player
@@ -203,18 +222,6 @@ public class InvasionManager {
 
             //debug
             //difficultyScale = 1F;
-
-            if (ConfigInvasion.invasionCountingPerPlayer) {
-                long ticksPlayed = player.getEntityData().getLong(DynamicDifficulty.dataPlayerServerTicks);
-                //doing +1 for case of player time = server time, since first invasion technically happens before 3 day count (72000 ticks)
-                //isInvasionTonight does same thing of +1
-                int dayNum = (int) (ticksPlayed / CoroUtilWorldTime.getDayLength()) + 1;
-                //CULog.dbg("per player day num: " + dayNum);
-                if (dayNum < ConfigInvasion.firstInvasionNight) {
-                    //CULog.dbg("too soon for specific player: " + player.getDisplayNameString() + ", skipping invasion");
-                    player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon, true);
-                }
-            }
 
             boolean activeBool = storage.dataPlayerInvasionActive;
             boolean skippingBool = isPlayerSkippingInvasion(player);

@@ -139,6 +139,11 @@ public class EventHandlerForge {
 				if (world.getTotalWorldTime() % 20 == 0) {
 					for (EntityPlayer player : world.playerEntities) {
 						if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
+							InvasionManager.tickPlayerSlowPre(player);
+						}
+					}
+					for (EntityPlayer player : world.playerEntities) {
+						if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
 							InvasionManager.tickPlayerSlow(player);
 						}
 					}
