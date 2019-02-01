@@ -10,6 +10,7 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -20,6 +21,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
@@ -196,6 +198,22 @@ public class EventHandlerForge {
 							UtilMining.canConvertToRepairingBlock(event.getWorld(), state)) {
 						TileEntityRepairingBlock.replaceBlockAndBackup(event.getWorld(), pos);
 						it.remove();
+					}
+				}
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public void entityTick(LivingEvent.LivingUpdateEvent event) {
+
+		EntityLivingBase ent = event.getEntityLiving();
+		if (!ent.world.isRemote) {
+			if (ConfigInvasion.damagePerSecondToInvadersAtSunrise > 0 && ent.world.isDaytime()) {
+				if (ent.getEntityData().getBoolean(UtilEntityBuffs.dataEntityWaveSpawned)) {
+					if ((ent.world.getTotalWorldTime() + ent.getEntityId()) % 20 == 0) {
+						ent.attackEntityFrom(DamageSource.OUT_OF_WORLD, (float) ConfigInvasion.damagePerSecondToInvadersAtSunrise);
+						ent.setFire(1);
 					}
 				}
 			}

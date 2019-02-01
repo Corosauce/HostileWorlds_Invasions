@@ -15,6 +15,9 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("If set to 3, there are 2 days of no invasions then the 3rd day is an invasion, etc")
 	public static int invadeEveryXDays = 3;
 
+	@ConfigComment("Amount of damage per second to give to mobs after invasion ends at sunrise to keep them from lingering around, set to 0 to disable")
+	public static double damagePerSecondToInvadersAtSunrise = 0;
+
 	@ConfigComment("use a per player active tracked playtime instead of global server time, used with firstInvasionNight and wave # in invasion configuration. Everyone will still get invasions on the same night but only if they qualify for one")
 	public static boolean invasionCountingPerPlayer = true;
 
