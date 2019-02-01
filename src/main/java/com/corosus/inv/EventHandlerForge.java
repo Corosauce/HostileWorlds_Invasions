@@ -163,10 +163,15 @@ public class EventHandlerForge {
 		/*System.out.println("old: " + event.getOriginal().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).getDifficultyForInvasion());
 		System.out.println("new: " + event.getEntityPlayer().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).getDifficultyForInvasion());*/
 
+		PlayerDataInstance oldInstance = event.getOriginal().getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+        PlayerDataInstance newInstance = event.getEntityPlayer().getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+
 		//migrate cap data to new player
 		NBTTagCompound nbtOld = new NBTTagCompound();
-		event.getOriginal().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).writeNBT(nbtOld);
-		event.getEntityPlayer().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).readNBT(nbtOld);
+        oldInstance.writeNBT(nbtOld);
+        newInstance.readNBT(nbtOld);
+
+        newInstance.copyRuntimeData(oldInstance);
 
 		/*System.out.println("old: " + event.getOriginal().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).getDifficultyForInvasion());
 		System.out.println("new: " + event.getEntityPlayer().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).getDifficultyForInvasion());*/

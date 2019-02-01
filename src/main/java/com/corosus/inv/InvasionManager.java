@@ -18,9 +18,11 @@ import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.monster.EntityMob;
@@ -44,11 +46,6 @@ public class InvasionManager {
 
     public static boolean invasionOnThisNight_Last = false;
     public static boolean isDayLast = false;
-
-    //not saved, just some runtime caching
-    public static List<BlockPos> listGoodCavePositions = new ArrayList<>();
-    public static int triesSinceWorkingCaveSpawn = 0;
-    public static int triesSinceWorkingAnySpawn = 0;
 
     /**
      *
@@ -489,9 +486,12 @@ public class InvasionManager {
 
         InvasionEntitySpawn randomEntityList = storage.getRandomEntityClassToSpawn();
 
+        int tryCachedCaveSpotThreshold = 300;
+        int tryWaterSurfaceAreasThreshold = 300;
+
         if (randomEntityList != null) {
             for (int tries = 0; tries < ConfigAdvancedOptions.attemptsPerSpawn; tries++) {
-                triesSinceWorkingAnySpawn++;
+                storage.triesSinceWorkingAnySpawn++;
                 int tryX = MathHelper.floor(player.posX) - (range / 2) + (rand.nextInt(range));
                 int tryZ = MathHelper.floor(player.posZ) - (range / 2) + (rand.nextInt(range));
                 int tryY = MathHelper.floor(player.posY) - (range / 2) + (rand.nextInt(range));
@@ -519,6 +519,7 @@ public class InvasionManager {
                 }
 
                 boolean requireSolidGround = true;
+                boolean allowWaterSurfaceSpawn = false;
                 if (randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.WATER || randomEntityList.spawnProfile.spawnType == EnumSpawnPlacementType.AIR) {
                     requireSolidGround = false;
                 }
@@ -562,24 +563,52 @@ public class InvasionManager {
 
                 //CULog.dbg("spawn type chosen: " + (caveSpawn ? "cave" : "surface"));
 
-                if (caveSpawn && triesSinceWorkingCaveSpawn > 300 && listGoodCavePositions.size() > 0) {
+                if (caveSpawn && storage.triesSinceWorkingCaveSpawn > tryCachedCaveSpotThreshold && storage.listGoodCavePositions.size() > 0) {
                     CULog.dbg("trying cached cave spot to spawn with");
-                    BlockPos pos = listGoodCavePositions.get(rand.nextInt(listGoodCavePositions.size()-1));
+                    BlockPos pos = storage.listGoodCavePositions.get(rand.nextInt(storage.listGoodCavePositions.size()-1));
                     tryX = pos.getX();
                     yToUse = pos.getY();
                     tryZ = pos.getZ();
                 }
 
+                //if we cant find any surface area to spawn something, its probably because theyre on an island, support ocean spawning, but dont lockout land spawning
+                if (!caveSpawn && storage.triesSinceWorkingSolidGroundSpawn > tryWaterSurfaceAreasThreshold) {
+                    allowWaterSurfaceSpawn = true;
+                }
+
+                boolean isWaterSurfaceSpawned = false;
 
                 if (requireSolidGround) {
+
+                    storage.triesSinceWorkingSolidGroundSpawn++;
+
+                    //TEST
                     if (!CoroUtilEntity.canSpawnMobOnGround(player.world, tryX, yToUse, tryZ)) {
                         //CULog.dbg("spawnNewMobFromProfile: canSpawnMobOnGround fail");
-                        continue;
+                        if (allowWaterSurfaceSpawn) {
+
+                            CULog.dbg("trying surface water to spawn with");
+
+                            BlockPos pos = new BlockPos(tryX, surfaceY, tryZ);
+                            IBlockState state = player.world.getBlockState(pos);
+                            //if spot at feet isnt water or where head is isnt air, we dont want to spawn them submerged or in solid block
+                            if (state.getMaterial() != Material.WATER || !CoroUtilBlock.isAir(player.world.getBlockState(pos.up()).getBlock())) {
+                                continue;
+                            }
+
+                            isWaterSurfaceSpawned = true;
+                            //dont contribute to counter if its a water surface spawn
+                            storage.triesSinceWorkingSolidGroundSpawn--;
+                        } else {
+                            continue;
+                        }
+
                     }
+
                 }
 
                 if (ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas != -1) {
-                    if (!storage.allowSpawnInLitAreas && triesSinceWorkingAnySpawn > ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas) {
+                    if (!storage.allowSpawnInLitAreas && storage.triesSinceWorkingAnySpawn > ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas) {
                         //give up on finding a dark spot and allow lit areas
                         CULog.dbg("couldnt find a dark area to spawn for " + ConfigAdvancedOptions.failedTriesBeforeAllowingSpawnInLitAreas + " tries, allowing spawning in lit areas now");
                         storage.allowSpawnInLitAreas = true;
@@ -589,7 +618,7 @@ public class InvasionManager {
                 boolean skipDarknessCheck = storage.allowSpawnInLitAreas || !ConfigAdvancedOptions.mobsMustSpawnInDarkness;
 
                 if (caveSpawn) {
-                    triesSinceWorkingCaveSpawn++;
+                    storage.triesSinceWorkingCaveSpawn++;
                     if (!CoroUtilEntity.isInDarkCave(player.world, tryX, yToUse, tryZ, true, skipDarknessCheck)) {
                         //CULog.dbg("spawnNewMobFromProfile: isInDarkCave fail");
                         continue;
@@ -636,17 +665,22 @@ public class InvasionManager {
 
                             randomEntityList.spawnCountCurrent++;
 
-                            triesSinceWorkingAnySpawn = 0;
+                            storage.triesSinceWorkingAnySpawn = 0;
 
                             if (caveSpawn) {
-                                triesSinceWorkingCaveSpawn = 0;
+                                storage.triesSinceWorkingCaveSpawn = 0;
 
                                 BlockPos pos = new BlockPos(tryX, yToUse, tryZ);
 
-                                if (!listGoodCavePositions.contains(pos)) {
+                                if (!storage.listGoodCavePositions.contains(pos)) {
                                     CULog.dbg("found good cave spot, adding: " + pos);
-                                    listGoodCavePositions.add(pos);
+                                    storage.listGoodCavePositions.add(pos);
                                 }
+                            }
+
+                            //if we arent in water fallback mode and actually got a successfull spawning on ground, reset
+                            if (requireSolidGround && !isWaterSurfaceSpawned) {
+                                storage.triesSinceWorkingSolidGroundSpawn = 0;
                             }
 
                             //InvLog.dbg("skipDarknessCheck: " + skipDarknessCheck);

@@ -8,6 +8,7 @@ import com.corosus.inv.InvLog;
 import com.corosus.inv.InvasionEntitySpawn;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,7 +30,12 @@ public class PlayerDataInstance {
     //when trying dark areas for a long time fails, fallsback to spawning in light
     public boolean allowSpawnInLitAreas = false;
 
+    //cached data for runtime only, not saved
     private List<Class> listSpawnablesCached = new ArrayList<>();
+    public List<BlockPos> listGoodCavePositions = new ArrayList<>();
+    public int triesSinceWorkingCaveSpawn = 0;
+    public int triesSinceWorkingAnySpawn = 0;
+    public int triesSinceWorkingSolidGroundSpawn = 0;
 
     //persistent data that should never be cleared without specific commands run
     public int lastWaveNumber = 0;
@@ -86,6 +92,12 @@ public class PlayerDataInstance {
         listSpawnables.clear();
         listSpawnablesCached.clear();
         allowSpawnInLitAreas = false;
+
+        listGoodCavePositions.clear();
+        triesSinceWorkingCaveSpawn = 0;
+        triesSinceWorkingAnySpawn = 0;
+        triesSinceWorkingSolidGroundSpawn = 0;
+
     }
 
     public void resetPersistentData() {
@@ -186,6 +198,18 @@ public class PlayerDataInstance {
         nbtTagCompound.setFloat("difficultyForInvasion", difficultyForInvasion);
 
         nbtTagCompound.setInteger("lastWaveNumber", lastWaveNumber);
+    }
+
+    /**
+     * While I dont save this data to disk, id like it to be preserved for current invasion between player deaths
+     * - if you reload game during invasions, itll have to refind good cave spawns etc
+     */
+    public void copyRuntimeData(PlayerDataInstance oldInstance) {
+        this.listGoodCavePositions.addAll(oldInstance.listGoodCavePositions);
+        this.listSpawnablesCached.addAll(oldInstance.listSpawnablesCached);
+        this.triesSinceWorkingCaveSpawn = oldInstance.triesSinceWorkingCaveSpawn;
+        this.triesSinceWorkingAnySpawn = oldInstance.triesSinceWorkingAnySpawn;
+        this.triesSinceWorkingSolidGroundSpawn = oldInstance.triesSinceWorkingSolidGroundSpawn;
     }
 
     public float getDifficultyForInvasion() {
