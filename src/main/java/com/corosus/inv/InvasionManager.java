@@ -152,21 +152,14 @@ public class InvasionManager {
      * @param player
      */
     public static void tickPlayer(EntityPlayer player) {
-        World world = player.world;
 
         //morpheus workaround
         if (ConfigInvasion.preventSleepDuringInvasions) {
-            if (CoroUtilWorldTime.isNightPadded(world) && InvasionManager.isInvasionTonight(world)) {
-                if (isAnyoneBeingInvadedTonight(world)) {
-                    //commented out, dont let whitelisted people sleep no matter what
-                    //if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
-                    if (player.isPlayerSleeping()) {
-                        player.wakeUpPlayer(true, true, false);
-                        player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_cantSleep));
-                    }
-                    //}
+            if (InvasionManager.shouldLockOutFeaturesForPossibleActiveInvasion(player.world)) {
+                if (player.isPlayerSleeping()) {
+                    player.wakeUpPlayer(true, true, false);
+                    player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_cantSleep));
                 }
-
             }
         }
     }
@@ -724,13 +717,19 @@ public class InvasionManager {
     }
 
     public static boolean isInvasionTonight(World world) {
+        int dayAdjust = 0;
 
-        int dayAdjust = ConfigInvasion.firstInvasionNight;
+        if (!ConfigInvasion.invasionCountingPerPlayer) {
+            dayAdjust = ConfigInvasion.firstInvasionNight;
+        }
+
         int dayNumber = (int)(world.getWorldTime() / CoroUtilWorldTime.getDayLength()) + 1;
         int dayStart = (dayNumber-dayAdjust);
 
-        if (dayStart < 0) {
-            return false;
+        if (!ConfigInvasion.invasionCountingPerPlayer) {
+            if (dayStart < 0) {
+                return false;
+            }
         }
 
         return (float)dayStart % (float)ConfigInvasion.invadeEveryXDays == 0;
@@ -741,7 +740,7 @@ public class InvasionManager {
     }
 
     /**
-     * get staticly calculated wave number based on time and config, not per player
+     * get staticly calculated wave number based on time and config, not used for per player
      *
      * @param world
      * @return
@@ -910,5 +909,14 @@ public class InvasionManager {
     public static boolean isPlayerSkippingInvasion(EntityPlayer player) {
         return player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping) ||
                 player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon);
+    }
+
+    public static boolean shouldLockOutFeaturesForPossibleActiveInvasion(World world) {
+        if (CoroUtilWorldTime.isNightPadded(world) && InvasionManager.isInvasionTonight(world)) {
+            if (InvasionManager.isAnyoneBeingInvadedTonight(world)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

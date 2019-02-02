@@ -76,24 +76,14 @@ public class EventHandlerForge {
 
 	@SubscribeEvent
 	public void canSleep(PlayerSleepInBedEvent event) {
+		EntityPlayer player = event.getEntityPlayer();
 		if (event.getEntityPlayer().world.isRemote) return;
-
-		//TODO: need to iterate every active player and find out if anyone has an actual invasion happening, if they do, deny, otherwise allow sleep
-		//this logic should be applied to the messages too that say "invasion might have happened for others"
 
 		//this doesnt work for mods like morpheus, added an extra denial in player tick to force wake them
 		if (ConfigInvasion.preventSleepDuringInvasions) {
-			if (CoroUtilWorldTime.isNightPadded(event.getEntityPlayer().world) && InvasionManager.isInvasionTonight(event.getEntityPlayer().world)) {
-				EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
-				//commented out, dont let whitelisted people sleep no matter what
-				//if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
-				if (InvasionManager.isAnyoneBeingInvadedTonight(player.world)) {
-					player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_cantSleep));
-					event.setResult(EntityPlayer.SleepResult.NOT_SAFE);
-				}
-				//}
-			} else {
-				
+			if (InvasionManager.shouldLockOutFeaturesForPossibleActiveInvasion(player.world)) {
+				player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_cantSleep));
+				event.setResult(EntityPlayer.SleepResult.NOT_SAFE);
 			}
 		}
 	}
@@ -186,18 +176,20 @@ public class EventHandlerForge {
 		if (event.getWorld().isRemote) return;
 
 		if (ConfigDynamicDifficulty.convertExplodedBlocksToRepairingBlocksDuringInvasion || ConfigDynamicDifficulty.preventExplodedTileEntitiesDuringInvasions) {
-			List<BlockPos> listPos = event.getExplosion().getAffectedBlockPositions();
+			if (InvasionManager.shouldLockOutFeaturesForPossibleActiveInvasion(event.getWorld())) {
+				List<BlockPos> listPos = event.getExplosion().getAffectedBlockPositions();
 
-			for (Iterator<BlockPos> it = listPos.iterator(); it.hasNext();) {
-				BlockPos pos = it.next();
-				if (ConfigDynamicDifficulty.preventExplodedTileEntitiesDuringInvasions && event.getWorld().getTileEntity(pos) != null) {
-					it.remove();
-				} else if (ConfigDynamicDifficulty.convertExplodedBlocksToRepairingBlocksDuringInvasion) {
-					IBlockState state = event.getWorld().getBlockState(pos);
-					if (UtilMining.canMineBlock(event.getWorld(), pos, state.getBlock()) &&
-							UtilMining.canConvertToRepairingBlock(event.getWorld(), state)) {
-						TileEntityRepairingBlock.replaceBlockAndBackup(event.getWorld(), pos);
+				for (Iterator<BlockPos> it = listPos.iterator(); it.hasNext(); ) {
+					BlockPos pos = it.next();
+					if (ConfigDynamicDifficulty.preventExplodedTileEntitiesDuringInvasions && event.getWorld().getTileEntity(pos) != null) {
 						it.remove();
+					} else if (ConfigDynamicDifficulty.convertExplodedBlocksToRepairingBlocksDuringInvasion) {
+						IBlockState state = event.getWorld().getBlockState(pos);
+						if (UtilMining.canMineBlock(event.getWorld(), pos, state.getBlock()) &&
+								UtilMining.canConvertToRepairingBlock(event.getWorld(), state)) {
+							TileEntityRepairingBlock.replaceBlockAndBackup(event.getWorld(), pos);
+							it.remove();
+						}
 					}
 				}
 			}

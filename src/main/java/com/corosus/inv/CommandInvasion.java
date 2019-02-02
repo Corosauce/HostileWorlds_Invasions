@@ -107,7 +107,13 @@ public class CommandInvasion extends CommandBase {
 						BlockCoord pos = new BlockCoord(MathHelper.floor(posVec.x), MathHelper.floor(posVec.y), MathHelper.floor(posVec.z));
 						double difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, pos);
 						if (var2.length >= 2) difficultyScale = Double.valueOf(var2[1]);
-						int invasionNumber = InvasionManager.getInvasionNumber(world);
+						int invasionNumber = 0;//InvasionManager.getInvasionNumber(world);
+						if (ConfigInvasion.invasionCountingPerPlayer) {
+							PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+							invasionNumber = storage.lastWaveNumber;
+						} else {
+							invasionNumber = InvasionManager.getInvasionNumber(player.world);
+						}
 						if (var2.length >= 3) invasionNumber = Integer.valueOf(var2[2]);
 
 						try {
@@ -192,7 +198,11 @@ public class CommandInvasion extends CommandBase {
 						CoroUtilMisc.sendCommandSenderMsg(var1, "Active tracked player time for: " + player.getDisplayNameString());
 						CoroUtilMisc.sendCommandSenderMsg(var1, "Ticks: " + time);
 						CoroUtilMisc.sendCommandSenderMsg(var1, "Days Played: " + (time / CoroUtilWorldTime.getDayLength()));
-						CoroUtilMisc.sendCommandSenderMsg(var1, "Days Needed: " + (ConfigInvasion.firstInvasionNight - 1) + " to " + ConfigInvasion.firstInvasionNight);
+						if (ConfigInvasion.invasionCountingPerPlayer) {
+							CoroUtilMisc.sendCommandSenderMsg(var1, "Days Needed: " + (ConfigInvasion.firstInvasionNight - 1) + " to " + ConfigInvasion.firstInvasionNight);
+						} else {
+							CoroUtilMisc.sendCommandSenderMsg(var1, "Server time in days needs: " + (ConfigInvasion.firstInvasionNight - 1) + " to " + ConfigInvasion.firstInvasionNight);
+						}
 						CoroUtilMisc.sendCommandSenderMsg(var1, "Last Wave #: " + storage.lastWaveNumber);
 					}
 				}
