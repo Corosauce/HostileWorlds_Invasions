@@ -2,6 +2,7 @@ package com.corosus.inv;
 
 import com.corosus.inv.block.BlockSacrifice;
 import com.corosus.inv.block.TileEntitySacrifice;
+import com.corosus.inv.config.ConfigInvasion;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -55,8 +56,10 @@ public class CommonProxy implements IGuiHandler
 	public void postInit() {
 		ResourceLocation group = new ResourceLocation(Invasion.modID, "hw_invasion");
 
-		GameRegistry.addShapedRecipe(new ResourceLocation(Invasion.modID, block_sacrifice_name), group,
-				new ItemStack(blockSacrifice, 1), new Object[] {"XRX", "RRR", "XRX", 'X', Items.GOLD_INGOT, 'R', Items.ROTTEN_FLESH});
+		if (!ConfigInvasion.Block_SacrificeNoRecipe) {
+			GameRegistry.addShapedRecipe(new ResourceLocation(Invasion.modID, block_sacrifice_name), group,
+					new ItemStack(blockSacrifice, 1), new Object[]{"XRX", "RRR", "XRX", 'X', Items.GOLD_INGOT, 'R', Items.ROTTEN_FLESH});
+		}
 	}
     
 	public void addBlock(RegistryEvent.Register<Block> event, Block block, Class tEnt, String unlocalizedName) {

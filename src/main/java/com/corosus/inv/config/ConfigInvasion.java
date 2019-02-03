@@ -71,6 +71,8 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("Use at own risk, will not support, requires game restart on change")
 	public static boolean enableAdvancedDeveloperConfigFiles = false;
 
+	public static boolean Block_SacrificeNoRecipe = false;
+
 	@Override
 	public String getName() {
 		return "InvasionConfig";
