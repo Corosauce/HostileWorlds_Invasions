@@ -1,5 +1,6 @@
 package com.corosus.inv.block;
 
+import com.corosus.inv.Invasion;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -50,15 +51,32 @@ public class BlockSacrifice extends BlockContainer
     @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 
-        if (!worldIn.isRemote && hand == EnumHand.MAIN_HAND) {
-            TileEntity tEnt = worldIn.getTileEntity(pos);
+        boolean old = false;
 
-            if (tEnt instanceof TileEntitySacrifice) {
-                ((TileEntitySacrifice) tEnt).onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
+        if (old) {
+            if (!worldIn.isRemote && hand == EnumHand.MAIN_HAND) {
+                TileEntity tEnt = worldIn.getTileEntity(pos);
+
+                if (tEnt instanceof TileEntitySacrifice) {
+                    ((TileEntitySacrifice) tEnt).onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
+                }
+            }
+
+            return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
+        } else {
+
+            if (worldIn.isRemote) {
+                return true;
+            }
+
+            if (hand == EnumHand.MAIN_HAND && !playerIn.isSneaking()) {
+                playerIn.openGui(Invasion.instance, 0, worldIn, pos.getX(), pos.getY(), pos.getZ());
+                return true;
+            } else {
+                return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
             }
         }
 
-        return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
     }
 
     @Override

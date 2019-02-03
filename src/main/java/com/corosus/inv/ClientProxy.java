@@ -42,8 +42,6 @@ public class ClientProxy extends CommonProxy
     @Override
     public void addBlock(RegistryEvent.Register<Block> event, Block parBlock, String name, boolean creativeTab) {
     	super.addBlock(event, parBlock, name, creativeTab);
-
-        //addItemModel(Item.getItemFromBlock(parBlock), 0, new ModelResourceLocation(Weather.modID + ":" + name, "inventory"));
     }
 
     @Override
@@ -62,10 +60,7 @@ public class ClientProxy extends CommonProxy
 
     public void addItemModel(Item item, int meta, ModelResourceLocation location) {
 
-        //1.11: doesnt work currently for our method of loading, try it again in 1.12
         ModelLoader.setCustomModelResourceLocation(item, meta, location);
 
-        //using this for now
-        //Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, meta, location);
     }
 }

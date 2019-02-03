@@ -3,6 +3,8 @@ package com.corosus.inv.block;
 import com.corosus.inv.InvasionManager;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
@@ -15,6 +17,12 @@ import net.minecraft.world.World;
 
 public class TileEntitySacrifice extends TileEntity implements ITickable
 {
+
+    private IInventory inventory;
+
+    public TileEntitySacrifice() {
+        inventory = new InventoryBasic("Sacrifice Inventory", true, 9);
+    }
 
 	@Override
     public void update()
@@ -46,4 +54,12 @@ public class TileEntitySacrifice extends TileEntity implements ITickable
         }
 
 	}
+
+    public IInventory getInventory() {
+        return inventory;
+    }
+
+    public void setInventory(IInventory inventory) {
+        this.inventory = inventory;
+    }
 }

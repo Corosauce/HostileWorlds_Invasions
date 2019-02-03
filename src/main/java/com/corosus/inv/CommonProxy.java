@@ -19,7 +19,7 @@ import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 @Mod.EventBusSubscriber(modid = Invasion.modID)
-public class CommonProxy implements IGuiHandler
+public class CommonProxy
 {
 
 	public static final String block_sacrifice_name = "block_sacrifice";
@@ -50,7 +50,7 @@ public class CommonProxy implements IGuiHandler
     }
 
     public void preInit() {
-
+        InvasionNetworkHandler.initNetworking();
 	}
 
 	public void postInit() {
@@ -76,22 +76,14 @@ public class CommonProxy implements IGuiHandler
     }
     
 	public void addBlock(RegistryEvent.Register<Block> event, Block parBlock, String unlocalizedName, boolean creativeTab) {
-		//vanilla calls
-		//GameRegistry.registerBlock(parBlock, unlocalizedName);
-		
 		parBlock.setUnlocalizedName(Invasion.modID + "." + unlocalizedName);
-		parBlock.setRegistryName(/*Weather.modID + ":" + */unlocalizedName);
+		parBlock.setRegistryName(unlocalizedName);
 
 		parBlock.setCreativeTab(CreativeTabs.MISC);
 
 		if (event != null) {
 			event.getRegistry().register(parBlock);
-		} else {
-			//GameRegistry.register(parBlock);
 		}
-
-		//ForgeRegistries.BLOCKS.register(parBlock);
-		//LanguageRegistry.addName(parBlock, blockNameBase);
 	}
 
 	public void addItemBlock(RegistryEvent.Register<Item> event, Item item) {
@@ -100,34 +92,13 @@ public class CommonProxy implements IGuiHandler
 	
 	public void addItem(RegistryEvent.Register<Item> event, Item item, String name) {
 		item.setUnlocalizedName(Invasion.modID + "." + name);
-		//item.setRegistryName(new ResourceLocation(Weather.modID, name));
 		item.setRegistryName(name);
 
 		item.setCreativeTab(CreativeTabs.MISC);
 
 		if (event != null) {
 			event.getRegistry().register(item);
-		} else {
-			//GameRegistry.register(item);
 		}
-
-		//registerItemVariantModel(item, name, 0);
-
-		//return item;
 	}
-
-    @Override
-    public Object getServerGuiElement(int ID, EntityPlayer player, World world,
-            int x, int y, int z)
-    {
-        return null;
-    }
-
-    @Override
-    public Object getClientGuiElement(int ID, EntityPlayer player, World world,
-            int x, int y, int z)
-    {
-        return null;
-    }
 
 }

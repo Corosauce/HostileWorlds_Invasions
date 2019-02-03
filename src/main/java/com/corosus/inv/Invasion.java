@@ -13,6 +13,7 @@ import net.minecraftforge.fml.common.event.*;
 
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 
 @Mod(modid = "hw_inv", name="HW_Invasions", version=Invasion.VERSION, acceptableRemoteVersions="*", dependencies="required-after:coroutil@[1.12.1-1.2.23,)")
 public class Invasion {
@@ -37,12 +38,18 @@ public class Invasion {
         }
 
         CapabilityManager.INSTANCE.register(PlayerDataInstance.class, new ExtendedPlayerStorage(), PlayerDataInstance.class);
+
+        NetworkRegistry.INSTANCE.registerGuiHandler(this, InvasionGUIHandler.getInstance());
+
+        proxy.preInit();
     }
     
 	@Mod.EventHandler
     public void load(FMLInitializationEvent event)
     {
 		MinecraftForge.EVENT_BUS.register(new EventHandlerForge());
+
+		proxy.init();
     }
 
     @Mod.EventHandler
