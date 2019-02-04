@@ -1,7 +1,7 @@
 package com.corosus.inv;
 
-import com.corosus.inv.network.RequestDPSData;
-import com.corosus.inv.network.SendDPSData;
+import com.corosus.inv.network.MessageRequestDifficultyData;
+import com.corosus.inv.network.MessageSendDifficultyData;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
@@ -18,8 +18,8 @@ public class InvasionNetworkHandler {
 
     public static void initNetworking() {
 
-        INSTANCE.registerMessage(RequestDPSData.MessageHandler.class, RequestDPSData.class, nextID(), Side.SERVER);
-        INSTANCE.registerMessage(SendDPSData.MessageHandler.class, SendDPSData.class, nextID(), Side.CLIENT);
+        INSTANCE.registerMessage(MessageRequestDifficultyData.MessageHandler.class, MessageRequestDifficultyData.class, nextID(), Side.SERVER);
+        INSTANCE.registerMessage(MessageSendDifficultyData.MessageHandler.class, MessageSendDifficultyData.class, nextID(), Side.CLIENT);
 
     }
 

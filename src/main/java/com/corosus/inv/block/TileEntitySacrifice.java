@@ -1,5 +1,6 @@
 package com.corosus.inv.block;
 
+import CoroUtil.difficulty.DifficultyInfoPlayer;
 import com.corosus.inv.InvasionManager;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -20,8 +21,11 @@ public class TileEntitySacrifice extends TileEntity implements ITickable
 
     private IInventory inventory;
 
+    private DifficultyInfoPlayer difficultyInfoPlayer;
+
     public TileEntitySacrifice() {
         inventory = new InventoryBasic("Sacrifice Inventory", true, 9);
+        difficultyInfoPlayer = new DifficultyInfoPlayer();
     }
 
 	@Override
@@ -61,5 +65,13 @@ public class TileEntitySacrifice extends TileEntity implements ITickable
 
     public void setInventory(IInventory inventory) {
         this.inventory = inventory;
+    }
+
+    public DifficultyInfoPlayer getDifficultyInfoPlayer() {
+        return difficultyInfoPlayer;
+    }
+
+    public void setDifficultyInfoPlayer(DifficultyInfoPlayer difficultyInfoPlayer) {
+        this.difficultyInfoPlayer = difficultyInfoPlayer;
     }
 }

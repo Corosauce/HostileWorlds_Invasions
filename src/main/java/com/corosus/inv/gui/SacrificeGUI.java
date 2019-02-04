@@ -1,6 +1,9 @@
 package com.corosus.inv.gui;
 
+import CoroUtil.util.CoroUtilMath;
+import com.corosus.inv.InvasionNetworkHandler;
 import com.corosus.inv.block.TileEntitySacrifice;
+import com.corosus.inv.network.MessageRequestDifficultyData;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -24,6 +27,9 @@ public class SacrificeGUI extends GuiContainer {
     @Override
     public void initGui() {
         super.initGui();
+
+        MessageRequestDifficultyData message = new MessageRequestDifficultyData(player, tile.getPos());
+        InvasionNetworkHandler.INSTANCE.sendToServer(message);
     }
 
     @Override
@@ -40,6 +46,9 @@ public class SacrificeGUI extends GuiContainer {
     {
         this.drawDefaultBackground();
         super.drawScreen(mouseX, mouseY, partialTicks);
+
+
+
         this.renderHoveredToolTip(mouseX, mouseY);
     }
 
@@ -51,6 +60,13 @@ public class SacrificeGUI extends GuiContainer {
         String s = tile.getInventory().getDisplayName().getUnformattedText();
         this.fontRenderer.drawString(s, this.xSize / 2 - this.fontRenderer.getStringWidth(s) / 2, 6, 4210752);
         this.fontRenderer.drawString(player.inventory.getDisplayName().getUnformattedText(), 8, this.ySize - 96 + 2, 4210752);
+
+        float scale = 0.5F;
+
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(scale, scale, scale);
+        this.fontRenderer.drawString("DPS Rating: " + CoroUtilMath.roundVal(tile.getDifficultyInfoPlayer().dps), (int)(8 / scale), (int)((6+10) / scale), 4210752);
+        GlStateManager.popMatrix();
     }
 
     /**
