@@ -21,7 +21,7 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("use a per player active tracked playtime instead of global server time, used with firstInvasionNight and wave # in invasion configuration. Everyone will still get invasions on the same night but only if they qualify for one")
 	public static boolean invasionCountingPerPlayer = true;
 
-	@ConfigComment("Max amount of invasions you can skip in a row before you are forced to deal with one")
+	@ConfigComment("-1 to disable. Max amount of invasions you can skip in a row before you are forced to deal with one")
 	public static int maxConsecutiveInvasionSkips = 3;
 
 	public static String Invasion_Message_startsTonight = TextFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!";
@@ -72,6 +72,15 @@ public class ConfigInvasion implements IConfigCategory {
 	public static boolean enableAdvancedDeveloperConfigFiles = false;
 
 	public static boolean Block_SacrificeNoRecipe = false;
+
+	public static String Sacrifice_Item_Name = "minecraft:diamond";
+	public static int Sacrifice_Item_Meta = -1;
+	public static int Sacrifice_CountNeeded = 1;
+	@ConfigComment("Amount to multiply the count needed by for every skip done, to make continued skipping more difficult")
+	public static double Sacrifice_CountNeeded_Multiplier = 2;
+	public static boolean Sacrifice_CountNeeded_Multiplier_ResetOnInvasionNoSkip = true;
+	@ConfigComment("Make it so if multiplier was 2 and last needed amount was 2, next wave would be 4, then next wave after that would be 8, and so on")
+	public static boolean Sacrifice_CountNeeded_Multiplier_MultiplyLastAmountNeeded = true;
 
 	@Override
 	public String getName() {

@@ -1,9 +1,12 @@
 package com.corosus.inv.gui;
 
+import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.util.CoroUtilMath;
 import com.corosus.inv.InvasionNetworkHandler;
 import com.corosus.inv.block.TileEntitySacrifice;
 import com.corosus.inv.network.MessageRequestDifficultyData;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -18,10 +21,13 @@ public class SacrificeGUI extends GuiContainer {
     private TileEntitySacrifice tile;
     private EntityPlayer player;
 
+    private FontRenderer fontRendererUnicode;
+
     public SacrificeGUI(InventoryPlayer inventoryPlayer, TileEntitySacrifice tile) {
         super(new SacrificeContainer(inventoryPlayer, tile));
         this.tile = tile;
         player = inventoryPlayer.player;
+        fontRendererUnicode = new FontRenderer(Minecraft.getMinecraft().gameSettings, new ResourceLocation("textures/font/ascii.png"), Minecraft.getMinecraft().renderEngine, true);
     }
 
     @Override
@@ -61,11 +67,16 @@ public class SacrificeGUI extends GuiContainer {
         this.fontRenderer.drawString(s, this.xSize / 2 - this.fontRenderer.getStringWidth(s) / 2, 6, 4210752);
         this.fontRenderer.drawString(player.inventory.getDisplayName().getUnformattedText(), 8, this.ySize - 96 + 2, 4210752);
 
-        float scale = 0.5F;
+        float scale = 1F;
 
         GlStateManager.pushMatrix();
-        GlStateManager.scale(scale, scale, scale);
-        this.fontRenderer.drawString("DPS Rating: " + CoroUtilMath.roundVal(tile.getDifficultyInfoPlayer().dps), (int)(8 / scale), (int)((6+10) / scale), 4210752);
+        GlStateManager.scale(scale, scale, 1F);
+        //this.fontRenderer.setUnicodeFlag(false);
+        //this.fontRenderer.drawString("DPS Rating: " + CoroUtilMath.roundVal(tile.getDifficultyInfoPlayer().dps), (int)(8 / scale), (int)((6+10) / scale), 4210752);
+        this.fontRendererUnicode.drawString("DPS Rating: " + CoroUtilMath.roundVal(tile.getDifficultyInfoPlayer().dps), (int)(8 / scale), (int)((6+10) / scale), 4210752);
+
+        this.fontRendererUnicode.drawString("Skip: " + tile.skipCount, (int)(8 / scale), (int)((6+20) / scale), 4210752);
+        this.fontRendererUnicode.drawString("Items Needed: " + tile.itemsNeeded, (int)(8 / scale), (int)((6+30) / scale), 4210752);
         GlStateManager.popMatrix();
     }
 

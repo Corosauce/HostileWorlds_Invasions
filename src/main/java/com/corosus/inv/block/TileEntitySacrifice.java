@@ -1,11 +1,17 @@
 package com.corosus.inv.block;
 
 import CoroUtil.difficulty.DifficultyInfoPlayer;
+import CoroUtil.difficulty.DynamicDifficulty;
+import CoroUtil.forge.CULog;
 import com.corosus.inv.InvasionManager;
+import com.corosus.inv.InventoryBasicCopy;
+import com.corosus.inv.config.ConfigInvasion;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.inventory.ItemStackHelper;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
@@ -16,37 +22,151 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
-public class TileEntitySacrifice extends TileEntity implements ITickable
+public class TileEntitySacrifice extends TileEntity implements ITickable, IInventory
 {
-
-    private IInventory inventory;
+    private InventoryBasicCopy inventory;
 
     private DifficultyInfoPlayer difficultyInfoPlayer;
 
+    private String ownerName = "";
+    private EntityPlayer player;
+
+    private String name;
+
+    //gui info
+    public int skipCount = 0;
+    public int skipCountMax = 0;
+    public int itemsNeeded = 0;
+
     public TileEntitySacrifice() {
-        inventory = new InventoryBasic("Sacrifice Inventory", true, 9);
+        name = "Sacrifice Inventory";
+        inventory = new InventoryBasicCopy(name, true, 9);
         difficultyInfoPlayer = new DifficultyInfoPlayer();
     }
 
 	@Override
     public void update()
     {
-    	
     	if (!world.isRemote) {
-    		
+            //System.out.println("wat");
+            if (world.getTotalWorldTime() % 20 == 0) {
 
+                //backwards compat fix + set to closest on new placement
+                if (ownerName.equals("")) {
+                    EntityPlayer player = world.getClosestPlayer(this.getPos().getX(), this.getPos().getY(), this.getPos().getZ(), 128, false);
+                    if (player != null) {
+                        ownerName = player.getName();
+                    }
+                }
+
+                boolean skipped = tryToSacrifice();
+                if (skipped) {
+                    InvasionManager.skipNextInvasionForPlayer(player);
+
+                    CULog.dbg("skipped: " + skipped);
+                }
+
+                skipCount = getPlayer().getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCountForMultiplier);
+                int skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCountForMultiplier);
+
+                if (skipCount == 0) {
+                    itemsNeeded = ConfigInvasion.Sacrifice_CountNeeded;
+                } else {
+                    itemsNeeded = (int) ((double) ConfigInvasion.Sacrifice_CountNeeded * ConfigInvasion.Sacrifice_CountNeeded_Multiplier * (double)skipCount);
+                }
+            }
     	}
     }
 
+    @Override
     public NBTTagCompound writeToNBT(NBTTagCompound var1)
     {
+        ItemStackHelper.saveAllItems(var1, this.inventory.inventoryContents);
+
+        var1.setString("ownerName", ownerName);
+
+        //System.out.println("write");
+
         return super.writeToNBT(var1);
     }
 
+    @Override
     public void readFromNBT(NBTTagCompound var1)
     {
         super.readFromNBT(var1);
 
+        ownerName = var1.getString(ownerName);
+
+        //System.out.println("read");
+
+        ItemStackHelper.loadAllItems(var1, this.inventory.inventoryContents);
+
+    }
+
+    /**
+     * Tries to spend the items to do a proper sacrifice
+     *
+     * @return
+     */
+    public boolean tryToSacrifice() {
+        EntityPlayer player = getPlayer();
+        if (player != null) {
+            if (InvasionManager.canPlayerSkipInvasion(player)) {
+                if (spendItem()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean spendItem() {
+        if (spendItemImpl(true)) {
+            return spendItemImpl(false);
+        }
+        return false;
+    }
+
+    public boolean spendItemImpl(boolean dryRun) {
+        Item item = Item.getByNameOrId(ConfigInvasion.Sacrifice_Item_Name);
+
+        EntityPlayer player = getPlayer();
+
+        if (player != null) {
+
+            int amountNeeded;
+
+            int skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCountForMultiplier);
+
+            if (skipCount == 0) {
+                amountNeeded = ConfigInvasion.Sacrifice_CountNeeded;
+            } else {
+                amountNeeded = (int) ((double) ConfigInvasion.Sacrifice_CountNeeded * ConfigInvasion.Sacrifice_CountNeeded_Multiplier * (double)skipCount);
+            }
+
+            if (item != null) {
+                for (int i = 0; i < inventory.getInventoryStackLimit() && amountNeeded > 0; i++) {
+                    ItemStack stack = inventory.getStackInSlot(i);
+                    if (stack.getItem() == item) {
+                        if (ConfigInvasion.Sacrifice_Item_Meta == -1 || stack.getMetadata() == ConfigInvasion.Sacrifice_Item_Meta) {
+                            if (stack.getCount() > amountNeeded) {
+                                if (!dryRun) {
+                                    stack.shrink(amountNeeded);
+                                }
+                                amountNeeded = 0;
+                            } else {
+                                amountNeeded -= stack.getCount();
+                                if (!dryRun) {
+                                    inventory.setInventorySlotContents(i, ItemStack.EMPTY);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return amountNeeded == 0;
+        }
+        return false;
     }
 
     public void onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
@@ -59,11 +179,11 @@ public class TileEntitySacrifice extends TileEntity implements ITickable
 
 	}
 
-    public IInventory getInventory() {
+    public InventoryBasicCopy getInventory() {
         return inventory;
     }
 
-    public void setInventory(IInventory inventory) {
+    public void setInventory(InventoryBasicCopy inventory) {
         this.inventory = inventory;
     }
 
@@ -73,5 +193,120 @@ public class TileEntitySacrifice extends TileEntity implements ITickable
 
     public void setDifficultyInfoPlayer(DifficultyInfoPlayer difficultyInfoPlayer) {
         this.difficultyInfoPlayer = difficultyInfoPlayer;
+    }
+
+    public EntityPlayer getPlayer() {
+        if (player == null) {
+            EntityPlayer findPlayer = world.getPlayerEntityByName(ownerName);
+            player = findPlayer;
+        }
+        return player;
+    }
+
+    @Override
+    public int getSizeInventory() {
+        return inventory.getSizeInventory();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        for (ItemStack itemstack : this.inventory.inventoryContents)
+        {
+            if (!itemstack.isEmpty())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public ItemStack getStackInSlot(int index) {
+        return inventory.getStackInSlot(index);
+    }
+
+    @Override
+    public ItemStack decrStackSize(int index, int count) {
+        ItemStack itemstack = ItemStackHelper.getAndSplit(inventory.inventoryContents, index, count);
+
+        if (!itemstack.isEmpty())
+        {
+            this.markDirty();
+        }
+
+        return itemstack;
+    }
+
+    @Override
+    public ItemStack removeStackFromSlot(int index) {
+        return ItemStackHelper.getAndRemove(inventory.inventoryContents, index);
+    }
+
+    @Override
+    public void setInventorySlotContents(int index, ItemStack stack) {
+        inventory.inventoryContents.set(index, stack);
+
+        if (stack.getCount() > this.getInventoryStackLimit())
+        {
+            stack.setCount(this.getInventoryStackLimit());
+        }
+
+        this.markDirty();
+    }
+
+    @Override
+    public int getInventoryStackLimit() {
+        return 64;
+    }
+
+    @Override
+    public boolean isUsableByPlayer(EntityPlayer player) {
+        return true;
+    }
+
+    @Override
+    public void openInventory(EntityPlayer player) {
+
+    }
+
+    @Override
+    public void closeInventory(EntityPlayer player) {
+
+    }
+
+    @Override
+    public boolean isItemValidForSlot(int index, ItemStack stack) {
+        return true;
+    }
+
+    @Override
+    public int getField(int id) {
+        return 0;
+    }
+
+    @Override
+    public void setField(int id, int value) {
+
+    }
+
+    @Override
+    public int getFieldCount() {
+        return 0;
+    }
+
+    @Override
+    public void clear() {
+        inventory.inventoryContents.clear();
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public boolean hasCustomName() {
+        return true;
     }
 }

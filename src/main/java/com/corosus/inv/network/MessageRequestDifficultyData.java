@@ -5,10 +5,13 @@ import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.forge.CULog;
 import CoroUtil.util.BlockCoord;
 import com.corosus.inv.InvasionNetworkHandler;
+import com.corosus.inv.block.TileEntitySacrifice;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -61,7 +64,10 @@ public class MessageRequestDifficultyData implements IMessage {
                     //TODO: ship difficulty data
                     DifficultyInfoPlayer difficultyInfoPlayer = new DifficultyInfoPlayer();
                     difficultyInfoPlayer.dps = DynamicDifficulty.getDifficultyScaleForPosDPS(player.world, new BlockCoord(player.getPosition()));
-                    InvasionNetworkHandler.INSTANCE.sendTo(new MessageSendDifficultyData(difficultyInfoPlayer, message.tileEntityPos), player);
+                    TileEntity tEnt = player.world.getTileEntity(message.tileEntityPos);
+                    if (tEnt instanceof TileEntitySacrifice) {
+                        InvasionNetworkHandler.INSTANCE.sendTo(new MessageSendDifficultyData(difficultyInfoPlayer, (TileEntitySacrifice) tEnt), player);
+                    }
                 }
 
             });
