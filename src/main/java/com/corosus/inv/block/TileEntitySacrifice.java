@@ -26,29 +26,37 @@ public class TileEntitySacrifice extends TileEntity implements ITickable, IInven
 {
     private InventoryBasicCopy inventory;
 
+    /**
+     * mainly just for caching, but shouldnt be required to be bound to tile entity
+     * since this block is bound to a single player, and since some calculations are player specific:
+     * lets only show the info for that player
+     * therefore we need to use tile entity position specifically to get the relevant player
+     *
+     * used on both sides, synced when client opens gui
+     */
     private DifficultyInfoPlayer difficultyInfoPlayer;
 
     private String ownerName = "";
     private EntityPlayer player;
 
-    private String name;
-
-    //gui info
-    public int skipCount = 0;
-    public int skipCountMax = 0;
-    public int itemsNeeded = 0;
+    private String inventoryName;
 
     public TileEntitySacrifice() {
-        name = "Sacrifice Inventory";
-        inventory = new InventoryBasicCopy(name, true, 9);
-        difficultyInfoPlayer = new DifficultyInfoPlayer();
+        inventoryName = "Sacrifice Inventory";
+        inventory = new InventoryBasicCopy(inventoryName, true, 9);
     }
 
-	@Override
+    @Override
+    public void onLoad() {
+        super.onLoad();
+
+        difficultyInfoPlayer = new DifficultyInfoPlayer(getPos());
+    }
+
+    @Override
     public void update()
     {
     	if (!world.isRemote) {
-            //System.out.println("wat");
             if (world.getTotalWorldTime() % 20 == 0) {
 
                 //backwards compat fix + set to closest on new placement
@@ -64,15 +72,6 @@ public class TileEntitySacrifice extends TileEntity implements ITickable, IInven
                     InvasionManager.skipNextInvasionForPlayer(player);
 
                     CULog.dbg("skipped: " + skipped);
-                }
-
-                skipCount = getPlayer().getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCountForMultiplier);
-                int skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCountForMultiplier);
-
-                if (skipCount == 0) {
-                    itemsNeeded = ConfigInvasion.Sacrifice_CountNeeded;
-                } else {
-                    itemsNeeded = (int) ((double) ConfigInvasion.Sacrifice_CountNeeded * ConfigInvasion.Sacrifice_CountNeeded_Multiplier * (double)skipCount);
                 }
             }
     	}
@@ -195,6 +194,10 @@ public class TileEntitySacrifice extends TileEntity implements ITickable, IInven
         this.difficultyInfoPlayer = difficultyInfoPlayer;
     }
 
+    public void setOwnerName(String name) {
+        this.ownerName = name;
+    }
+
     public EntityPlayer getPlayer() {
         if (player == null) {
             EntityPlayer findPlayer = world.getPlayerEntityByName(ownerName);
@@ -302,7 +305,7 @@ public class TileEntitySacrifice extends TileEntity implements ITickable, IInven
 
     @Override
     public String getName() {
-        return name;
+        return inventoryName;
     }
 
     @Override

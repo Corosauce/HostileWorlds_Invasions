@@ -1,6 +1,5 @@
 package com.corosus.inv.gui;
 
-import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.util.CoroUtilMath;
 import com.corosus.inv.InvasionNetworkHandler;
 import com.corosus.inv.block.TileEntitySacrifice;
@@ -34,7 +33,7 @@ public class SacrificeGUI extends GuiContainer {
     public void initGui() {
         super.initGui();
 
-        MessageRequestDifficultyData message = new MessageRequestDifficultyData(player, tile.getPos());
+        MessageRequestDifficultyData message = new MessageRequestDifficultyData(player.world, tile.getPos());
         InvasionNetworkHandler.INSTANCE.sendToServer(message);
     }
 
@@ -73,10 +72,10 @@ public class SacrificeGUI extends GuiContainer {
         GlStateManager.scale(scale, scale, 1F);
         //this.fontRenderer.setUnicodeFlag(false);
         //this.fontRenderer.drawString("DPS Rating: " + CoroUtilMath.roundVal(tile.getDifficultyInfoPlayer().dps), (int)(8 / scale), (int)((6+10) / scale), 4210752);
-        this.fontRendererUnicode.drawString("DPS Rating: " + CoroUtilMath.roundVal(tile.getDifficultyInfoPlayer().dps), (int)(8 / scale), (int)((6+10) / scale), 4210752);
+        this.fontRendererUnicode.drawString("DPS Rating: " + CoroUtilMath.roundVal(tile.getDifficultyInfoPlayer().difficultyDPS), (int)(8 / scale), (int)((6+10) / scale), 4210752);
 
-        this.fontRendererUnicode.drawString("Skip: " + tile.skipCount, (int)(8 / scale), (int)((6+20) / scale), 4210752);
-        this.fontRendererUnicode.drawString("Items Needed: " + tile.itemsNeeded, (int)(8 / scale), (int)((6+30) / scale), 4210752);
+        this.fontRendererUnicode.drawString("Skip: " + tile.getDifficultyInfoPlayer().skipCount, (int)(8 / scale), (int)((6+20) / scale), 4210752);
+        this.fontRendererUnicode.drawString("Items Needed: " + tile.getDifficultyInfoPlayer().itemsNeeded, (int)(8 / scale), (int)((6+30) / scale), 4210752);
         GlStateManager.popMatrix();
     }
 

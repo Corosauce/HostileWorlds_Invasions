@@ -79,6 +79,8 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("Amount to multiply the count needed by for every skip done, to make continued skipping more difficult")
 	public static double Sacrifice_CountNeeded_Multiplier = 2;
 	public static boolean Sacrifice_CountNeeded_Multiplier_ResetOnInvasionNoSkip = true;
+
+	//TODO: USE
 	@ConfigComment("Make it so if multiplier was 2 and last needed amount was 2, next wave would be 4, then next wave after that would be 8, and so on")
 	public static boolean Sacrifice_CountNeeded_Multiplier_MultiplyLastAmountNeeded = true;
 

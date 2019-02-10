@@ -5,6 +5,7 @@ import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -85,5 +86,18 @@ public class BlockSacrifice extends BlockContainer
         tooltip.add(TextFormatting.YELLOW + "Right click on day of invasion to trade blood to skip invasion.");
         tooltip.add(TextFormatting.YELLOW + "Will make next one harder, can skip up to 3 invasions.");
         tooltip.add(TextFormatting.YELLOW + "Then you must fight the invasion, and can use the block again.");
+    }
+
+    @Override
+    public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+        super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+
+        if (placer instanceof EntityPlayer) {
+            TileEntity tEnt = worldIn.getTileEntity(pos);
+
+            if (tEnt instanceof TileEntitySacrifice) {
+                ((TileEntitySacrifice) tEnt).setOwnerName(placer.getName());
+            }
+        }
     }
 }
