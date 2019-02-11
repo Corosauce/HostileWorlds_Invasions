@@ -23,6 +23,7 @@ import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -675,6 +676,11 @@ public class InvasionManager {
                             ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, false);
                             //leave this to omniscience task if config says so
                             //ent.setAttackTarget(player);
+
+                            //no children!
+                            if (ent instanceof EntityZombie) {
+                                ((EntityZombie) ent).setChild(false);
+                            }
 
                             randomEntityList.spawnCountCurrent++;
 
