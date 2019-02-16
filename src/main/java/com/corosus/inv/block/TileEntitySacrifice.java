@@ -9,6 +9,7 @@ import com.corosus.inv.config.ConfigInvasion;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -22,8 +23,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
-public class TileEntitySacrifice extends TileEntity implements ITickable, IInventory
+public class TileEntitySacrifice extends TileEntity implements ITickable, ISidedInventory
 {
+    private static final int[] SLOTS_ALL = new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8};
+
     private InventoryBasicCopy inventory;
 
     /**
@@ -310,6 +313,33 @@ public class TileEntitySacrifice extends TileEntity implements ITickable, IInven
 
     @Override
     public boolean hasCustomName() {
+        return true;
+    }
+
+    net.minecraftforge.items.IItemHandler handlerAll = new net.minecraftforge.items.wrapper.SidedInvWrapper(this, net.minecraft.util.EnumFacing.WEST);
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @javax.annotation.Nullable net.minecraft.util.EnumFacing facing)
+    {
+        if (capability == net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+            return (T) handlerAll;
+        }
+        return super.getCapability(capability, facing);
+    }
+
+    @Override
+    public int[] getSlotsForFace(EnumFacing side) {
+        return SLOTS_ALL;
+    }
+
+    @Override
+    public boolean canInsertItem(int index, ItemStack itemStackIn, EnumFacing direction) {
+        return true;
+    }
+
+    @Override
+    public boolean canExtractItem(int index, ItemStack stack, EnumFacing direction) {
         return true;
     }
 }
