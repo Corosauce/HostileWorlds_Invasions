@@ -80,8 +80,10 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("Chests, machines, etc, arent normal blocks that we can convert to repairing blocks, so instead this setting just protects them from being harmed at all by explosions")
 	public static boolean preventExplodedTileEntitiesDuringInvasions = true;
 
+	@ConfigComment("Disable if you want traditional block breaking that drops the itemized version of the block when its mined")
 	public static boolean convertMinedBlocksToRepairingBlocksDuringInvasions = true;
 
+	@ConfigComment("Allow tile entities (Chests, machines, etc) to be mined the traditional way, breaks it like a player would. Note: Tile entities will never be converted to repairing blocks, they're not supported.")
 	public static boolean preventMinedTileEntitiesDuringInvasions = true;
 
 	//public static boolean spawnItemsOfBlocksIfNotUsingRepairingBlock = true;
