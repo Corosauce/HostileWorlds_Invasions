@@ -14,7 +14,7 @@ import net.minecraftforge.fml.common.event.*;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
 
-@Mod(modid = "hw_inv", name="HW_Invasions", version=Invasion.VERSION, acceptableRemoteVersions="*", dependencies="required-after:coroutil@[1.12.1-1.2.23,)")
+@Mod(modid = "hw_inv", name="HW_Invasions", version=Invasion.VERSION, acceptableRemoteVersions="*", dependencies="required-after:coroutil@[1.12.1-1.2.28,)")
 public class Invasion {
 	
 	@Mod.Instance( value = "hw_inv" )
