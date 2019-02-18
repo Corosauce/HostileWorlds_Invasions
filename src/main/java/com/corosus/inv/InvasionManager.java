@@ -26,6 +26,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -124,7 +125,7 @@ public class InvasionManager {
                 //only allow skip during day before its actually active
                 if (!CoroUtilWorldTime.isNightPadded(world)) {
                     int skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCount);
-                    if (skipCount < ConfigInvasion.maxConsecutiveInvasionSkips) {
+                    if (ConfigInvasion.maxConsecutiveInvasionSkips == -1 || skipCount < ConfigInvasion.maxConsecutiveInvasionSkips) {
                         skipCount++;
                         player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, true);
                         player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCount, skipCount);
@@ -655,6 +656,11 @@ public class InvasionManager {
                             ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, false);
                             //leave this to omniscience task if config says so
                             //ent.setAttackTarget(player);
+
+                            //no children!
+                            if (ent instanceof EntityZombie) {
+                                ((EntityZombie) ent).setChild(false);
+                            }
 
                             randomEntityList.spawnCountCurrent++;
 

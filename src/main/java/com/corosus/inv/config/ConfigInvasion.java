@@ -2,6 +2,7 @@ package com.corosus.inv.config;
 
 import java.io.File;
 
+import CoroUtil.ai.tasks.TaskDigTowardsTarget;
 import modconfig.ConfigComment;
 import modconfig.IConfigCategory;
 import net.minecraft.util.math.MathHelper;
@@ -21,7 +22,7 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("use a per player active tracked playtime instead of global server time, used with firstInvasionNight and wave # in invasion configuration. Everyone will still get invasions on the same night but only if they qualify for one")
 	public static boolean invasionCountingPerPlayer = true;
 
-	@ConfigComment("Max amount of invasions you can skip in a row before you are forced to deal with one")
+	@ConfigComment("-1 to disable. Max amount of invasions you can skip in a row before you are forced to deal with one")
 	public static int maxConsecutiveInvasionSkips = 3;
 
 	public static String Invasion_Message_startsTonight = TextFormatting.GOLD + "An invasion starts tonight! SpoOoOoky!";
@@ -73,6 +74,18 @@ public class ConfigInvasion implements IConfigCategory {
 
 	public static boolean Block_SacrificeNoRecipe = false;
 
+	@ConfigComment("Prevents permanent damage caused by explosions during invasions, since zombie miners will be making holes they can get in")
+	public static boolean convertExplodedBlocksToRepairingBlocksDuringInvasions = true;
+
+	@ConfigComment("Chests, machines, etc, arent normal blocks that we can convert to repairing blocks, so instead this setting just protects them from being harmed at all by explosions")
+	public static boolean preventExplodedTileEntitiesDuringInvasions = true;
+
+	public static boolean convertMinedBlocksToRepairingBlocksDuringInvasions = true;
+
+	public static boolean preventMinedTileEntitiesDuringInvasions = true;
+
+	//public static boolean spawnItemsOfBlocksIfNotUsingRepairingBlock = true;
+
 	@Override
 	public String getName() {
 		return "InvasionConfig";
@@ -98,6 +111,9 @@ public class ConfigInvasion implements IConfigCategory {
 		
 		firstInvasionNight = MathHelper.clamp(firstInvasionNight, 0, 9999);
 		invadeEveryXDays = MathHelper.clamp(invadeEveryXDays, 0, 9999);
+
+		TaskDigTowardsTarget.convertMinedBlocksToRepairingBlocksDuringInvasions = convertMinedBlocksToRepairingBlocksDuringInvasions;
+		TaskDigTowardsTarget.preventMinedTileEntitiesDuringInvasions = preventMinedTileEntitiesDuringInvasions;
 		
 	}
 
