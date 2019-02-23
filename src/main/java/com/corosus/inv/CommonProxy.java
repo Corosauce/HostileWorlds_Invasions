@@ -40,8 +40,6 @@ public class CommonProxy implements IGuiHandler
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event) {
 		Invasion.proxy.addItemBlock(event, new ItemBlock(blockSacrifice).setRegistryName(blockSacrifice.getRegistryName()));
-
-
 	}
 
     public void init()
