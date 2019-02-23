@@ -27,15 +27,16 @@ public class Invasion {
 
     @CapabilityInject(PlayerDataInstance.class)
     public static final Capability<PlayerDataInstance> PLAYER_DATA_INSTANCE = null;
+
+    public static ConfigAdvancedOptions configDev = new ConfigAdvancedOptions();
     
 	@Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
 		ConfigMod.addConfigFile(event, new ConfigInvasion());
-		if (ConfigInvasion.enableAdvancedDeveloperConfigFiles) {
-            ConfigMod.addConfigFile(event, new ConfigAdvancedOptions());
+		if (!ConfigInvasion.enableAdvancedDeveloperConfigFiles) {
+            configDev.hookUpdatedValues();
         }
-
         CapabilityManager.INSTANCE.register(PlayerDataInstance.class, new ExtendedPlayerStorage(), PlayerDataInstance.class);
     }
     

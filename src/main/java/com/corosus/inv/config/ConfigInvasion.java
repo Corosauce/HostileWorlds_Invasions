@@ -3,7 +3,9 @@ package com.corosus.inv.config;
 import java.io.File;
 
 import CoroUtil.ai.tasks.TaskDigTowardsTarget;
+import com.corosus.inv.Invasion;
 import modconfig.ConfigComment;
+import modconfig.ConfigMod;
 import modconfig.IConfigCategory;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
@@ -69,7 +71,7 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("For logging warnings/errors")
 	public static boolean useLoggingError = true;
 
-	@ConfigComment("Use at own risk, will not support, requires game restart on change")
+	@ConfigComment("Use at own risk, will not support")
 	public static boolean enableAdvancedDeveloperConfigFiles = false;
 
 	public static boolean Block_SacrificeNoRecipe = false;
@@ -116,6 +118,10 @@ public class ConfigInvasion implements IConfigCategory {
 
 		TaskDigTowardsTarget.convertMinedBlocksToRepairingBlocksDuringInvasions = convertMinedBlocksToRepairingBlocksDuringInvasions;
 		TaskDigTowardsTarget.preventMinedTileEntitiesDuringInvasions = preventMinedTileEntitiesDuringInvasions;
+
+		if (enableAdvancedDeveloperConfigFiles && !ConfigMod.instance.configLookup.containsKey(Invasion.configDev.getRegistryName())) {
+			ConfigMod.addConfigFile(null, Invasion.configDev);
+		}
 		
 	}
 
