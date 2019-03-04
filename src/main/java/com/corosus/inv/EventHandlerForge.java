@@ -122,10 +122,6 @@ public class EventHandlerForge {
 	public void tickServer(ServerTickEvent event) {
 		
 		if (event.phase == Phase.START) {
-			//System.out.println("tick ZA");
-			//ZombieAwareness.instance.onTick(MinecraftServer.getServer());
-			
-			
 			World world = DimensionManager.getWorld(0);
 			if (world != null) {
 				if (world.getTotalWorldTime() % 20 == 0) {
