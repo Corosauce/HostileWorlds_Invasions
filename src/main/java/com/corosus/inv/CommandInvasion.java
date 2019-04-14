@@ -89,7 +89,7 @@ public class CommandInvasion extends CommandBase {
 						BlockPos pos = new BlockPos(x, y, z);
 						IBlockState state = world.getBlockState(pos);
 						Block block = state.getBlock();
-						boolean canMine = UtilMining.canMineBlock(world, new BlockCoord(x, y, z), block);
+						boolean canMine = UtilMining.canMineBlockNew(world, pos);
 						float blockStrength = state.getBlockHardness(world, pos);
 
 						var1.sendMessage(new TextComponentString("can mine? "/* + x + ", " + y + ", " + z + "?: "*/ + canMine + ", hardness: " + blockStrength + ", block: " + block.getLocalizedName()));
