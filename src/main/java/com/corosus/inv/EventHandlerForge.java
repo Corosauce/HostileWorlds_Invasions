@@ -175,15 +175,15 @@ public class EventHandlerForge {
 
 		if (event.getWorld().isRemote) return;
 
-		if (ConfigDynamicDifficulty.convertExplodedBlocksToRepairingBlocksDuringInvasion || ConfigDynamicDifficulty.preventExplodedTileEntitiesDuringInvasions) {
+		if (ConfigInvasion.convertExplodedBlocksToRepairingBlocksDuringInvasions || ConfigInvasion.preventExplodedTileEntitiesDuringInvasions) {
 			if (InvasionManager.shouldLockOutFeaturesForPossibleActiveInvasion(event.getWorld())) {
 				List<BlockPos> listPos = event.getExplosion().getAffectedBlockPositions();
 
 				for (Iterator<BlockPos> it = listPos.iterator(); it.hasNext(); ) {
 					BlockPos pos = it.next();
-					if (ConfigDynamicDifficulty.preventExplodedTileEntitiesDuringInvasions && event.getWorld().getTileEntity(pos) != null) {
+					if (ConfigInvasion.preventExplodedTileEntitiesDuringInvasions && event.getWorld().getTileEntity(pos) != null) {
 						it.remove();
-					} else if (ConfigDynamicDifficulty.convertExplodedBlocksToRepairingBlocksDuringInvasion) {
+					} else if (ConfigInvasion.convertExplodedBlocksToRepairingBlocksDuringInvasions) {
 						IBlockState state = event.getWorld().getBlockState(pos);
 						if (UtilMining.canMineBlock(event.getWorld(), pos, state.getBlock()) &&
 								UtilMining.canConvertToRepairingBlock(event.getWorld(), state)) {
