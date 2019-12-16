@@ -4,7 +4,6 @@ import CoroUtil.ai.tasks.EntityAIChaseFromFar;
 import CoroUtil.ai.tasks.EntityAINearestAttackablePlayerOmniscience;
 import CoroUtil.ai.tasks.TaskDigTowardsTarget;
 import CoroUtil.config.ConfigCoroUtil;
-import CoroUtil.config.ConfigDynamicDifficulty;
 import CoroUtil.difficulty.DifficultyQueryContext;
 import CoroUtil.difficulty.DynamicDifficulty;
 import CoroUtil.difficulty.UtilEntityBuffs;
@@ -18,17 +17,14 @@ import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
-import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -99,6 +95,23 @@ public class InvasionManager {
      *
      */
 
+    public static boolean canPlayerSkipInvasion(EntityPlayer player) {
+        World world = player.world;
+        boolean skipped = player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping);
+        if (!skipped) {
+            if (isInvasionTonight(world)) {
+                //only allow skip during day before its actually active
+                if (!CoroUtilWorldTime.isNightPadded(world)) {
+                    int skipCount = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCount);
+                    if (ConfigInvasion.maxConsecutiveInvasionSkips == -1 || skipCount < ConfigInvasion.maxConsecutiveInvasionSkips) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public static boolean skipNextInvasionForPlayer(EntityPlayer player) {
         /**
          * mark in data they have a skip ready
@@ -129,6 +142,10 @@ public class InvasionManager {
                         skipCount++;
                         player.getEntityData().setBoolean(DynamicDifficulty.dataPlayerInvasionSkipping, true);
                         player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCount, skipCount);
+
+                        int skipCountAllTime = player.getEntityData().getInteger(DynamicDifficulty.dataPlayerInvasionSkipCountForMultiplier) + 1;
+                        player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCountForMultiplier, skipCountAllTime);
+
                         player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_skipping, skipCount)));
                         return true;
                     } else {
@@ -291,6 +308,9 @@ public class InvasionManager {
                     //might be a better place to put this
                     if (!skippingBool) {
                         player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCount, 0);
+                        if (ConfigInvasion.Sacrifice_CountNeeded_Multiplier_ResetOnInvasionNoSkip) {
+                            player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCountForMultiplier, 0);
+                        }
                     }
 
                     invasionStopReset(player);
