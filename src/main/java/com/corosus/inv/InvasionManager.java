@@ -907,6 +907,8 @@ public class InvasionManager {
             } else {
                 return Loader.isModLoaded(((ConditionModLoaded) condition).mod_id);
             }
+        } else if (condition instanceof ConditionGameStages) {
+            return CoroUtilCrossMod.gameStages_hasStages(player, ((ConditionGameStages) condition).game_stages, ((ConditionGameStages) condition).matchAll());
         }
         return false;
     }
