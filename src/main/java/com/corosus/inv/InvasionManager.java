@@ -19,17 +19,20 @@ import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.command.CommandException;
+import net.minecraft.entity.*;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.nbt.NBTException;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraftforge.fml.common.Loader;
 
 import java.util.ArrayList;
@@ -647,7 +650,15 @@ public class InvasionManager {
 
                 try {
 
-                    String spawn = randomEntityList.spawnProfile.entities.get(rand.nextInt(randomEntityList.spawnProfile.entities.size()));
+                    String spawnStr = randomEntityList.spawnProfile.entities.get(rand.nextInt(randomEntityList.spawnProfile.entities.size()));
+
+                    spawnStr = spawnStr.trim();
+                    String spawn = spawnStr;
+                    String spawnStrNBT = "";
+                    if (spawn.contains("{")) {
+                        spawn = spawnStr.substring(0, spawnStr.indexOf("{"));
+                        spawnStrNBT = spawnStr.substring(spawnStr.indexOf("{"));
+                    }
 
                     //hardcoded fixes to convert to AI taskable entities
                     if (spawn.equals("minecraft:bat")) {
@@ -657,7 +668,25 @@ public class InvasionManager {
                     Class classToSpawn = CoroUtilEntity.getClassFromRegistry(spawn);
                     if (classToSpawn != null) {
                         if (EntityCreature.class.isAssignableFrom(classToSpawn)) {
-                            EntityCreature ent = (EntityCreature) classToSpawn.getConstructor(new Class[]{World.class}).newInstance(new Object[]{player.world});
+
+                            EntityCreature ent = null;
+                            NBTTagCompound spawnNBT = null;
+
+                            boolean handleSpawning = true;
+
+                            if (spawnStrNBT != "") {
+                                handleSpawning = false;
+                                try {
+                                    spawnNBT = JsonToNBT.getTagFromJson(spawnStrNBT);
+                                    spawnNBT.setString("id", spawn);
+                                    spawnNBT.setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, true);
+                                } catch (NBTException nbtexception) {
+                                    throw new CommandException("commands.summon.tagError", new Object[]{nbtexception.getMessage()});
+                                }
+                                ent = (EntityCreature) AnvilChunkLoader.readWorldEntityPos(spawnNBT, player.world, tryX, yToUse + 1, tryZ, true);
+                            } else {
+                                ent = (EntityCreature) classToSpawn.getConstructor(new Class[]{World.class}).newInstance(new Object[]{player.world});
+                            }
 
                             //set to above the solid block we can spawn on
                             ent.setPosition(tryX, yToUse + 1, tryZ);
@@ -671,8 +700,12 @@ public class InvasionManager {
                             //set cmod data to entity
                             UtilEntityBuffs.registerAndApplyCmods(ent, randomEntityList.spawnProfile.cmods, difficultyScale);
 
-                            ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, true);
-                            player.world.spawnEntity(ent);
+
+                            if (handleSpawning) {
+                                //put into nbt above before entity instanced otherwise
+                                ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, true);
+                                player.world.spawnEntity(ent);
+                            }
                             ent.getEntityData().setBoolean(UtilEntityBuffs.dataEntityInitialSpawn, false);
                             //leave this to omniscience task if config says so
                             //ent.setAttackTarget(player);
