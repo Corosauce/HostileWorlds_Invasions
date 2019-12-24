@@ -261,12 +261,16 @@ public class InvasionManager {
                         if (isAnyoneBeingInvadedTonight(player.world)) {
                             //CULog.dbg("someone being invaded");
                             //if others on server
-                            player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startsTonightButNotYou, ConfigInvasion.firstInvasionNight)));
+                            if (!ConfigInvasion.Invasion_Message_startsTonightButNotYou.equals("")) {
+                                player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startsTonightButNotYou, ConfigInvasion.firstInvasionNight)));
+                            }
                         } else {
                             //CULog.dbg("noone being invaded");
                         }
                     } else {
-                        player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startsTonight));
+                        if (!ConfigInvasion.Invasion_Message_startsTonight.equals("")) {
+                            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startsTonight));
+                        }
                     }
                     storage.dataPlayerInvasionWarned = true;
                 }
@@ -291,11 +295,15 @@ public class InvasionManager {
                         storage.dataPlayerInvasionActive = true;
 
                         if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkipping)) {
-                            player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startedButSkippedForYou));
+                            if (!ConfigInvasion.Invasion_Message_startedButSkippedForYou.equals("")) {
+                                player.sendMessage(new TextComponentString(ConfigInvasion.Invasion_Message_startedButSkippedForYou));
+                            }
                         } else if (player.getEntityData().getBoolean(DynamicDifficulty.dataPlayerInvasionSkippingTooSoon)) {
                             if (isAnyoneBeingInvadedTonight(player.world)) {
                                 //CULog.dbg("someone being invaded");
-                                player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startedButSkippedForYouTooSoon, ConfigInvasion.firstInvasionNight)));
+                                if (!ConfigInvasion.Invasion_Message_startedButSkippedForYouTooSoon.equals("")) {
+                                    player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_startedButSkippedForYouTooSoon, ConfigInvasion.firstInvasionNight)));
+                                }
                             } else {
                                 //CULog.dbg("noone being invaded");
                             }
@@ -478,7 +486,9 @@ public class InvasionManager {
         PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
         //System.out.println("invasion ended");
         if (!isPlayerSkippingInvasion(player)) {
-            player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_ended, ConfigInvasion.invadeEveryXDays)));
+            if (!ConfigInvasion.Invasion_Message_ended.equals("")) {
+                player.sendMessage(new TextComponentString(String.format(ConfigInvasion.Invasion_Message_ended, ConfigInvasion.invadeEveryXDays)));
+            }
         }
 
         storage.dataPlayerInvasionActive = false;
