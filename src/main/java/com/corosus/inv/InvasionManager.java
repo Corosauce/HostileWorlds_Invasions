@@ -74,7 +74,7 @@ public class InvasionManager {
      * ---- How to handle quarries?
      *
      * --- Power usage / Pollution buildup like factorio
-     * ---- Might need a whitelist / blacklist of mod machines
+     * ---- Might need a ist / blacklist of mod machines
      * ----- for all power spending machines: blacklist stuff like batteries, trasmitters (wires)
      * ----- or whitelist only non batteries
      * ---- Using the various APIs, attempt to track their power consumption
@@ -183,9 +183,22 @@ public class InvasionManager {
                 }
             }
         }
+
+        if (ConfigInvasion.forcePlayersToOverworldDuringInvasion) {
+            PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+
+            if (player.dimension == 0) {
+                //TODO: !!!
+            } else {
+
+            }
+        }
     }
 
     /**
+     *
+     * Ticked every 20 ticks
+     *
      * Need to do some stuff before main player loop runs
      *
      * @param player
@@ -205,7 +218,7 @@ public class InvasionManager {
     }
 
     /**
-     * Ticked every 20 ticks
+     *
      *
      * @param player
      */
@@ -662,13 +675,8 @@ public class InvasionManager {
 
                     String spawnStr = randomEntityList.spawnProfile.entities.get(rand.nextInt(randomEntityList.spawnProfile.entities.size()));
 
-                    spawnStr = spawnStr.trim();
-                    String spawn = spawnStr;
-                    String spawnStrNBT = "";
-                    if (spawn.contains("{")) {
-                        spawn = spawnStr.substring(0, spawnStr.indexOf("{"));
-                        spawnStrNBT = spawnStr.substring(spawnStr.indexOf("{"));
-                    }
+                    String spawn = CoroUtilEntity.getEntityNameStringFromNBTLoadedName(spawnStr);
+                    String spawnStrNBT = CoroUtilEntity.getEntityNBTStringFromNBTLoadedName(spawnStr);
 
                     //hardcoded fixes to convert to AI taskable entities
                     if (spawn.equals("minecraft:bat")) {

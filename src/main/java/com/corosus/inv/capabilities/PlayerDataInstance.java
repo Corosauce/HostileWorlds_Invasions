@@ -40,6 +40,9 @@ public class PlayerDataInstance {
     //persistent data that should never be cleared without specific commands run
     public int lastWaveNumber = 0;
 
+    //used for forcing players back to overworld
+    public int ticksNotInOverworld = 0;
+
     public PlayerDataInstance() {
 
     }
@@ -140,7 +143,9 @@ public class PlayerDataInstance {
         if (listSpawnablesCached.size() == 0) {
             for (InvasionEntitySpawn spawns : listSpawnables) {
                 for (String spawnable : spawns.spawnProfile.entities) {
-                    Class classToSpawn = CoroUtilEntity.getClassFromRegistry(spawnable);
+                    Class classToSpawn = CoroUtilEntity.getClassFromRegistry(
+                            CoroUtilEntity.getEntityNameStringFromNBTLoadedName(spawnable)
+                    );
                     if (classToSpawn != null) {
                         if (!listSpawnablesCached.contains(classToSpawn)) {
                             listSpawnablesCached.add(classToSpawn);

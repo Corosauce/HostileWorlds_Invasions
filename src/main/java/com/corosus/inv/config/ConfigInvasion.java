@@ -101,6 +101,12 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("Make it so if multiplier was 2 and last needed amount was 2, next wave would be 4, then next wave after that would be 8, and so on")
 	public static boolean Sacrifice_CountNeeded_Multiplier_MultiplyLastAmountNeeded = true;
 
+	@ConfigComment("Force teleport players to their overworld spawn point during invasions after a configurable delay, if they arent already in the overworld")
+	public static boolean forcePlayersToOverworldDuringInvasion = true;
+
+	@ConfigComment("Time in ticks to wait before force teleporing player, 20 ticks = 1 second")
+	public static int forcePlayersToOverworldDuringInvasion_TickDelay = 20*120;
+
 	@Override
 	public String getName() {
 		return "InvasionConfig";
