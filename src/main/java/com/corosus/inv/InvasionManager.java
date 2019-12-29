@@ -211,7 +211,14 @@ public class InvasionManager {
                                                 (int) (ConfigInvasion.forcePlayersToOverworldDuringInvasion_TickDelay / 20))
                                 ));
                             }
+
+                            if (ConfigInvasion.forcePlayersToOverworldDuringInvasion_TickDelay - storage.ticksNotInOverworld == 200 &&
+                                    !ConfigInvasion.forcePlayersToOverworldDuringInvasion_FinalWarningMessage.equals("")) {
+                                player.sendMessage(new TextComponentString(ConfigInvasion.forcePlayersToOverworldDuringInvasion_FinalWarningMessage));
+                            }
                         }
+                        CULog.dbg("time: " + player.world.getTotalWorldTime() + " - " +
+                                storage.ticksNotInOverworld);
                         storage.ticksNotInOverworld++;
 
                         if (storage.ticksNotInOverworld >= ConfigInvasion.forcePlayersToOverworldDuringInvasion_TickDelay) {

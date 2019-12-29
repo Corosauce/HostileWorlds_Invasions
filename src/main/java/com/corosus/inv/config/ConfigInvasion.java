@@ -114,6 +114,8 @@ public class ConfigInvasion implements IConfigCategory {
 	@ConfigComment("Message to warn player to get back to overworld, use of %d will show the seconds they have")
 	public static String forcePlayersToOverworldDuringInvasion_FirstWarningMessage = TextFormatting.RED + "An invasion has started in the overworld, you must get back to fight it or be teleported to your spawn automatically in %d seconds";
 
+	public static String forcePlayersToOverworldDuringInvasion_FinalWarningMessage = TextFormatting.RED + "10 Seconds to automatic teleport!";
+
 	@ConfigComment("Message to tell player upon automatic teleport")
 	public static String forcePlayersToOverworldDuringInvasion_TPMessage = TextFormatting.GOLD + "You've been automatically teleported to your spawn for the invasion!";
 
