@@ -146,6 +146,11 @@ public class EventHandlerForge {
 	}
 
 	@SubscribeEvent
+	public void playerCloneEvent(PlayerEvent.LivingUpdateEvent event) {
+
+	}
+
+	@SubscribeEvent
 	public void playerCloneEvent(PlayerEvent.Clone event) {
 
 		/*System.out.println("old: " + event.getOriginal().getCapability(Invasion.PLAYER_DATA_INSTANCE, null).getDifficultyForInvasion());
@@ -203,6 +208,13 @@ public class EventHandlerForge {
 						ent.attackEntityFrom(DamageSource.OUT_OF_WORLD, (float) ConfigInvasion.damagePerSecondToInvadersAtSunrise);
 						ent.setFire(1);
 					}
+				}
+			}
+
+			if (ent instanceof EntityPlayer) {
+				EntityPlayer player = (EntityPlayer) ent;
+				if (CoroUtilEntity.canProcessForList(CoroUtilEntity.getName(player), ConfigAdvancedOptions.blackListPlayers, ConfigAdvancedOptions.useBlacklistAsWhitelist)) {
+					InvasionManager.tickPlayerEverywhere(player);
 				}
 			}
 		}

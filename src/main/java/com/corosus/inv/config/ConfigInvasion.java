@@ -90,15 +90,19 @@ public class ConfigInvasion implements IConfigCategory {
 
 	//public static boolean spawnItemsOfBlocksIfNotUsingRepairingBlock = true;
 
+	@ConfigComment("UNUSED")
 	public static String Sacrifice_Item_Name = "minecraft:diamond";
+	@ConfigComment("UNUSED")
 	public static int Sacrifice_Item_Meta = -1;
+	@ConfigComment("UNUSED")
 	public static int Sacrifice_CountNeeded = 1;
-	@ConfigComment("Amount to multiply the count needed by for every skip done, to make continued skipping more difficult")
+	@ConfigComment("UNUSED, Amount to multiply the count needed by for every skip done, to make continued skipping more difficult")
 	public static double Sacrifice_CountNeeded_Multiplier = 2;
+	@ConfigComment("UNUSED")
 	public static boolean Sacrifice_CountNeeded_Multiplier_ResetOnInvasionNoSkip = true;
 
 	//TODO: USE
-	@ConfigComment("Make it so if multiplier was 2 and last needed amount was 2, next wave would be 4, then next wave after that would be 8, and so on")
+	@ConfigComment("UNUSED, Make it so if multiplier was 2 and last needed amount was 2, next wave would be 4, then next wave after that would be 8, and so on")
 	public static boolean Sacrifice_CountNeeded_Multiplier_MultiplyLastAmountNeeded = true;
 
 	@ConfigComment("Force teleport players to their overworld spawn point during invasions after a configurable delay, if they arent already in the overworld")
@@ -106,6 +110,12 @@ public class ConfigInvasion implements IConfigCategory {
 
 	@ConfigComment("Time in ticks to wait before force teleporing player, 20 ticks = 1 second")
 	public static int forcePlayersToOverworldDuringInvasion_TickDelay = 20*120;
+
+	@ConfigComment("Message to warn player to get back to overworld, use of %d will show the seconds they have")
+	public static String forcePlayersToOverworldDuringInvasion_FirstWarningMessage = TextFormatting.RED + "An invasion has started in the overworld, you must get back to fight it or be teleported to your spawn automatically in %d seconds";
+
+	@ConfigComment("Message to tell player upon automatic teleport")
+	public static String forcePlayersToOverworldDuringInvasion_TPMessage = TextFormatting.GOLD + "You've been automatically teleported to your spawn for the invasion!";
 
 	@Override
 	public String getName() {

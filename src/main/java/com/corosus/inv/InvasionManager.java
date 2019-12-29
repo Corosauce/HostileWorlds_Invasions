@@ -17,6 +17,7 @@ import CoroUtil.util.*;
 import com.corosus.inv.capabilities.PlayerDataInstance;
 import com.corosus.inv.config.ConfigAdvancedOptions;
 import com.corosus.inv.config.ConfigInvasion;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.CommandException;
@@ -24,9 +25,11 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketChangeGameState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -183,14 +186,61 @@ public class InvasionManager {
                 }
             }
         }
+    }
 
+    /**
+     * Ticked every tick regardless of dimension, fired from living event tick
+     *
+     * @param player
+     */
+    public static void tickPlayerEverywhere(EntityPlayer player) {
         if (ConfigInvasion.forcePlayersToOverworldDuringInvasion) {
-            PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
+            if (CoroUtilWorldTime.isNightPadded(player.world) && InvasionManager.isInvasionTonight(player.world)) {
+                //ignore skipping players
+                if (!InvasionManager.isPlayerSkippingInvasion(player)) {
+                    PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
 
-            if (player.dimension == 0) {
-                //TODO: !!!
-            } else {
+                    if (player.dimension == 0) {
+                        storage.ticksNotInOverworld = 0;
+                    } else {
+                        if (ConfigInvasion.forcePlayersToOverworldDuringInvasion_TickDelay > 0) {
+                            if (storage.ticksNotInOverworld == 0 && !ConfigInvasion.forcePlayersToOverworldDuringInvasion_FirstWarningMessage.equals("")) {
+                                //first warning message if theres time for them to react
+                                player.sendMessage(new TextComponentString(
+                                        String.format(ConfigInvasion.forcePlayersToOverworldDuringInvasion_FirstWarningMessage,
+                                                (int) (ConfigInvasion.forcePlayersToOverworldDuringInvasion_TickDelay / 20))
+                                ));
+                            }
+                        }
+                        storage.ticksNotInOverworld++;
 
+                        if (storage.ticksNotInOverworld >= ConfigInvasion.forcePlayersToOverworldDuringInvasion_TickDelay) {
+                            if (player instanceof EntityPlayerMP) {
+                                player = (EntityPlayer) player.changeDimension(0);
+
+                                if (player != null) {
+                                    BlockPos spawnPos = player.getBedLocation(0);
+                                    if (spawnPos != null) {
+                                        spawnPos = EntityPlayer.getBedSpawnLocation(
+                                                ((EntityPlayerMP) player).world, spawnPos, false);
+                                        if (spawnPos == null) {
+                                            ((EntityPlayerMP) player).connection.sendPacket(new SPacketChangeGameState(0, 0.0F));
+                                        }
+                                    }
+                                    if (spawnPos == null) {
+                                        CULog.dbg("force tp, no bed location found, reverting to world spawn");
+                                        spawnPos = player.world.provider.getRandomizedSpawnPoint();
+                                    }
+                                    CULog.dbg("spawnpoint to use: " + spawnPos);
+                                    ((EntityPlayerMP) player).connection.setPlayerLocation(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), player.rotationYaw, player.rotationPitch);
+                                    if (!ConfigInvasion.forcePlayersToOverworldDuringInvasion_TPMessage.equals("")) {
+                                        player.sendMessage(new TextComponentString(ConfigInvasion.forcePlayersToOverworldDuringInvasion_TPMessage));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
