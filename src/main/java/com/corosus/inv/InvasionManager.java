@@ -50,6 +50,15 @@ public class InvasionManager {
     public static boolean invasionOnThisNight_Last = false;
     public static boolean isDayLast = false;
 
+    //placeholder variables while i figure out how to instance invasions
+
+    //if true, assumes invasion only starts during night too
+    //if false, i guess we'd have invasions require to be run for a certain amount of time then ends, so each instance tracks how long its been on
+    //false is mostly a future proofing placeholder for now
+    public static boolean invasionEndsOnDay = true;
+
+
+
     /**
      *
      * Invasion reason redesign:
@@ -289,6 +298,11 @@ public class InvasionManager {
 
             PlayerDataInstance storage = player.getCapability(Invasion.PLAYER_DATA_INSTANCE, null);
 
+            if (ConfigCoroUtil.useLoggingDebug) {
+                NBTTagCompound nbt = player.getEntityData();
+                int test = 0;
+            }
+
             //tickInvasionData(player, difficultyScale);
 
             ///Chunk chunk = world.getChunkFromBlockCoords(pos);
@@ -299,7 +313,7 @@ public class InvasionManager {
             long dayNumber = (world.getWorldTime() / CoroUtilWorldTime.getDayLength()) + 1;
             //System.out.println("daynumber: " + dayNumber + " - " + world.getWorldTime() + " - " + world.isDaytime());
 
-            boolean invasionActive = false;
+            //boolean invasionActive = false;
 
             //debug
             //difficultyScale = 1F;
@@ -354,7 +368,7 @@ public class InvasionManager {
 
                 storage.dataPlayerInvasionHappenedThisDay = true;
 
-                invasionActive = true;
+                //invasionActive = true;
                 if (!activeBool) {
                     if (!skippingBool) {
                         //System.out.println("triggering invasion start");
@@ -380,7 +394,7 @@ public class InvasionManager {
                         }
                     }
                 }
-            } else {
+            }/* else {
                 invasionActive = false;
                 if (activeBool) {
                     //System.out.println("triggering invasion stop");
@@ -396,6 +410,23 @@ public class InvasionManager {
 
                     invasionStopReset(player);
                 }
+            }*/
+
+            if (isDay && activeBool) {
+                //invasionActive = false;
+
+                CULog.dbg("triggering invasion stop");
+
+                //before the skipping flag is reset for all, check if wasnt skipping, and reset their skip counter
+                //might be a better place to put this
+                if (!skippingBool) {
+                    player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCount, 0);
+                    if (ConfigInvasion.Sacrifice_CountNeeded_Multiplier_ResetOnInvasionNoSkip) {
+                        player.getEntityData().setInteger(DynamicDifficulty.dataPlayerInvasionSkipCountForMultiplier, 0);
+                    }
+                }
+
+                invasionStopReset(player);
             }
 
             //now that warn flag is serialized, we need to reset it incase time changes during warning stage
@@ -417,7 +448,7 @@ public class InvasionManager {
             //invasionActive = true;
             //world.getDifficultyForLocation(player.playerLocation);
 
-            if (invasionActive && !skippingBool) {
+            if (storage.dataPlayerInvasionActive && !skippingBool) {
 
                 if (world.getTotalWorldTime() % ConfigAdvancedOptions.aiTickRateEnhance == 0) {
                     if (ConfigAdvancedOptions.enhanceAllMobsOfSpawnedTypesForOmniscience) {

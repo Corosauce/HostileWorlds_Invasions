@@ -46,7 +46,7 @@ public class InvasionEntitySpawn {
     }
 
     public String toString(boolean detailed) {
-        String str = "spawnCountCurrent: " + spawnCountCurrent + ", " + super.toString();
+        String str = "spawnCountCurrent: " + spawnCountCurrent + ", " + spawnProfile.toString();
         return str;
     }
 

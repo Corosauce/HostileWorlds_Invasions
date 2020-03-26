@@ -141,8 +141,28 @@ public class CommandInvasion extends CommandBase {
 					}
 				} else if (var2[0].equalsIgnoreCase("forceInvasion")) {
 	        		int amount = (CoroUtilWorldTime.getDayLength() * 3) + (6000 * 2) + (600 * 3);
+					if (player != null) {
+						player.getEntityData().setLong(DynamicDifficulty.dataPlayerServerTicks, ConfigInvasion.firstInvasionNight * CoroUtilWorldTime.getDayLength());
+					}
 	        		world.getWorldInfo().setWorldTime(amount);
+				} else if (var2[0].equalsIgnoreCase("forceInvasion2")) {
+					if (var2.length >= 3) {
+						player = world.getPlayerEntityByName(var2[2]);
+						if (player == null) {
+							CoroUtilMisc.sendCommandSenderMsg(var1, "Couldnt find player by name: " + var2[1]);
+						}
+					}
+					if (player != null) {
+						CoroUtilMisc.sendCommandSenderMsg(var1, "Force starting invasion for: " + player.getDisplayNameString());
+						float difficultyScale = DynamicDifficulty.getDifficultyScaleAverage(world, player, new BlockCoord(player.getPosition()));
 
+						//TODO: temp until i unspaghetti the invasion instancing
+						if (player != null) {
+							player.getEntityData().setLong(DynamicDifficulty.dataPlayerServerTicks, ConfigInvasion.firstInvasionNight * CoroUtilWorldTime.getDayLength());
+						}
+
+						InvasionManager.invasionStart(player, difficultyScale);
+					}
 				} else if (var2[0].equalsIgnoreCase("resetPlayer")) {
 					if (var2.length >= 3) {
 						player = world.getPlayerEntityByName(var2[2]);
