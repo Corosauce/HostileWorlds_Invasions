@@ -662,7 +662,7 @@ public class InvasionManager {
 
                 if (caveSpawn && storage.triesSinceWorkingCaveSpawn > tryCachedCaveSpotThreshold && storage.listGoodCavePositions.size() > 0) {
                     CULog.dbg("trying cached cave spot to spawn with");
-                    BlockPos pos = storage.listGoodCavePositions.get(rand.nextInt(storage.listGoodCavePositions.size()-1));
+                    BlockPos pos = storage.listGoodCavePositions.get((storage.listGoodCavePositions.size() == 1) ? 0 : rand.nextInt(storage.listGoodCavePositions.size()-1));
                     tryX = pos.getX();
                     yToUse = pos.getY();
                     tryZ = pos.getZ();
